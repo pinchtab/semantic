@@ -76,7 +76,7 @@ func loadSnapshot(path string) ([]semantic.ElementDescriptor, error) {
 		if err != nil {
 			return nil, err
 		}
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 		r = f
 	}
 
@@ -251,11 +251,11 @@ func reorderArgs(args []string) []string {
 }
 
 type jsonOutput struct {
-	BestRef    string           `json:"best_ref"`
-	BestScore  float64          `json:"best_score"`
-	Confidence string           `json:"confidence"`
-	Strategy   string           `json:"strategy"`
-	Matches    []jsonMatch      `json:"matches"`
+	BestRef    string      `json:"best_ref"`
+	BestScore  float64     `json:"best_score"`
+	Confidence string      `json:"confidence"`
+	Strategy   string      `json:"strategy"`
+	Matches    []jsonMatch `json:"matches"`
 }
 
 type jsonMatch struct {
@@ -290,12 +290,12 @@ func outputTable(result semantic.FindResult) {
 		return
 	}
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "REF\tSCORE\tCONFIDENCE\tSTRATEGY")
+	_, _ = fmt.Fprintln(w, "REF\tSCORE\tCONFIDENCE\tSTRATEGY")
 	for _, m := range result.Matches {
 		conf := semantic.CalibrateConfidence(m.Score)
-		fmt.Fprintf(w, "%s\t%.3f\t%s\t%s\n", m.Ref, m.Score, conf, result.Strategy)
+		_, _ = fmt.Fprintf(w, "%s\t%.3f\t%s\t%s\n", m.Ref, m.Score, conf, result.Strategy)
 	}
-	w.Flush()
+	_ = w.Flush()
 }
 
 func outputRefs(result semantic.FindResult) {

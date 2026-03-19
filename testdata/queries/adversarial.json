@@ -1,0 +1,34 @@
+[
+  {
+    "query": "the the the the",
+    "snapshot": "login-page.json",
+    "expect_no_match": true,
+    "note": "all-stopword query should still run without crashing"
+  },
+  {
+    "query": "xyzzy foobar baz",
+    "snapshot": "login-page.json",
+    "expect_no_match": true,
+    "note": "nonsense query should return no matches above threshold"
+  },
+  {
+    "query": "button",
+    "snapshot": "login-page.json",
+    "expect_has_matches": true,
+    "note": "generic role query should match multiple buttons"
+  },
+  {
+    "query": "",
+    "snapshot": "login-page.json",
+    "expect_no_match": true,
+    "note": "empty query"
+  },
+  {
+    "query": "sign in",
+    "snapshot": "login-page.json",
+    "expect_ref": "e4",
+    "min_score": 0.5,
+    "threshold": 0.9,
+    "note": "high threshold should still find strong match"
+  }
+]

@@ -1,0 +1,72 @@
+[
+  {
+    "query": "log in",
+    "snapshot": "login-page.json",
+    "expect_ref": "e4",
+    "min_score": 0.4,
+    "note": "log in → sign in synonym"
+  },
+  {
+    "query": "register",
+    "snapshot": "login-page.json",
+    "expect_ref": "e6",
+    "min_score": 0.3,
+    "note": "register → create account synonym"
+  },
+  {
+    "query": "forgot password",
+    "snapshot": "login-page.json",
+    "expect_ref": "e5",
+    "min_score": 0.4,
+    "note": "direct match on forgot password"
+  },
+  {
+    "query": "purchase",
+    "snapshot": "ecommerce-product.json",
+    "expect_ref": "e11",
+    "min_score": 0.3,
+    "note": "purchase → buy synonym"
+  },
+  {
+    "query": "basket",
+    "snapshot": "ecommerce-product.json",
+    "expect_ref": "e10",
+    "min_score": 0.3,
+    "note": "basket → cart synonym"
+  },
+  {
+    "query": "preferences",
+    "snapshot": "dashboard.json",
+    "expect_ref": "e3",
+    "min_score": 0.3,
+    "note": "preferences → settings synonym"
+  },
+  {
+    "query": "find projects",
+    "snapshot": "dashboard.json",
+    "expect_ref": "e6",
+    "min_score": 0.3,
+    "note": "find → search synonym"
+  },
+  {
+    "query": "download data",
+    "snapshot": "dashboard.json",
+    "expect_ref": "e8",
+    "min_score": 0.3,
+    "note": "download → export synonym"
+  },
+  {
+    "query": "sign out",
+    "snapshot": "dashboard.json",
+    "expect_ref": "e15",
+    "min_score": 0.3,
+    "note": "sign out → log out synonym"
+  },
+  {
+    "query": "look up",
+    "snapshot": "search-results.json",
+    "expect_ref": "e0",
+    "min_score": 0.3,
+    "note": "look up → search synonym"
+  }
+]

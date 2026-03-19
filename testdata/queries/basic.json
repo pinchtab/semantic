@@ -1,0 +1,50 @@
+[
+  {
+    "query": "sign in button",
+    "snapshot": "login-page.json",
+    "expect_ref": "e4",
+    "min_score": 0.5
+  },
+  {
+    "query": "email input",
+    "snapshot": "login-page.json",
+    "expect_ref": "e1",
+    "min_score": 0.4
+  },
+  {
+    "query": "password field",
+    "snapshot": "login-page.json",
+    "expect_ref": "e2",
+    "min_score": 0.4
+  },
+  {
+    "query": "add to cart",
+    "snapshot": "ecommerce-product.json",
+    "expect_ref": "e10",
+    "min_score": 0.5
+  },
+  {
+    "query": "search box",
+    "snapshot": "dashboard.json",
+    "expect_ref": "e6",
+    "min_score": 0.4
+  },
+  {
+    "query": "quantity",
+    "snapshot": "ecommerce-product.json",
+    "expect_ref": "e8",
+    "min_score": 0.4
+  },
+  {
+    "query": "log out",
+    "snapshot": "dashboard.json",
+    "expect_ref": "e15",
+    "min_score": 0.5
+  },
+  {
+    "query": "next page",
+    "snapshot": "search-results.json",
+    "expect_ref": "e9",
+    "min_score": 0.5
+  }
+]

@@ -1,0 +1,7 @@
+services:
+  runner:
+    build:
+      context: ../..
+      dockerfile: tests/e2e/Dockerfile
+    volumes:
+      - ./results:/results

@@ -1,0 +1,17 @@
+[
+  {"ref": "e0", "role": "searchbox", "name": "Search", "value": "golang testing"},
+  {"ref": "e1", "role": "button", "name": "Search"},
+  {"ref": "e2", "role": "button", "name": "Clear"},
+  {"ref": "e3", "role": "link", "name": "All"},
+  {"ref": "e4", "role": "link", "name": "Images"},
+  {"ref": "e5", "role": "link", "name": "Videos"},
+  {"ref": "e6", "role": "link", "name": "News"},
+  {"ref": "e7", "role": "heading", "name": "Testing in Go - Official Documentation"},
+  {"ref": "e8", "role": "link", "name": "go.dev/doc/tutorial/add-a-test"},
+  {"ref": "e9", "role": "link", "name": "Next page"},
+  {"ref": "e10", "role": "link", "name": "Previous page"},
+  {"ref": "e11", "role": "button", "name": "Settings"},
+  {"ref": "e12", "role": "button", "name": "Sign in"},
+  {"ref": "e13", "role": "combobox", "name": "Safe Search"},
+  {"ref": "e14", "role": "link", "name": "Feedback"}
+]

@@ -1,0 +1,22 @@
+[
+  {"ref": "e0", "role": "link", "name": "Home"},
+  {"ref": "e1", "role": "link", "name": "Electronics"},
+  {"ref": "e2", "role": "heading", "name": "Wireless Bluetooth Headphones"},
+  {"ref": "e3", "role": "img", "name": "Product photo"},
+  {"ref": "e4", "role": "button", "name": "Previous image"},
+  {"ref": "e5", "role": "button", "name": "Next image"},
+  {"ref": "e6", "role": "text", "name": "$79.99"},
+  {"ref": "e7", "role": "text", "name": "In Stock"},
+  {"ref": "e8", "role": "spinbutton", "name": "Quantity", "value": "1"},
+  {"ref": "e9", "role": "combobox", "name": "Color", "value": "Black"},
+  {"ref": "e10", "role": "button", "name": "Add to Cart"},
+  {"ref": "e11", "role": "button", "name": "Buy Now"},
+  {"ref": "e12", "role": "button", "name": "Add to Wishlist"},
+  {"ref": "e13", "role": "link", "name": "Write a Review"},
+  {"ref": "e14", "role": "tab", "name": "Description"},
+  {"ref": "e15", "role": "tab", "name": "Reviews (42)"},
+  {"ref": "e16", "role": "tab", "name": "Shipping Info"},
+  {"ref": "e17", "role": "link", "name": "View Cart"},
+  {"ref": "e18", "role": "button", "name": "Share"},
+  {"ref": "e19", "role": "link", "name": "Customer Support"}
+]
