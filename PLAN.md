@@ -610,10 +610,137 @@ Phase 6 can start as soon as Phase 1 is tagged (even v0.1.0).
 
 ---
 
+## Library Usage Examples
+
+### Import
+
+```go
+import "github.com/pinchtab/semantic"
+```
+
+Root package — no `pkg/` subdirectory. This is the standard Go convention for
+single-purpose libraries (same pattern as `go-chi/chi`, `gorilla/mux`, `uber-go/zap`).
+Import gives you `semantic.NewCombinedMatcher()` — clean, no stutter.
+
+### Basic: Find elements matching a query
+
+```go
+// Build descriptors from your accessibility tree (or any element source)
+elements := []semantic.ElementDescriptor{
+    {Ref: "e0", Role: "button", Name: "Sign In"},
+    {Ref: "e1", Role: "textbox", Name: "Email", Value: ""},
+    {Ref: "e2", Role: "link", Name: "Forgot password?"},
+    {Ref: "e3", Role: "button", Name: "Create Account"},
+}
+
+// Create a matcher (combined = lexical + embedding, best accuracy)
+matcher := semantic.NewCombinedMatcher(semantic.NewHashingEmbedder(128))
+
+// Find elements
+result, err := matcher.Find(ctx, "log in button", elements, semantic.FindOptions{
+    Threshold: 0.3,
+    TopK:      3,
+})
+
+// result.BestRef = "e0" (Sign In matches "log in" via synonyms)
+// result.BestScore = 0.82
+// result.Matches = [{Ref: "e0", Score: 0.82}, ...]
+```
+
+### Lexical-only matching (fastest, zero allocations beyond the result)
+
+```go
+matcher := semantic.NewLexicalMatcher()
+result, _ := matcher.Find(ctx, "submit", elements, semantic.FindOptions{
+    Threshold: 0.4,
+    TopK:      1,
+})
+```
+
+### Confidence calibration
+
+```go
+conf := semantic.CalibrateConfidence(result.BestScore)
+// "high" (>= 0.8), "medium" (>= 0.6), or "low"
+```
+
+### Error classification for recovery decisions
+
+```go
+ft := semantic.ClassifyFailure(err)
+// ft == semantic.FailureElementNotFound
+// ft.Recoverable() == true
+// ft.String() == "element_not_found"
+```
+
+### Self-healing recovery (how pinchtab uses it)
+
+The recovery engine re-locates elements when refs go stale (SPA re-renders,
+DOM changes, navigation). It uses callback interfaces so it stays decoupled
+from any specific browser automation library:
+
+```go
+intentCache := semantic.NewIntentCache(200, 10*time.Minute)
+
+recovery := semantic.NewRecoveryEngine(
+    semantic.DefaultRecoveryConfig(),
+    matcher,
+    intentCache,
+    // SnapshotRefresher — your callback to get a fresh DOM snapshot
+    func(ctx context.Context, tabID string) error {
+        return refreshSnapshot(ctx, tabID)
+    },
+    // NodeIDResolver — map ref → node ID from your snapshot cache
+    func(tabID, ref string) (int64, bool) {
+        return cache.Resolve(tabID, ref)
+    },
+    // DescriptorBuilder — convert your snapshot nodes to descriptors
+    func(tabID string) []semantic.ElementDescriptor {
+        nodes := getSnapshotNodes(tabID)
+        descs := make([]semantic.ElementDescriptor, len(nodes))
+        for i, n := range nodes {
+            descs[i] = semantic.ElementDescriptor{
+                Ref: n.Ref, Role: n.Role, Name: n.Name, Value: n.Value,
+            }
+        }
+        return descs
+    },
+)
+
+// Before actions, cache the element's intent
+recovery.RecordIntent(tabID, "e5", semantic.IntentEntry{
+    Query:      "checkout button",
+    Descriptor: semantic.ElementDescriptor{Ref: "e5", Role: "button", Name: "Checkout"},
+})
+
+// When an action fails, attempt recovery
+if err != nil && recovery.ShouldAttempt(err, ref) {
+    rr, result, err := recovery.Attempt(ctx, tabID, ref, "click", executeAction)
+    if rr.Recovered {
+        // Action succeeded with new ref rr.NewRef (score: rr.Score)
+    }
+}
+```
+
+### Intent caching (standalone)
+
+```go
+cache := semantic.NewIntentCache(200, 10*time.Minute)
+cache.Store("tab1", "e5", semantic.IntentEntry{
+    Query:      "submit button",
+    Descriptor: semantic.ElementDescriptor{Ref: "e5", Role: "button", Name: "Submit"},
+})
+entry, ok := cache.Lookup("tab1", "e5")
+```
+
+---
+
 ## Design Decisions
 
 ### Package at root (not `pkg/semantic/`)
 Import as `semantic.NewCombinedMatcher()` — clean, no stutter. The module IS the package.
+This follows the Go standard for single-purpose libraries. `pkg/` is a legacy anti-pattern
+that the Go community has moved away from.
 
 ### CLI as trust boundary
 If `semantic find` produces correct results against real snapshots, the library is correct.
@@ -622,6 +749,7 @@ E2E tests exercise the CLI, which exercises the library. No separate integration
 ### Recovery stays in the library
 `RecoveryEngine` uses callback interfaces (`SnapshotRefresher`, `NodeIDResolver`, etc.),
 so it's fully decoupled from pinchtab internals. Pinchtab injects its implementations.
+Any browser automation tool can use recovery by providing its own callbacks.
 
 ### No external dependencies
 The library stays zero-dep (stdlib only). The CLI adds only `flag` (stdlib).
