@@ -1,0 +1,16 @@
+# Binary (root only, not cmd/semantic/)
+/semantic
+*.exe
+
+# Test
+coverage.out
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
