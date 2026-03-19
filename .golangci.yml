@@ -8,6 +8,6 @@ linters:
     - unused
     - ineffassign
 
-issues:
+run:
   exclude-dirs:
     - testdata
