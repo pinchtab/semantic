@@ -14,6 +14,22 @@ combined (weighted fusion), self-healing recovery, intent caching, and confidenc
 
 ---
 
+## Package Layout
+
+**Root package.** Import as:
+
+```go
+import "github.com/pinchtab/semantic"
+```
+
+Use as `semantic.NewCombinedMatcher()`, `semantic.ElementDescriptor{}`, etc.
+
+This follows the standard Go convention for single-purpose libraries (same pattern as
+`github.com/go-chi/chi`, `go.uber.org/zap`, `github.com/charmbracelet/bubbletea`).
+No `pkg/` subdirectory — the Go community moved away from that years ago. The module
+IS the package. The CLI lives in `cmd/` which is the standard Go layout for binaries
+alongside a library.
+
 ## Repo Structure
 
 ```
@@ -375,11 +391,8 @@ go get github.com/pinchtab/semantic@latest
 
 ### 6.2 — Update imports
 
-In `internal/handlers/`:
-- `actions.go`: `semantic.` → same (package name unchanged)
-- `handlers.go`: import path changes
-- `find.go`: import path changes
-- `find_test.go`: import path changes
+The import path changes, but every call site stays identical — the package
+name is still `semantic`:
 
 ```go
 // Before
@@ -388,6 +401,12 @@ import "github.com/pinchtab/pinchtab/internal/semantic"
 // After
 import "github.com/pinchtab/semantic"
 ```
+
+Files to update:
+- `internal/handlers/handlers.go`
+- `internal/handlers/actions.go`
+- `internal/handlers/find.go`
+- `internal/handlers/find_test.go`
 
 ### 6.3 — Delete internal package
 
@@ -401,6 +420,175 @@ Remove `internal/semantic/` from pinchtab. All 154 tests now live in the semanti
 - The handlers produce identical results
 
 **Exit criteria:** Pinchtab builds + all tests pass with external dependency. `internal/semantic/` deleted.
+
+---
+
+## Library Usage
+
+This is how pinchtab uses the semantic package — and how any other project would.
+
+### Basic: Find elements by natural language query
+
+```go
+import "github.com/pinchtab/semantic"
+
+// Build descriptors from your accessibility tree (or any element list).
+elements := []semantic.ElementDescriptor{
+    {Ref: "e0", Role: "button", Name: "Sign In"},
+    {Ref: "e1", Role: "textbox", Name: "Email", Value: ""},
+    {Ref: "e2", Role: "link", Name: "Forgot password?"},
+    {Ref: "e3", Role: "button", Name: "Create Account"},
+}
+
+// Create a matcher. CombinedMatcher fuses lexical + embedding for best results.
+matcher := semantic.NewCombinedMatcher(semantic.NewHashingEmbedder(128))
+
+// Find matching elements.
+result, err := matcher.Find(ctx, "login button", elements, semantic.FindOptions{
+    Threshold: 0.3, // minimum similarity score
+    TopK:      3,    // return up to 3 matches
+})
+
+// result.BestRef = "e0"       (the Sign In button)
+// result.BestScore = 0.82     (high confidence — "login" ↔ "sign in" via synonyms)
+// result.Matches = [{Ref:"e0", Score:0.82}, {Ref:"e3", Score:0.45}, ...]
+```
+
+### Choose your matcher strategy
+
+```go
+// Lexical only — fast, exact + synonym matching, zero allocations per query.
+lexical := semantic.NewLexicalMatcher()
+
+// Embedding only — sub-word similarity via feature hashing.
+embedding := semantic.NewEmbeddingMatcher(semantic.NewHashingEmbedder(128))
+
+// Combined (recommended) — weighted fusion: 60% lexical + 40% embedding.
+combined := semantic.NewCombinedMatcher(semantic.NewHashingEmbedder(128))
+
+// All implement the same interface.
+var m semantic.ElementMatcher = combined
+```
+
+### Self-healing recovery
+
+When an element reference goes stale (DOM changed, SPA re-rendered), the
+recovery engine re-matches against a fresh snapshot using cached intent:
+
+```go
+// Set up the recovery engine with callbacks into your system.
+intentCache := semantic.NewIntentCache(200, 10*time.Minute)
+
+recovery := semantic.NewRecoveryEngine(
+    semantic.DefaultRecoveryConfig(),
+    matcher,
+    intentCache,
+    // SnapshotRefresher — your function to refresh the element tree.
+    func(ctx context.Context, tabID string) error {
+        return refreshAccessibilityTree(tabID)
+    },
+    // NodeIDResolver — maps a ref string to a backend node ID.
+    func(tabID, ref string) (int64, bool) {
+        return lookupNodeID(tabID, ref)
+    },
+    // DescriptorBuilder — builds element descriptors from current state.
+    func(tabID string) []semantic.ElementDescriptor {
+        return buildDescriptorsFromSnapshot(tabID)
+    },
+)
+
+// Before executing an action, cache the element's intent.
+recovery.RecordIntent(tabID, "e5", semantic.IntentEntry{
+    Query:      "submit order button",
+    Descriptor: semantic.ElementDescriptor{Ref: "e5", Role: "button", Name: "Place Order"},
+    Score:      0.91,
+    Confidence: "high",
+})
+
+// When an action fails, check if recovery is possible.
+err := executeAction(tabID, "e5", "click")
+if err != nil && recovery.ShouldAttempt(err, "e5") {
+    rr, result, err := recovery.Attempt(ctx, tabID, "e5", "click", executeAction)
+    // rr.Recovered = true
+    // rr.NewRef = "e12"        (element moved, new ref)
+    // rr.Score = 0.87
+    // rr.Confidence = "high"
+}
+```
+
+### Classify failure types
+
+```go
+err := errors.New("could not find node with given id")
+ft := semantic.ClassifyFailure(err)
+// ft = semantic.FailureElementNotFound
+// ft.Recoverable() = true
+// ft.String() = "element_not_found"
+
+err2 := errors.New("connection refused")
+ft2 := semantic.ClassifyFailure(err2)
+// ft2 = semantic.FailureNetwork
+// ft2.Recoverable() = false
+```
+
+### Confidence calibration
+
+```go
+semantic.CalibrateConfidence(0.92) // "high"   (>= 0.8)
+semantic.CalibrateConfidence(0.65) // "medium" (>= 0.6)
+semantic.CalibrateConfidence(0.35) // "low"    (< 0.6)
+```
+
+### How pinchtab wires it up
+
+This is the actual pattern from `pinchtab/internal/handlers/handlers.go`:
+
+```go
+func New(bridge BridgeAPI, cfg *Config) *Handlers {
+    matcher := semantic.NewCombinedMatcher(semantic.NewHashingEmbedder(128))
+    intentCache := semantic.NewIntentCache(200, 10*time.Minute)
+
+    h := &Handlers{
+        Bridge:      bridge,
+        Matcher:     matcher,
+        IntentCache: intentCache,
+    }
+
+    h.Recovery = semantic.NewRecoveryEngine(
+        semantic.DefaultRecoveryConfig(),
+        matcher,
+        intentCache,
+        func(ctx context.Context, tabID string) error {
+            h.refreshSnapshot(ctx, tabID)
+            return nil
+        },
+        func(tabID, ref string) (int64, bool) {
+            cache := h.Bridge.GetRefCache(tabID)
+            if cache == nil {
+                return 0, false
+            }
+            return cache.Refs[ref], cache.Refs[ref] != 0
+        },
+        func(tabID string) []semantic.ElementDescriptor {
+            nodes := h.getSnapshotNodes(tabID)
+            descs := make([]semantic.ElementDescriptor, len(nodes))
+            for i, n := range nodes {
+                descs[i] = semantic.ElementDescriptor{
+                    Ref: n.Ref, Role: n.Role,
+                    Name: n.Name, Value: n.Value,
+                }
+            }
+            return descs
+        },
+    )
+
+    return h
+}
+```
+
+The pattern: create matcher + cache, wire recovery with three callbacks that
+bridge into your system (refresh, resolve, build). Everything else is the
+library's job.
 
 ---
 
