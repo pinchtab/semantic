@@ -74,6 +74,10 @@ semantic classify "could not find node with given id"
 
 The library uses only Go standard library. No external dependencies, no supply chain risk.
 
+## Origin
+
+This project was extracted from [pinchtab](https://github.com/pinchtab/pinchtab)'s internal semantic matching package. The original implementation was contributed by [@YashJadhav21](https://github.com/YashJadhav21), [@Djain912](https://github.com/Djain912), and [@Chetnapadhi](https://github.com/Chetnapadhi) in a collaboration that built the lexical matching, synonym expansion, embedding, and recovery systems that form the core of this library.
+
 ## License
 
 MIT
