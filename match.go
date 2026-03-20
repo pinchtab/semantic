@@ -16,16 +16,19 @@ type ElementMatcher interface {
 
 // FindOptions controls matching behaviour.
 type FindOptions struct {
+	// Threshold is the minimum similarity score for a match to be included.
 	Threshold float64
-	TopK      int
 
-	// Per-request weight overrides (optional). If both are zero the
-	// matcher's default weights are used.
-	LexicalWeight   float64
-	EmbeddingWeight float64
+	// TopK is the maximum number of matches to return.
+	TopK int
 
 	// Explain enables verbose per-match scoring breakdown.
 	Explain bool
+
+	// lexicalWeight and embeddingWeight are per-request weight overrides
+	// used internally by CombinedMatcher. Not part of the public API.
+	lexicalWeight   float64
+	embeddingWeight float64
 }
 
 // FindResult holds the output of a Find operation.

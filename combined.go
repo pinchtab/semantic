@@ -50,9 +50,9 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []Ele
 	// Per-request weight overrides; fall back to matcher defaults.
 	lexW := c.LexicalWeight
 	embW := c.EmbeddingWeight
-	if opts.LexicalWeight > 0 || opts.EmbeddingWeight > 0 {
-		lexW = opts.LexicalWeight
-		embW = opts.EmbeddingWeight
+	if opts.lexicalWeight > 0 || opts.embeddingWeight > 0 {
+		lexW = opts.lexicalWeight
+		embW = opts.embeddingWeight
 	}
 
 	// Use a lower internal threshold to capture candidates from both matchers

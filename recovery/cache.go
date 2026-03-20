@@ -1,8 +1,10 @@
-package semantic
+package recovery
 
 import (
 	"sync"
 	"time"
+
+	"github.com/pinchtab/semantic"
 )
 
 // IntentEntry captures the semantic identity of an element at the time an
@@ -16,7 +18,7 @@ type IntentEntry struct {
 
 	// Descriptor holds role, name, and value of the element at
 	// action time.
-	Descriptor ElementDescriptor
+	Descriptor semantic.ElementDescriptor
 
 	// Score and Confidence from the last /find (if available).
 	Score      float64

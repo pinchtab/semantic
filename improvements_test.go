@@ -3,6 +3,7 @@ package semantic
 import (
 	"context"
 	"fmt"
+	"math"
 	"strings"
 	"testing"
 )
@@ -982,7 +983,7 @@ func cosineSim(a, b []float32) float64 {
 	if normA == 0 || normB == 0 {
 		return 0
 	}
-	return dot / (sqrt64(normA) * sqrt64(normB))
+	return dot / (math.Sqrt(normA) * math.Sqrt(normB))
 }
 
 // ===========================================================================

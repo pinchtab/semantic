@@ -13,6 +13,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/pinchtab/semantic"
+	"github.com/pinchtab/semantic/recovery"
 )
 
 var version = "dev"
@@ -227,7 +228,7 @@ func runClassify(args []string) {
 		errMsg = strings.Join(args, " ")
 	}
 
-	ft := semantic.ClassifyFailure(fmt.Errorf("%s", errMsg))
+	ft := recovery.ClassifyFailure(fmt.Errorf("%s", errMsg))
 	fmt.Printf("%s (recoverable: %v)\n", ft.String(), ft.Recoverable())
 }
 

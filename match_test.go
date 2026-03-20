@@ -200,11 +200,11 @@ func TestLexicalMatcher_ThresholdFiltering(t *testing.T) {
 }
 
 // ===========================================================================
-// DummyEmbedder tests
+// TestEmbedder tests
 // ===========================================================================
 
-func TestDummyEmbedder_Deterministic(t *testing.T) {
-	e := NewDummyEmbedder(64)
+func TestTestEmbedder_Deterministic(t *testing.T) {
+	e := NewTestEmbedder(64)
 
 	v1, err := e.Embed([]string{"hello world"})
 	if err != nil {
@@ -221,27 +221,27 @@ func TestDummyEmbedder_Deterministic(t *testing.T) {
 
 	for i := range v1[0] {
 		if v1[0][i] != v2[0][i] {
-			t.Fatalf("DummyEmbedder is not deterministic at dim %d", i)
+			t.Fatalf("TestEmbedder is not deterministic at dim %d", i)
 		}
 	}
 }
 
-func TestDummyEmbedder_Strategy(t *testing.T) {
-	e := NewDummyEmbedder(32)
-	if e.Strategy() != "dummy" {
+func TestTestEmbedder_Strategy(t *testing.T) {
+	e := NewTestEmbedder(32)
+	if e.Strategy() != "test" {
 		t.Errorf("expected strategy=dummy, got %s", e.Strategy())
 	}
 }
 
-func TestDummyEmbedder_DefaultDim(t *testing.T) {
-	e := NewDummyEmbedder(0)
+func TestTestEmbedder_DefaultDim(t *testing.T) {
+	e := NewTestEmbedder(0)
 	if e.Dim != 64 {
 		t.Errorf("expected default dim=64, got %d", e.Dim)
 	}
 }
 
-func TestDummyEmbedder_NormalizedOutput(t *testing.T) {
-	e := NewDummyEmbedder(64)
+func TestTestEmbedder_NormalizedOutput(t *testing.T) {
+	e := NewTestEmbedder(64)
 	vecs, err := e.Embed([]string{"test string"})
 	if err != nil {
 		t.Fatalf("Embed error: %v", err)
@@ -299,15 +299,15 @@ func TestCosineSimilarity_DifferentLengths(t *testing.T) {
 // ===========================================================================
 
 func TestEmbeddingMatcher_Strategy(t *testing.T) {
-	m := NewEmbeddingMatcher(NewDummyEmbedder(64))
-	want := "embedding:dummy"
+	m := NewEmbeddingMatcher(NewTestEmbedder(64))
+	want := "embedding:test"
 	if m.Strategy() != want {
 		t.Errorf("expected strategy=%s, got %s", want, m.Strategy())
 	}
 }
 
 func TestEmbeddingMatcher_Find(t *testing.T) {
-	m := NewEmbeddingMatcher(NewDummyEmbedder(64))
+	m := NewEmbeddingMatcher(NewTestEmbedder(64))
 
 	elements := []ElementDescriptor{
 		{Ref: "e0", Role: "button", Name: "Login"},
@@ -326,8 +326,8 @@ func TestEmbeddingMatcher_Find(t *testing.T) {
 	if result.ElementCount != 3 {
 		t.Errorf("expected ElementCount=3, got %d", result.ElementCount)
 	}
-	if result.Strategy != "embedding:dummy" {
-		t.Errorf("expected strategy=embedding:dummy, got %s", result.Strategy)
+	if result.Strategy != "embedding:test" {
+		t.Errorf("expected strategy=embedding:test, got %s", result.Strategy)
 	}
 	if len(result.Matches) == 0 {
 		t.Error("expected at least one match")
@@ -339,7 +339,7 @@ func TestEmbeddingMatcher_Find(t *testing.T) {
 }
 
 func TestEmbeddingMatcher_ThresholdFiltering(t *testing.T) {
-	m := NewEmbeddingMatcher(NewDummyEmbedder(64))
+	m := NewEmbeddingMatcher(NewTestEmbedder(64))
 
 	elements := []ElementDescriptor{
 		{Ref: "e0", Role: "button", Name: "Submit"},

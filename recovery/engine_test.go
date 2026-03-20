@@ -1,4 +1,4 @@
-package semantic
+package recovery
 
 import (
 	"context"
@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/pinchtab/semantic"
 )
 
 // ===========================================================================
@@ -161,7 +163,7 @@ func TestIntentCache_StoreAndLookup(t *testing.T) {
 
 	entry := IntentEntry{
 		Query:      "submit button",
-		Descriptor: ElementDescriptor{Ref: "e1", Role: "button", Name: "Submit"},
+		Descriptor: semantic.ElementDescriptor{Ref: "e1", Role: "button", Name: "Submit"},
 		Score:      0.95,
 		Confidence: "high",
 		Strategy:   "combined",
@@ -304,16 +306,16 @@ func TestIntentCache_DefaultValues(t *testing.T) {
 // RecoveryEngine tests
 // ===========================================================================
 
-// mockMatcher is a configurable test double for ElementMatcher.
+// mockMatcher is a configurable test double for semantic.ElementMatcher.
 type mockMatcher struct {
-	findFn func(ctx context.Context, query string, descs []ElementDescriptor, opts FindOptions) (FindResult, error)
+	findFn func(ctx context.Context, query string, descs []semantic.ElementDescriptor, opts semantic.FindOptions) (semantic.FindResult, error)
 }
 
-func (m *mockMatcher) Find(ctx context.Context, query string, descs []ElementDescriptor, opts FindOptions) (FindResult, error) {
+func (m *mockMatcher) Find(ctx context.Context, query string, descs []semantic.ElementDescriptor, opts semantic.FindOptions) (semantic.FindResult, error) {
 	if m.findFn != nil {
 		return m.findFn(ctx, query, descs, opts)
 	}
-	return FindResult{}, fmt.Errorf("mockMatcher: Find not configured")
+	return semantic.FindResult{}, fmt.Errorf("mockMatcher: Find not configured")
 }
 
 func (m *mockMatcher) Strategy() string { return "mock" }
@@ -379,18 +381,18 @@ func TestRecoveryEngine_Attempt_Success(t *testing.T) {
 	cache := NewIntentCache(100, 5*time.Minute)
 	cache.Store("tab1", "e5", IntentEntry{
 		Query:      "submit button",
-		Descriptor: ElementDescriptor{Ref: "e5", Role: "button", Name: "Submit"},
+		Descriptor: semantic.ElementDescriptor{Ref: "e5", Role: "button", Name: "Submit"},
 	})
 
 	matcher := &mockMatcher{
-		findFn: func(_ context.Context, query string, descs []ElementDescriptor, opts FindOptions) (FindResult, error) {
+		findFn: func(_ context.Context, query string, descs []semantic.ElementDescriptor, opts semantic.FindOptions) (semantic.FindResult, error) {
 			if query != "submit button" {
-				return FindResult{}, fmt.Errorf("unexpected query: %s", query)
+				return semantic.FindResult{}, fmt.Errorf("unexpected query: %s", query)
 			}
-			return FindResult{
+			return semantic.FindResult{
 				BestRef:   "e12",
 				BestScore: 0.88,
-				Matches: []ElementMatch{
+				Matches: []semantic.ElementMatch{
 					{Ref: "e12", Role: "button", Name: "Submit Form", Score: 0.88},
 				},
 				Strategy:     "combined",
@@ -414,8 +416,8 @@ func TestRecoveryEngine_Attempt_Success(t *testing.T) {
 			}
 			return 0, false
 		},
-		func(tabID string) []ElementDescriptor {
-			return []ElementDescriptor{
+		func(tabID string) []semantic.ElementDescriptor {
+			return []semantic.ElementDescriptor{
 				{Ref: "e10", Role: "link", Name: "Home"},
 				{Ref: "e12", Role: "button", Name: "Submit Form"},
 				{Ref: "e14", Role: "textbox", Name: "Email"},
@@ -473,8 +475,8 @@ func TestRecoveryEngine_Attempt_ScoreBelowThreshold(t *testing.T) {
 	})
 
 	matcher := &mockMatcher{
-		findFn: func(_ context.Context, _ string, _ []ElementDescriptor, _ FindOptions) (FindResult, error) {
-			return FindResult{
+		findFn: func(_ context.Context, _ string, _ []semantic.ElementDescriptor, _ semantic.FindOptions) (semantic.FindResult, error) {
+			return semantic.FindResult{
 				BestRef:   "e2",
 				BestScore: 0.25, // Below default MinConfidence (0.4)
 			}, nil
@@ -487,8 +489,8 @@ func TestRecoveryEngine_Attempt_ScoreBelowThreshold(t *testing.T) {
 		cache,
 		func(_ context.Context, _ string) error { return nil },
 		func(_, _ string) (int64, bool) { return 10, true },
-		func(_ string) []ElementDescriptor {
-			return []ElementDescriptor{{Ref: "e2", Role: "button", Name: "Cancel"}}
+		func(_ string) []semantic.ElementDescriptor {
+			return []semantic.ElementDescriptor{{Ref: "e2", Role: "button", Name: "Cancel"}}
 		},
 	)
 
@@ -515,8 +517,8 @@ func TestRecoveryEngine_Attempt_ActionFailsOnReMatch(t *testing.T) {
 	cache.Store("tab1", "e1", IntentEntry{Query: "login button"})
 
 	matcher := &mockMatcher{
-		findFn: func(_ context.Context, _ string, _ []ElementDescriptor, _ FindOptions) (FindResult, error) {
-			return FindResult{
+		findFn: func(_ context.Context, _ string, _ []semantic.ElementDescriptor, _ semantic.FindOptions) (semantic.FindResult, error) {
+			return semantic.FindResult{
 				BestRef:   "e8",
 				BestScore: 0.9,
 				Strategy:  "combined",
@@ -535,8 +537,8 @@ func TestRecoveryEngine_Attempt_ActionFailsOnReMatch(t *testing.T) {
 			}
 			return 0, false
 		},
-		func(_ string) []ElementDescriptor {
-			return []ElementDescriptor{{Ref: "e8", Role: "button", Name: "Login"}}
+		func(_ string) []semantic.ElementDescriptor {
+			return []semantic.ElementDescriptor{{Ref: "e8", Role: "button", Name: "Login"}}
 		},
 	)
 
@@ -564,7 +566,7 @@ func TestRecoveryEngine_Attempt_EmptySnapshotAfterRefresh(t *testing.T) {
 		cache,
 		func(_ context.Context, _ string) error { return nil },
 		nil,
-		func(_ string) []ElementDescriptor { return nil }, // empty snapshot
+		func(_ string) []semantic.ElementDescriptor { return nil }, // empty snapshot
 	)
 
 	rr, _, err := re.Attempt(context.Background(), "tab1", "e1", "click", nil)
@@ -602,8 +604,8 @@ func TestRecoveryEngine_Attempt_MatcherError(t *testing.T) {
 	cache.Store("tab1", "e1", IntentEntry{Query: "submit"})
 
 	matcher := &mockMatcher{
-		findFn: func(_ context.Context, _ string, _ []ElementDescriptor, _ FindOptions) (FindResult, error) {
-			return FindResult{}, fmt.Errorf("internal matcher error")
+		findFn: func(_ context.Context, _ string, _ []semantic.ElementDescriptor, _ semantic.FindOptions) (semantic.FindResult, error) {
+			return semantic.FindResult{}, fmt.Errorf("internal matcher error")
 		},
 	}
 
@@ -613,8 +615,8 @@ func TestRecoveryEngine_Attempt_MatcherError(t *testing.T) {
 		cache,
 		func(_ context.Context, _ string) error { return nil },
 		nil,
-		func(_ string) []ElementDescriptor {
-			return []ElementDescriptor{{Ref: "e2", Role: "button", Name: "Submit"}}
+		func(_ string) []semantic.ElementDescriptor {
+			return []semantic.ElementDescriptor{{Ref: "e2", Role: "button", Name: "Submit"}}
 		},
 	)
 
@@ -632,8 +634,8 @@ func TestRecoveryEngine_Attempt_NewRefNotInCache(t *testing.T) {
 	cache.Store("tab1", "e1", IntentEntry{Query: "submit"})
 
 	matcher := &mockMatcher{
-		findFn: func(_ context.Context, _ string, _ []ElementDescriptor, _ FindOptions) (FindResult, error) {
-			return FindResult{BestRef: "e99", BestScore: 0.9, Strategy: "combined"}, nil
+		findFn: func(_ context.Context, _ string, _ []semantic.ElementDescriptor, _ semantic.FindOptions) (semantic.FindResult, error) {
+			return semantic.FindResult{BestRef: "e99", BestScore: 0.9, Strategy: "combined"}, nil
 		},
 	}
 
@@ -643,8 +645,8 @@ func TestRecoveryEngine_Attempt_NewRefNotInCache(t *testing.T) {
 		cache,
 		func(_ context.Context, _ string) error { return nil },
 		func(_, _ string) (int64, bool) { return 0, false }, // ref not in cache
-		func(_ string) []ElementDescriptor {
-			return []ElementDescriptor{{Ref: "e99", Role: "button", Name: "Submit"}}
+		func(_ string) []semantic.ElementDescriptor {
+			return []semantic.ElementDescriptor{{Ref: "e99", Role: "button", Name: "Submit"}}
 		},
 	)
 
@@ -661,12 +663,12 @@ func TestRecoveryEngine_AttemptWithClassification(t *testing.T) {
 	cache := NewIntentCache(100, 5*time.Minute)
 	cache.Store("tab1", "e3", IntentEntry{
 		Query:      "email input",
-		Descriptor: ElementDescriptor{Ref: "e3", Role: "textbox", Name: "Email"},
+		Descriptor: semantic.ElementDescriptor{Ref: "e3", Role: "textbox", Name: "Email"},
 	})
 
 	matcher := &mockMatcher{
-		findFn: func(_ context.Context, query string, _ []ElementDescriptor, _ FindOptions) (FindResult, error) {
-			return FindResult{
+		findFn: func(_ context.Context, query string, _ []semantic.ElementDescriptor, _ semantic.FindOptions) (semantic.FindResult, error) {
+			return semantic.FindResult{
 				BestRef:   "e20",
 				BestScore: 0.85,
 				Strategy:  "combined",
@@ -685,8 +687,8 @@ func TestRecoveryEngine_AttemptWithClassification(t *testing.T) {
 			}
 			return 0, false
 		},
-		func(_ string) []ElementDescriptor {
-			return []ElementDescriptor{{Ref: "e20", Role: "textbox", Name: "Email Address"}}
+		func(_ string) []semantic.ElementDescriptor {
+			return []semantic.ElementDescriptor{{Ref: "e20", Role: "textbox", Name: "Email Address"}}
 		},
 	)
 
@@ -717,8 +719,8 @@ func TestRecoveryEngine_PreferHighConfidence_RejectsLow(t *testing.T) {
 	cache.Store("tab1", "e1", IntentEntry{Query: "submit"})
 
 	matcher := &mockMatcher{
-		findFn: func(_ context.Context, _ string, _ []ElementDescriptor, _ FindOptions) (FindResult, error) {
-			return FindResult{
+		findFn: func(_ context.Context, _ string, _ []semantic.ElementDescriptor, _ semantic.FindOptions) (semantic.FindResult, error) {
+			return semantic.FindResult{
 				BestRef:   "e2",
 				BestScore: 0.5, // CalibrateConfidence(0.5) = "low"
 				Strategy:  "combined",
@@ -735,8 +737,8 @@ func TestRecoveryEngine_PreferHighConfidence_RejectsLow(t *testing.T) {
 		cache,
 		func(_ context.Context, _ string) error { return nil },
 		func(_, _ string) (int64, bool) { return 10, true },
-		func(_ string) []ElementDescriptor {
-			return []ElementDescriptor{{Ref: "e2", Role: "button", Name: "Submit"}}
+		func(_ string) []semantic.ElementDescriptor {
+			return []semantic.ElementDescriptor{{Ref: "e2", Role: "button", Name: "Submit"}}
 		},
 	)
 
@@ -756,14 +758,14 @@ func TestRecoveryEngine_ReconstructQuery_FallbackToComposite(t *testing.T) {
 	cache := NewIntentCache(100, 5*time.Minute)
 	// Store entry with no Query, only a descriptor.
 	cache.Store("tab1", "e1", IntentEntry{
-		Descriptor: ElementDescriptor{Ref: "e1", Role: "button", Name: "Sign In"},
+		Descriptor: semantic.ElementDescriptor{Ref: "e1", Role: "button", Name: "Sign In"},
 	})
 
 	querySeen := ""
 	matcher := &mockMatcher{
-		findFn: func(_ context.Context, query string, _ []ElementDescriptor, _ FindOptions) (FindResult, error) {
+		findFn: func(_ context.Context, query string, _ []semantic.ElementDescriptor, _ semantic.FindOptions) (semantic.FindResult, error) {
 			querySeen = query
-			return FindResult{
+			return semantic.FindResult{
 				BestRef:   "e10",
 				BestScore: 0.9,
 				Strategy:  "combined",
@@ -782,8 +784,8 @@ func TestRecoveryEngine_ReconstructQuery_FallbackToComposite(t *testing.T) {
 			}
 			return 0, false
 		},
-		func(_ string) []ElementDescriptor {
-			return []ElementDescriptor{{Ref: "e10", Role: "button", Name: "Sign In"}}
+		func(_ string) []semantic.ElementDescriptor {
+			return []semantic.ElementDescriptor{{Ref: "e10", Role: "button", Name: "Sign In"}}
 		},
 	)
 
@@ -794,7 +796,7 @@ func TestRecoveryEngine_ReconstructQuery_FallbackToComposite(t *testing.T) {
 	)
 
 	// The query should be the Composite() of the descriptor: "button: Sign In"
-	desc := ElementDescriptor{Ref: "e1", Role: "button", Name: "Sign In"}
+	desc := semantic.ElementDescriptor{Ref: "e1", Role: "button", Name: "Sign In"}
 	expected := desc.Composite()
 	if querySeen != expected {
 		t.Errorf("reconstructed query = %q, want %q", querySeen, expected)
@@ -812,7 +814,7 @@ func TestRecoveryEngine_RecordIntent(t *testing.T) {
 
 	re.RecordIntent("tab1", "e5", IntentEntry{
 		Query:      "search box",
-		Descriptor: ElementDescriptor{Ref: "e5", Role: "textbox", Name: "Search"},
+		Descriptor: semantic.ElementDescriptor{Ref: "e5", Role: "textbox", Name: "Search"},
 	})
 
 	entry, ok := cache.Lookup("tab1", "e5")
@@ -843,14 +845,14 @@ func TestRecovery_Scenario_SPAFormReRender(t *testing.T) {
 	// Simulate /find having cached the intent for "Submit" button.
 	cache.Store("tab-react-app", "e15", IntentEntry{
 		Query:      "submit button",
-		Descriptor: ElementDescriptor{Ref: "e15", Role: "button", Name: "Submit"},
+		Descriptor: semantic.ElementDescriptor{Ref: "e15", Role: "button", Name: "Submit"},
 		Score:      0.95,
 		Confidence: "high",
 		Strategy:   "combined",
 	})
 
 	// After re-render, the fresh snapshot has different refs.
-	freshDescs := []ElementDescriptor{
+	freshDescs := []semantic.ElementDescriptor{
 		{Ref: "e30", Role: "heading", Name: "Contact Form"},
 		{Ref: "e31", Role: "textbox", Name: "Full Name"},
 		{Ref: "e32", Role: "textbox", Name: "Email Address"},
@@ -859,7 +861,7 @@ func TestRecovery_Scenario_SPAFormReRender(t *testing.T) {
 		{Ref: "e35", Role: "button", Name: "Cancel"},
 	}
 
-	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
+	matcher := semantic.NewCombinedMatcher(semantic.NewHashingEmbedder(128))
 
 	re := NewRecoveryEngine(
 		DefaultRecoveryConfig(),
@@ -874,7 +876,7 @@ func TestRecovery_Scenario_SPAFormReRender(t *testing.T) {
 			nid, ok := nodeMap[ref]
 			return nid, ok
 		},
-		func(_ string) []ElementDescriptor { return freshDescs },
+		func(_ string) []semantic.ElementDescriptor { return freshDescs },
 	)
 
 	err := fmt.Errorf("could not find node with id 15")
@@ -917,12 +919,12 @@ func TestRecovery_Scenario_EcommerceCheckout(t *testing.T) {
 	cache := NewIntentCache(100, 5*time.Minute)
 	cache.Store("tab-shop", "e50", IntentEntry{
 		Query:      "place order button",
-		Descriptor: ElementDescriptor{Ref: "e50", Role: "button", Name: "Place Order"},
+		Descriptor: semantic.ElementDescriptor{Ref: "e50", Role: "button", Name: "Place Order"},
 		Score:      0.92,
 		Confidence: "high",
 	})
 
-	freshDescs := []ElementDescriptor{
+	freshDescs := []semantic.ElementDescriptor{
 		{Ref: "e70", Role: "heading", Name: "Your Cart (3 items)"},
 		{Ref: "e71", Role: "button", Name: "Update Cart"},
 		{Ref: "e72", Role: "button", Name: "Apply Coupon"},
@@ -930,7 +932,7 @@ func TestRecovery_Scenario_EcommerceCheckout(t *testing.T) {
 		{Ref: "e74", Role: "link", Name: "Continue Shopping"},
 	}
 
-	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
+	matcher := semantic.NewCombinedMatcher(semantic.NewHashingEmbedder(128))
 
 	re := NewRecoveryEngine(
 		DefaultRecoveryConfig(),
@@ -943,7 +945,7 @@ func TestRecovery_Scenario_EcommerceCheckout(t *testing.T) {
 			}
 			return 0, false
 		},
-		func(_ string) []ElementDescriptor { return freshDescs },
+		func(_ string) []semantic.ElementDescriptor { return freshDescs },
 	)
 
 	rr, res, err := re.AttemptWithClassification(
@@ -974,12 +976,12 @@ func TestRecovery_Scenario_LoginFormNavigation(t *testing.T) {
 	cache := NewIntentCache(100, 5*time.Minute)
 	cache.Store("tab-login", "e20", IntentEntry{
 		Query: "password input field",
-		Descriptor: ElementDescriptor{
+		Descriptor: semantic.ElementDescriptor{
 			Ref: "e20", Role: "textbox", Name: "Password",
 		},
 	})
 
-	freshDescs := []ElementDescriptor{
+	freshDescs := []semantic.ElementDescriptor{
 		{Ref: "e40", Role: "heading", Name: "Log In"},
 		{Ref: "e41", Role: "textbox", Name: "Username or Email"},
 		{Ref: "e42", Role: "textbox", Name: "Password"},
@@ -987,7 +989,7 @@ func TestRecovery_Scenario_LoginFormNavigation(t *testing.T) {
 		{Ref: "e44", Role: "link", Name: "Forgot Password?"},
 	}
 
-	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
+	matcher := semantic.NewCombinedMatcher(semantic.NewHashingEmbedder(128))
 
 	re := NewRecoveryEngine(
 		DefaultRecoveryConfig(),
@@ -999,7 +1001,7 @@ func TestRecovery_Scenario_LoginFormNavigation(t *testing.T) {
 			nid, ok := m[ref]
 			return nid, ok
 		},
-		func(_ string) []ElementDescriptor { return freshDescs },
+		func(_ string) []semantic.ElementDescriptor { return freshDescs },
 	)
 
 	rr, res, err := re.AttemptWithClassification(
@@ -1033,16 +1035,16 @@ func TestRecovery_Scenario_GoogleSearchButton(t *testing.T) {
 	cache := NewIntentCache(100, 5*time.Minute)
 	cache.Store("tab-google", "e10", IntentEntry{
 		Query:      "google search button",
-		Descriptor: ElementDescriptor{Ref: "e10", Role: "button", Name: "Google Search"},
+		Descriptor: semantic.ElementDescriptor{Ref: "e10", Role: "button", Name: "Google Search"},
 	})
 
-	freshDescs := []ElementDescriptor{
+	freshDescs := []semantic.ElementDescriptor{
 		{Ref: "e80", Role: "textbox", Name: "Search"},
 		{Ref: "e81", Role: "button", Name: "Google Search"},
 		{Ref: "e82", Role: "button", Name: "I'm Feeling Lucky"},
 	}
 
-	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
+	matcher := semantic.NewCombinedMatcher(semantic.NewHashingEmbedder(128))
 
 	re := NewRecoveryEngine(
 		DefaultRecoveryConfig(),
@@ -1055,7 +1057,7 @@ func TestRecovery_Scenario_GoogleSearchButton(t *testing.T) {
 			}
 			return 0, false
 		},
-		func(_ string) []ElementDescriptor { return freshDescs },
+		func(_ string) []semantic.ElementDescriptor { return freshDescs },
 	)
 
 	rr, _, err := re.AttemptWithClassification(
@@ -1083,12 +1085,12 @@ func TestRecovery_Scenario_DashboardSimilarButtons(t *testing.T) {
 	cache := NewIntentCache(100, 5*time.Minute)
 	cache.Store("tab-dash", "e5", IntentEntry{
 		Query: "delete account",
-		Descriptor: ElementDescriptor{
+		Descriptor: semantic.ElementDescriptor{
 			Ref: "e5", Role: "button", Name: "Delete Account",
 		},
 	})
 
-	freshDescs := []ElementDescriptor{
+	freshDescs := []semantic.ElementDescriptor{
 		{Ref: "e100", Role: "button", Name: "Delete Comment"},
 		{Ref: "e101", Role: "button", Name: "Delete Post"},
 		{Ref: "e102", Role: "button", Name: "Delete Account"},
@@ -1096,7 +1098,7 @@ func TestRecovery_Scenario_DashboardSimilarButtons(t *testing.T) {
 		{Ref: "e104", Role: "button", Name: "Save Settings"},
 	}
 
-	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
+	matcher := semantic.NewCombinedMatcher(semantic.NewHashingEmbedder(128))
 
 	re := NewRecoveryEngine(
 		DefaultRecoveryConfig(),
@@ -1110,7 +1112,7 @@ func TestRecovery_Scenario_DashboardSimilarButtons(t *testing.T) {
 			nid, ok := m[ref]
 			return nid, ok
 		},
-		func(_ string) []ElementDescriptor { return freshDescs },
+		func(_ string) []semantic.ElementDescriptor { return freshDescs },
 	)
 
 	rr, _, err := re.AttemptWithClassification(
@@ -1141,10 +1143,10 @@ func TestRecovery_Scenario_CMSNavigationLink(t *testing.T) {
 	cache := NewIntentCache(100, 5*time.Minute)
 	// No query — only descriptor. Recovery falls back to Composite().
 	cache.Store("tab-cms", "e7", IntentEntry{
-		Descriptor: ElementDescriptor{Ref: "e7", Role: "link", Name: "About Us"},
+		Descriptor: semantic.ElementDescriptor{Ref: "e7", Role: "link", Name: "About Us"},
 	})
 
-	freshDescs := []ElementDescriptor{
+	freshDescs := []semantic.ElementDescriptor{
 		{Ref: "e200", Role: "link", Name: "Home"},
 		{Ref: "e201", Role: "link", Name: "Services"},
 		{Ref: "e202", Role: "link", Name: "About Us"},
@@ -1152,7 +1154,7 @@ func TestRecovery_Scenario_CMSNavigationLink(t *testing.T) {
 		{Ref: "e204", Role: "link", Name: "Blog"},
 	}
 
-	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
+	matcher := semantic.NewCombinedMatcher(semantic.NewHashingEmbedder(128))
 
 	re := NewRecoveryEngine(
 		DefaultRecoveryConfig(),
@@ -1166,7 +1168,7 @@ func TestRecovery_Scenario_CMSNavigationLink(t *testing.T) {
 			nid, ok := m[ref]
 			return nid, ok
 		},
-		func(_ string) []ElementDescriptor { return freshDescs },
+		func(_ string) []semantic.ElementDescriptor { return freshDescs },
 	)
 
 	rr, _, err := re.AttemptWithClassification(
@@ -1216,14 +1218,14 @@ func TestRecovery_Scenario_MultipleRetries(t *testing.T) {
 
 	attempt := 0
 	matcher := &mockMatcher{
-		findFn: func(_ context.Context, _ string, _ []ElementDescriptor, _ FindOptions) (FindResult, error) {
+		findFn: func(_ context.Context, _ string, _ []semantic.ElementDescriptor, _ semantic.FindOptions) (semantic.FindResult, error) {
 			attempt++
 			if attempt == 1 {
 				// First attempt: score too low.
-				return FindResult{BestRef: "e10", BestScore: 0.2}, nil
+				return semantic.FindResult{BestRef: "e10", BestScore: 0.2}, nil
 			}
 			// Second attempt: match found.
-			return FindResult{BestRef: "e11", BestScore: 0.95, Strategy: "combined"}, nil
+			return semantic.FindResult{BestRef: "e11", BestScore: 0.95, Strategy: "combined"}, nil
 		},
 	}
 
@@ -1241,8 +1243,8 @@ func TestRecovery_Scenario_MultipleRetries(t *testing.T) {
 			}
 			return 0, false
 		},
-		func(_ string) []ElementDescriptor {
-			return []ElementDescriptor{{Ref: "e11", Role: "button", Name: "Save"}}
+		func(_ string) []semantic.ElementDescriptor {
+			return []semantic.ElementDescriptor{{Ref: "e11", Role: "button", Name: "Save"}}
 		},
 	)
 

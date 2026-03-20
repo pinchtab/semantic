@@ -6,6 +6,71 @@ import (
 	"sort"
 )
 
+// Embedder is the interface for converting text into dense vector
+// representations. Implementations include HashingEmbedder (zero deps,
+// feature hashing) and TestEmbedder (deterministic, for testing).
+//
+// Custom implementations can be provided for real ML models
+// (sentence-transformers, OpenAI, etc.).
+type Embedder interface {
+	// Embed converts a batch of text strings into float32 vectors.
+	// All returned vectors must have the same dimensionality.
+	Embed(texts []string) ([][]float32, error)
+
+	// Strategy returns the name of the embedding strategy (e.g. "hashing", "openai").
+	Strategy() string
+}
+
+// TestEmbedder generates deterministic fixed-dimension vectors using a
+// simple hash of each input string. Useful for testing without real ML
+// dependencies. For production use, prefer HashingEmbedder.
+type TestEmbedder struct {
+	Dim int // vector dimensionality (default 64)
+}
+
+// NewTestEmbedder creates a TestEmbedder with the given dimensionality.
+func NewTestEmbedder(dim int) *TestEmbedder {
+	if dim <= 0 {
+		dim = 64
+	}
+	return &TestEmbedder{Dim: dim}
+}
+
+// Strategy returns "test".
+func (d *TestEmbedder) Strategy() string { return "test" }
+
+// Embed generates deterministic pseudo-vectors by hashing each character
+// of the input string into the vector dimensions.
+func (d *TestEmbedder) Embed(texts []string) ([][]float32, error) {
+	result := make([][]float32, len(texts))
+	for i, text := range texts {
+		result[i] = d.hashVec(text)
+	}
+	return result, nil
+}
+
+func (d *TestEmbedder) hashVec(s string) []float32 {
+	vec := make([]float32, d.Dim)
+	for i, c := range s {
+		idx := (i*31 + int(c)) % d.Dim
+		if idx < 0 {
+			idx = -idx
+		}
+		vec[idx] += float32(c) / 128.0
+	}
+	var norm float64
+	for _, v := range vec {
+		norm += float64(v) * float64(v)
+	}
+	if norm > 0 {
+		invNorm := float32(1.0 / math.Sqrt(norm))
+		for j := range vec {
+			vec[j] *= invNorm
+		}
+	}
+	return vec
+}
+
 // EmbeddingMatcher implements ElementMatcher using vector embeddings
 // and cosine similarity. It delegates text → vector conversion to the
 // provided Embedder implementation.

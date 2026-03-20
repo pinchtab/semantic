@@ -1,9 +1,11 @@
-package semantic
+package recovery
 
 import (
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/pinchtab/semantic"
 )
 
 // RecoveryConfig tunes the self-healing behaviour.
@@ -82,10 +84,10 @@ type NodeIDResolver func(tabID, ref string) (int64, bool)
 // This is the same signature as Bridge.ExecuteAction.
 type ActionExecutor func(ctx context.Context, kind string, nodeID int64) (map[string]any, error)
 
-// DescriptorBuilder converts raw snapshot data into ElementDescriptors.
+// DescriptorBuilder converts raw snapshot data into semantic.ElementDescriptors.
 // The handler provides this so the recovery engine stays decoupled from
 // bridge internals.
-type DescriptorBuilder func(tabID string) []ElementDescriptor
+type DescriptorBuilder func(tabID string) []semantic.ElementDescriptor
 
 // RecoveryEngine orchestrates self-healing when an action fails because
 // the target element's ref is stale or the DOM has changed.
@@ -99,7 +101,7 @@ type DescriptorBuilder func(tabID string) []ElementDescriptor
 //	}
 type RecoveryEngine struct {
 	Config      RecoveryConfig
-	Matcher     ElementMatcher
+	Matcher     semantic.ElementMatcher
 	IntentCache *IntentCache
 	Refresh     SnapshotRefresher
 	ResolveNode NodeIDResolver
@@ -109,7 +111,7 @@ type RecoveryEngine struct {
 // NewRecoveryEngine creates a RecoveryEngine with the given dependencies.
 func NewRecoveryEngine(
 	cfg RecoveryConfig,
-	matcher ElementMatcher,
+	matcher semantic.ElementMatcher,
 	cache *IntentCache,
 	refresh SnapshotRefresher,
 	resolve NodeIDResolver,
@@ -199,7 +201,7 @@ func (re *RecoveryEngine) Attempt(
 		}
 
 		// 5. Run the semantic matcher.
-		result, err := re.Matcher.Find(ctx, query, descs, FindOptions{
+		result, err := re.Matcher.Find(ctx, query, descs, semantic.FindOptions{
 			Threshold: re.Config.MinConfidence,
 			TopK:      1,
 		})
@@ -214,7 +216,7 @@ func (re *RecoveryEngine) Attempt(
 		}
 
 		// Confidence gate.
-		conf := CalibrateConfidence(result.BestScore)
+		conf := semantic.CalibrateConfidence(result.BestScore)
 		if re.Config.PreferHighConfidence && conf == "low" {
 			lastErr = fmt.Errorf("match confidence too low: %s (%.2f)",
 				conf, result.BestScore)
@@ -299,7 +301,7 @@ func (re *RecoveryEngine) AttemptWithClassification(
 			continue
 		}
 
-		result, err := re.Matcher.Find(ctx, query, descs, FindOptions{
+		result, err := re.Matcher.Find(ctx, query, descs, semantic.FindOptions{
 			Threshold: re.Config.MinConfidence,
 			TopK:      1,
 		})
@@ -313,7 +315,7 @@ func (re *RecoveryEngine) AttemptWithClassification(
 			continue
 		}
 
-		conf := CalibrateConfidence(result.BestScore)
+		conf := semantic.CalibrateConfidence(result.BestScore)
 		if re.Config.PreferHighConfidence && conf == "low" {
 			lastErr = fmt.Errorf("match confidence too low: %s (%.2f)",
 				conf, result.BestScore)
