@@ -47,26 +47,37 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []Ele
 		opts.TopK = 3
 	}
 
-	// Per-request weight overrides; fall back to matcher defaults.
-	lexW := c.LexicalWeight
-	embW := c.EmbeddingWeight
-	if opts.lexicalWeight > 0 || opts.embeddingWeight > 0 {
-		lexW = opts.lexicalWeight
-		embW = opts.embeddingWeight
+	lexW, embW := c.weights(opts)
+
+	lexResult, embResult, err := c.runBoth(ctx, query, elements, opts)
+	if err != nil {
+		return FindResult{}, err
 	}
 
-	// Use a lower internal threshold to capture candidates from both matchers
-	// that might miss the final threshold individually but pass when combined.
+	return c.mergeResults(lexResult, embResult, elements, opts, lexW, embW), nil
+}
+
+// weights returns the lexical and embedding weights for this request.
+func (c *CombinedMatcher) weights(opts FindOptions) (float64, float64) {
+	if opts.lexicalWeight > 0 || opts.embeddingWeight > 0 {
+		return opts.lexicalWeight, opts.embeddingWeight
+	}
+	return c.LexicalWeight, c.EmbeddingWeight
+}
+
+// matcherResult pairs a FindResult with its error.
+type matcherResult struct {
+	result FindResult
+	err    error
+}
+
+// runBoth executes lexical and embedding matchers concurrently.
+func (c *CombinedMatcher) runBoth(ctx context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, FindResult, error) {
 	internalOpts := FindOptions{
 		Threshold: opts.Threshold * 0.5,
-		TopK:      len(elements), // get all candidates internally
+		TopK:      len(elements),
 	}
 
-	// Run both matchers concurrently.
-	type matcherResult struct {
-		result FindResult
-		err    error
-	}
 	lexCh := make(chan matcherResult, 1)
 	embCh := make(chan matcherResult, 1)
 
@@ -93,31 +104,36 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []Ele
 	embRes := <-embCh
 
 	if lexRes.err != nil {
-		return FindResult{}, lexRes.err
+		return FindResult{}, FindResult{}, lexRes.err
 	}
 	if embRes.err != nil {
-		return FindResult{}, embRes.err
+		return FindResult{}, FindResult{}, embRes.err
 	}
+	return lexRes.result, embRes.result, nil
+}
 
-	// Build ref → score maps.
-	lexScores := make(map[string]float64, len(lexRes.result.Matches))
-	for _, m := range lexRes.result.Matches {
-		lexScores[m.Ref] = m.Score
-	}
+// scored holds a candidate element with its fused score.
+type scored struct {
+	ref      string
+	score    float64
+	el       ElementDescriptor
+	lexScore float64
+	embScore float64
+}
 
-	embScores := make(map[string]float64, len(embRes.result.Matches))
-	for _, m := range embRes.result.Matches {
-		embScores[m.Ref] = m.Score
-	}
+// mergeResults fuses lexical and embedding scores by ref, sorts, and
+// returns the top-K matches above threshold.
+func (c *CombinedMatcher) mergeResults(lexResult, embResult FindResult, elements []ElementDescriptor, opts FindOptions, lexW, embW float64) FindResult {
+	lexScores := scoreMap(lexResult.Matches)
+	embScores := scoreMap(embResult.Matches)
 
-	// Build element lookup by ref for metadata.
 	refToElem := make(map[string]ElementDescriptor, len(elements))
 	for _, el := range elements {
 		refToElem[el.Ref] = el
 	}
 
-	// Merge: collect all refs that appeared in either matcher.
-	allRefs := make(map[string]bool)
+	// Collect all refs from either matcher.
+	allRefs := make(map[string]bool, len(lexScores)+len(embScores))
 	for ref := range lexScores {
 		allRefs[ref] = true
 	}
@@ -125,38 +141,22 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []Ele
 		allRefs[ref] = true
 	}
 
-	type scored struct {
-		ref      string
-		score    float64
-		el       ElementDescriptor
-		lexScore float64
-		embScore float64
-	}
-
-	var candidates []scored
+	candidates := make([]scored, 0, len(allRefs))
 	for ref := range allRefs {
-		ls := lexScores[ref]
-		es := embScores[ref]
-		combined := lexW*ls + embW*es
+		combined := lexW*lexScores[ref] + embW*embScores[ref]
 		if combined >= opts.Threshold {
-			s := scored{
-				ref:   ref,
-				score: combined,
-				el:    refToElem[ref],
-			}
+			s := scored{ref: ref, score: combined, el: refToElem[ref]}
 			if opts.Explain {
-				s.lexScore = lexW * ls
-				s.embScore = embW * es
+				s.lexScore = lexW * lexScores[ref]
+				s.embScore = embW * embScores[ref]
 			}
 			candidates = append(candidates, s)
 		}
 	}
 
-	// Sort descending by combined score.
 	sort.Slice(candidates, func(i, j int) bool {
 		return candidates[i].score > candidates[j].score
 	})
-
 	if len(candidates) > opts.TopK {
 		candidates = candidates[:opts.TopK]
 	}
@@ -165,7 +165,6 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []Ele
 		Strategy:     c.Strategy(),
 		ElementCount: len(elements),
 	}
-
 	for _, cand := range candidates {
 		em := ElementMatch{
 			Ref:   cand.ref,
@@ -182,11 +181,18 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []Ele
 		}
 		result.Matches = append(result.Matches, em)
 	}
-
 	if len(result.Matches) > 0 {
 		result.BestRef = result.Matches[0].Ref
 		result.BestScore = result.Matches[0].Score
 	}
+	return result
+}
 
-	return result, nil
+// scoreMap converts a slice of ElementMatch into a ref → score map.
+func scoreMap(matches []ElementMatch) map[string]float64 {
+	m := make(map[string]float64, len(matches))
+	for _, match := range matches {
+		m[match.Ref] = match.Score
+	}
+	return m
 }

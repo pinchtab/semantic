@@ -63,6 +63,39 @@ func (f FailureType) Recoverable() bool {
 	}
 }
 
+// classificationRule maps a set of error patterns to a FailureType.
+type classificationRule struct {
+	failureType FailureType
+	patterns    []string
+}
+
+// classificationRules is the ordered pattern table for error classification.
+// Rules are checked top-to-bottom; the first match wins.
+var classificationRules = []classificationRule{
+	{FailureElementNotFound, []string{
+		"could not find node", "node with given id", "no node",
+		"ref not found", "node not found", "backend node id", "no node with given",
+	}},
+	{FailureElementStale, []string{
+		"stale", "orphan", "object reference", "node is detached",
+		"execution context was destroyed", "context was destroyed", "target closed",
+	}},
+	{FailureElementNotInteractable, []string{
+		"not interactable", "not clickable", "element is not visible",
+		"not visible", "element is disabled", "overlapped", "overlapping",
+		"obscured", "pointer-events: none", "cannot focus",
+		"outside of the viewport", "outside the viewport",
+	}},
+	{FailureNavigation, []string{
+		"navigat", "page crashed", "page was destroyed",
+		"inspected target", "frame was detached", "frame detached",
+	}},
+	{FailureNetwork, []string{
+		"net::", "connection refused", "could not connect",
+		"timeout", "deadline exceeded", "websocket", "eof", "broken pipe",
+	}},
+}
+
 // ClassifyFailure inspects an error string and returns the most likely
 // FailureType. The classification is intentionally broad — it matches
 // error messages produced by Chrome DevTools Protocol, chromedp, and
@@ -74,94 +107,18 @@ func ClassifyFailure(err error) FailureType {
 	}
 	e := strings.ToLower(err.Error())
 
-	// Element not found patterns.
-	notFoundPatterns := []string{
-		"could not find node",
-		"node with given id",
-		"no node",
-		"ref not found",
-		"node not found",
-		"backend node id",
-		"no node with given",
-	}
-	for _, p := range notFoundPatterns {
-		if strings.Contains(e, p) {
-			return FailureElementNotFound
+	for _, rule := range classificationRules {
+		for _, p := range rule.patterns {
+			if strings.Contains(e, p) {
+				return rule.failureType
+			}
 		}
 	}
 
-	// Stale element / detached DOM patterns.
-	// NOTE: "frame" detachment is classified as navigation, not stale.
-	stalePatterns := []string{
-		"stale",
-		"orphan",
-		"object reference",
-		"node is detached",
-		"execution context was destroyed",
-		"context was destroyed",
-		"target closed",
-	}
-	for _, p := range stalePatterns {
-		if strings.Contains(e, p) {
-			return FailureElementStale
-		}
-	}
-	// "detached" alone is stale, but "frame" + "detached" is navigation.
+	// Special case: "detached" alone is stale, but "frame" + "detached"
+	// is navigation (already caught by the navigation rule above).
 	if strings.Contains(e, "detached") && !strings.Contains(e, "frame") {
 		return FailureElementStale
-	}
-
-	// Not interactable patterns.
-	interactablePatterns := []string{
-		"not interactable",
-		"not clickable",
-		"element is not visible",
-		"not visible",
-		"element is disabled",
-		"overlapped",
-		"overlapping",
-		"obscured",
-		"pointer-events: none",
-		"cannot focus",
-		"outside of the viewport",
-		"outside the viewport",
-	}
-	for _, p := range interactablePatterns {
-		if strings.Contains(e, p) {
-			return FailureElementNotInteractable
-		}
-	}
-
-	// Navigation patterns.
-	navPatterns := []string{
-		"navigat",
-		"page crashed",
-		"page was destroyed",
-		"inspected target",
-		"frame was detached",
-		"frame detached",
-	}
-	for _, p := range navPatterns {
-		if strings.Contains(e, p) {
-			return FailureNavigation
-		}
-	}
-
-	// Network patterns.
-	networkPatterns := []string{
-		"net::",
-		"connection refused",
-		"could not connect",
-		"timeout",
-		"deadline exceeded",
-		"websocket",
-		"eof",
-		"broken pipe",
-	}
-	for _, p := range networkPatterns {
-		if strings.Contains(e, p) {
-			return FailureNetwork
-		}
 	}
 
 	return FailureUnknown
