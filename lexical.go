@@ -46,7 +46,7 @@ func (m *LexicalMatcher) Find(_ context.Context, query string, elements []Elemen
 	var candidates []scored
 	for _, el := range elements {
 		composite := el.Composite()
-		score := LexicalScore(query, composite)
+		score := lexicalScore(query, composite)
 		if score >= opts.Threshold {
 			candidates = append(candidates, scored{desc: el, score: score})
 		}
@@ -127,7 +127,7 @@ var roleKeywords = map[string]bool{
 	"search":   true,
 }
 
-// LexicalScore computes a similarity between a query and an element
+// lexicalScore computes a similarity between a query and an element
 // description using Jaccard overlap on tokens with:
 //   - lowercase normalization
 //   - context-aware stopword removal
@@ -138,7 +138,7 @@ var roleKeywords = map[string]bool{
 //   - token importance weighting (rarer tokens score higher)
 //
 // Returns a value in [0, 1].
-func LexicalScore(query, desc string) float64 {
+func lexicalScore(query, desc string) float64 {
 	rawQTokens := tokenize(query)
 	rawDTokens := tokenize(desc)
 

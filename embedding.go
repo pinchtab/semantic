@@ -8,7 +8,7 @@ import (
 
 // Embedder is the interface for converting text into dense vector
 // representations. Implementations include HashingEmbedder (zero deps,
-// feature hashing) and TestEmbedder (deterministic, for testing).
+// feature hashing) and DummyEmbedder (deterministic, for testing).
 //
 // Custom implementations can be provided for real ML models
 // (sentence-transformers, OpenAI, etc.).
@@ -21,27 +21,27 @@ type Embedder interface {
 	Strategy() string
 }
 
-// TestEmbedder generates deterministic fixed-dimension vectors using a
+// DummyEmbedder generates deterministic fixed-dimension vectors using a
 // simple hash of each input string. Useful for testing without real ML
 // dependencies. For production use, prefer HashingEmbedder.
-type TestEmbedder struct {
+type DummyEmbedder struct {
 	Dim int // vector dimensionality (default 64)
 }
 
-// NewTestEmbedder creates a TestEmbedder with the given dimensionality.
-func NewTestEmbedder(dim int) *TestEmbedder {
+// NewDummyEmbedder creates a DummyEmbedder with the given dimensionality.
+func NewDummyEmbedder(dim int) *DummyEmbedder {
 	if dim <= 0 {
 		dim = 64
 	}
-	return &TestEmbedder{Dim: dim}
+	return &DummyEmbedder{Dim: dim}
 }
 
 // Strategy returns "test".
-func (d *TestEmbedder) Strategy() string { return "test" }
+func (d *DummyEmbedder) Strategy() string { return "test" }
 
 // Embed generates deterministic pseudo-vectors by hashing each character
 // of the input string into the vector dimensions.
-func (d *TestEmbedder) Embed(texts []string) ([][]float32, error) {
+func (d *DummyEmbedder) Embed(texts []string) ([][]float32, error) {
 	result := make([][]float32, len(texts))
 	for i, text := range texts {
 		result[i] = d.hashVec(text)
@@ -49,7 +49,7 @@ func (d *TestEmbedder) Embed(texts []string) ([][]float32, error) {
 	return result, nil
 }
 
-func (d *TestEmbedder) hashVec(s string) []float32 {
+func (d *DummyEmbedder) hashVec(s string) []float32 {
 	vec := make([]float32, d.Dim)
 	for i, c := range s {
 		idx := (i*31 + int(c)) % d.Dim
@@ -118,7 +118,7 @@ func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []Elem
 
 	var candidates []scored
 	for i, el := range elements {
-		sim := CosineSimilarity(queryVec, elemVecs[i])
+		sim := cosineSimilarity(queryVec, elemVecs[i])
 		if sim >= opts.Threshold {
 			candidates = append(candidates, scored{desc: el, score: sim})
 		}
@@ -154,9 +154,9 @@ func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []Elem
 	return result, nil
 }
 
-// CosineSimilarity computes cosine similarity between two float32 vectors.
+// cosineSimilarity computes cosine similarity between two float32 vectors.
 // Returns a value in [-1, 1]; for normalized vectors this is in [0, 1].
-func CosineSimilarity(a, b []float32) float64 {
+func cosineSimilarity(a, b []float32) float64 {
 	if len(a) != len(b) || len(a) == 0 {
 		return 0
 	}

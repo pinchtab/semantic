@@ -107,14 +107,14 @@ func TestRemoveStopwords(t *testing.T) {
 // ===========================================================================
 
 func TestLexicalScore_ExactMatch(t *testing.T) {
-	score := LexicalScore("submit button", "button: Submit")
+	score := lexicalScore("submit button", "button: Submit")
 	if score < 0.5 {
 		t.Errorf("expected high score for exact match, got %f", score)
 	}
 }
 
 func TestLexicalScore_NoOverlap(t *testing.T) {
-	score := LexicalScore("download pdf", "button: Login")
+	score := lexicalScore("download pdf", "button: Login")
 	if score > 0.3 {
 		t.Errorf("expected low score for no overlap, got %f", score)
 	}
@@ -122,8 +122,8 @@ func TestLexicalScore_NoOverlap(t *testing.T) {
 
 func TestLexicalScore_RoleBoost(t *testing.T) {
 	// "button" is a role keyword; if it appears in both, a boost is applied.
-	withRole := LexicalScore("submit button", "button: Submit")
-	withoutRole := LexicalScore("submit action", "link: Submit")
+	withRole := lexicalScore("submit button", "button: Submit")
+	withoutRole := lexicalScore("submit action", "link: Submit")
 	if withRole <= withoutRole {
 		t.Errorf("expected role boost to increase score: withRole=%f, withoutRole=%f", withRole, withoutRole)
 	}
@@ -131,8 +131,8 @@ func TestLexicalScore_RoleBoost(t *testing.T) {
 
 func TestLexicalScore_StopwordRemoval(t *testing.T) {
 	// "the" is a stopword — it should be removed so both queries score similarly.
-	s1 := LexicalScore("click the button", "button: Click")
-	s2 := LexicalScore("click button", "button: Click")
+	s1 := lexicalScore("click the button", "button: Click")
+	s2 := lexicalScore("click button", "button: Click")
 	diff := math.Abs(s1 - s2)
 	if diff > 0.01 {
 		t.Errorf("stopwords should not affect score significantly: s1=%f, s2=%f, diff=%f", s1, s2, diff)
@@ -200,11 +200,11 @@ func TestLexicalMatcher_ThresholdFiltering(t *testing.T) {
 }
 
 // ===========================================================================
-// TestEmbedder tests
+// DummyEmbedder tests
 // ===========================================================================
 
-func TestTestEmbedder_Deterministic(t *testing.T) {
-	e := NewTestEmbedder(64)
+func TestDummyEmbedder_Deterministic(t *testing.T) {
+	e := NewDummyEmbedder(64)
 
 	v1, err := e.Embed([]string{"hello world"})
 	if err != nil {
@@ -221,27 +221,27 @@ func TestTestEmbedder_Deterministic(t *testing.T) {
 
 	for i := range v1[0] {
 		if v1[0][i] != v2[0][i] {
-			t.Fatalf("TestEmbedder is not deterministic at dim %d", i)
+			t.Fatalf("DummyEmbedder is not deterministic at dim %d", i)
 		}
 	}
 }
 
-func TestTestEmbedder_Strategy(t *testing.T) {
-	e := NewTestEmbedder(32)
+func TestDummyEmbedder_Strategy(t *testing.T) {
+	e := NewDummyEmbedder(32)
 	if e.Strategy() != "test" {
 		t.Errorf("expected strategy=dummy, got %s", e.Strategy())
 	}
 }
 
-func TestTestEmbedder_DefaultDim(t *testing.T) {
-	e := NewTestEmbedder(0)
+func TestDummyEmbedder_DefaultDim(t *testing.T) {
+	e := NewDummyEmbedder(0)
 	if e.Dim != 64 {
 		t.Errorf("expected default dim=64, got %d", e.Dim)
 	}
 }
 
-func TestTestEmbedder_NormalizedOutput(t *testing.T) {
-	e := NewTestEmbedder(64)
+func TestDummyEmbedder_NormalizedOutput(t *testing.T) {
+	e := NewDummyEmbedder(64)
 	vecs, err := e.Embed([]string{"test string"})
 	if err != nil {
 		t.Fatalf("Embed error: %v", err)
@@ -263,7 +263,7 @@ func TestTestEmbedder_NormalizedOutput(t *testing.T) {
 
 func TestCosineSimilarity_Identical(t *testing.T) {
 	v := []float32{1, 0, 0, 0}
-	sim := CosineSimilarity(v, v)
+	sim := cosineSimilarity(v, v)
 	if math.Abs(sim-1.0) > 1e-6 {
 		t.Errorf("identical vectors should have similarity 1.0, got %f", sim)
 	}
@@ -272,14 +272,14 @@ func TestCosineSimilarity_Identical(t *testing.T) {
 func TestCosineSimilarity_Orthogonal(t *testing.T) {
 	a := []float32{1, 0, 0, 0}
 	b := []float32{0, 1, 0, 0}
-	sim := CosineSimilarity(a, b)
+	sim := cosineSimilarity(a, b)
 	if math.Abs(sim) > 1e-6 {
 		t.Errorf("orthogonal vectors should have similarity ~0, got %f", sim)
 	}
 }
 
 func TestCosineSimilarity_Empty(t *testing.T) {
-	sim := CosineSimilarity(nil, nil)
+	sim := cosineSimilarity(nil, nil)
 	if sim != 0 {
 		t.Errorf("empty vectors should have similarity 0, got %f", sim)
 	}
@@ -288,7 +288,7 @@ func TestCosineSimilarity_Empty(t *testing.T) {
 func TestCosineSimilarity_DifferentLengths(t *testing.T) {
 	a := []float32{1, 0}
 	b := []float32{1, 0, 0}
-	sim := CosineSimilarity(a, b)
+	sim := cosineSimilarity(a, b)
 	if sim != 0 {
 		t.Errorf("different-length vectors should return 0, got %f", sim)
 	}
@@ -299,7 +299,7 @@ func TestCosineSimilarity_DifferentLengths(t *testing.T) {
 // ===========================================================================
 
 func TestEmbeddingMatcher_Strategy(t *testing.T) {
-	m := NewEmbeddingMatcher(NewTestEmbedder(64))
+	m := NewEmbeddingMatcher(NewDummyEmbedder(64))
 	want := "embedding:test"
 	if m.Strategy() != want {
 		t.Errorf("expected strategy=%s, got %s", want, m.Strategy())
@@ -307,7 +307,7 @@ func TestEmbeddingMatcher_Strategy(t *testing.T) {
 }
 
 func TestEmbeddingMatcher_Find(t *testing.T) {
-	m := NewEmbeddingMatcher(NewTestEmbedder(64))
+	m := NewEmbeddingMatcher(NewDummyEmbedder(64))
 
 	elements := []ElementDescriptor{
 		{Ref: "e0", Role: "button", Name: "Login"},
@@ -339,7 +339,7 @@ func TestEmbeddingMatcher_Find(t *testing.T) {
 }
 
 func TestEmbeddingMatcher_ThresholdFiltering(t *testing.T) {
-	m := NewEmbeddingMatcher(NewTestEmbedder(64))
+	m := NewEmbeddingMatcher(NewDummyEmbedder(64))
 
 	elements := []ElementDescriptor{
 		{Ref: "e0", Role: "button", Name: "Submit"},
@@ -471,8 +471,8 @@ func TestHashingEmbedder_SimilarTexts(t *testing.T) {
 		t.Fatalf("Embed error: %v", err)
 	}
 
-	simSameWord := CosineSimilarity(vecs[0], vecs[1])  // share "submit"
-	simUnrelated := CosineSimilarity(vecs[0], vecs[2]) // no shared words
+	simSameWord := cosineSimilarity(vecs[0], vecs[1])  // share "submit"
+	simUnrelated := cosineSimilarity(vecs[0], vecs[2]) // no shared words
 
 	if simSameWord <= simUnrelated {
 		t.Errorf("texts sharing 'submit' should be more similar: same=%f, unrelated=%f",
@@ -493,8 +493,8 @@ func TestHashingEmbedder_SubwordSimilarity(t *testing.T) {
 		t.Fatalf("Embed error: %v", err)
 	}
 
-	simAbbrev := CosineSimilarity(vecs[0], vecs[1])
-	simUnrelated := CosineSimilarity(vecs[0], vecs[2])
+	simAbbrev := cosineSimilarity(vecs[0], vecs[1])
+	simUnrelated := cosineSimilarity(vecs[0], vecs[2])
 
 	// The abbreviation similarity might be small, but should be greater
 	// than an unrelated word due to shared character n-grams.
@@ -519,8 +519,8 @@ func TestHashingEmbedder_RoleFeatures(t *testing.T) {
 
 	// Both have "button" role features — should be more similar to each other
 	// than to "textbox email" which has a different role keyword.
-	simSameRole := CosineSimilarity(vecs[0], vecs[1])
-	simDiffRole := CosineSimilarity(vecs[0], vecs[2])
+	simSameRole := cosineSimilarity(vecs[0], vecs[1])
+	simDiffRole := cosineSimilarity(vecs[0], vecs[2])
 
 	if simSameRole <= simDiffRole {
 		t.Errorf("same-role elements should be more similar: same=%f, diff=%f",
@@ -672,8 +672,8 @@ func TestCombinedMatcher_WeightsApplied(t *testing.T) {
 	m := NewCombinedMatcher(NewHashingEmbedder(128))
 
 	// Override weights to emphasize embedding.
-	m.LexicalWeight = 0.2
-	m.EmbeddingWeight = 0.8
+	m.lexicalWeight = 0.2
+	m.embeddingWeight = 0.8
 
 	elements := []ElementDescriptor{
 		{Ref: "e0", Role: "button", Name: "Log In"},

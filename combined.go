@@ -17,9 +17,9 @@ type CombinedMatcher struct {
 	lexical   *LexicalMatcher
 	embedding *EmbeddingMatcher
 
-	// Weight factors (should sum to 1.0 for interpretable scores).
-	LexicalWeight   float64
-	EmbeddingWeight float64
+	// weight factors (should sum to 1.0 for interpretable scores).
+	lexicalWeight   float64
+	embeddingWeight float64
 }
 
 // NewCombinedMatcher creates a CombinedMatcher with default weights
@@ -30,8 +30,8 @@ func NewCombinedMatcher(embedder Embedder) *CombinedMatcher {
 	return &CombinedMatcher{
 		lexical:         NewLexicalMatcher(),
 		embedding:       NewEmbeddingMatcher(embedder),
-		LexicalWeight:   0.6,
-		EmbeddingWeight: 0.4,
+		lexicalWeight:   0.6,
+		embeddingWeight: 0.4,
 	}
 }
 
@@ -62,7 +62,7 @@ func (c *CombinedMatcher) weights(opts FindOptions) (float64, float64) {
 	if opts.lexicalWeight > 0 || opts.embeddingWeight > 0 {
 		return opts.lexicalWeight, opts.embeddingWeight
 	}
-	return c.LexicalWeight, c.EmbeddingWeight
+	return c.lexicalWeight, c.embeddingWeight
 }
 
 // matcherResult pairs a FindResult with its error.

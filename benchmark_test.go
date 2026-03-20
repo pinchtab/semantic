@@ -31,17 +31,17 @@ func benchElements() []ElementDescriptor {
 	}
 }
 
-func BenchmarkLexicalScore(b *testing.B) {
+func BenchmarkLexicalScoreFn(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		LexicalScore("sign in button", "button: Sign In")
+		lexicalScore("sign in button", "button: Sign In")
 	}
 }
 
-func BenchmarkLexicalScore_Synonym(b *testing.B) {
+func BenchmarkLexicalScoreFn_Synonym(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		LexicalScore("log in", "button: Sign In")
+		lexicalScore("log in", "button: Sign In")
 	}
 }
 
@@ -136,7 +136,7 @@ func BenchmarkCombinedFind_100Elements(b *testing.B) {
 	}
 }
 
-func BenchmarkCosineSimilarity(b *testing.B) {
+func BenchmarkCosineSim(b *testing.B) {
 	h := NewHashingEmbedder(128)
 	vecs1, _ := h.Embed([]string{"sign in button"})
 	vecs2, _ := h.Embed([]string{"button: Sign In"})
@@ -144,7 +144,7 @@ func BenchmarkCosineSimilarity(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		CosineSimilarity(a, v)
+		cosineSimilarity(a, v)
 	}
 }
 
