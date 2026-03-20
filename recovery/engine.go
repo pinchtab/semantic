@@ -157,107 +157,28 @@ func (re *RecoveryEngine) Attempt(
 	kind string,
 	exec ActionExecutor,
 ) (RecoveryResult, map[string]any, error) {
-	start := time.Now()
-
 	ft := ClassifyFailure(fmt.Errorf("recovery trigger"))
-	// We always accept the call at this point since ShouldAttempt already
-	// gated entry. Re-classify for the result struct.
-	rr := RecoveryResult{
-		OriginalRef: ref,
-		FailureType: ft.String(),
-	}
-
-	// 1. Build the search query from cached intent.
-	query := re.reconstructQuery(tabID, ref)
-	if query == "" {
-		rr.Error = "no cached intent for ref " + ref
-		rr.LatencyMs = time.Since(start).Milliseconds()
-		return rr, nil, fmt.Errorf("recovery: %s", rr.Error)
-	}
-
-	// 2. Iterate up to MaxRetries.
-	maxRetries := re.Config.MaxRetries
-	if maxRetries <= 0 {
-		maxRetries = 1
-	}
-
-	var lastErr error
-	for attempt := 1; attempt <= maxRetries; attempt++ {
-		rr.Attempts = attempt
-
-		// 3. Force a fresh snapshot.
-		if re.Refresh != nil {
-			if err := re.Refresh(ctx, tabID); err != nil {
-				lastErr = fmt.Errorf("refresh snapshot: %w", err)
-				continue
-			}
-		}
-
-		// 4. Build descriptors from the fresh snapshot.
-		descs := re.BuildDescs(tabID)
-		if len(descs) == 0 {
-			lastErr = fmt.Errorf("empty snapshot after refresh")
-			continue
-		}
-
-		// 5. Run the semantic matcher.
-		result, err := re.Matcher.Find(ctx, query, descs, semantic.FindOptions{
-			Threshold: re.Config.MinConfidence,
-			TopK:      1,
-		})
-		if err != nil {
-			lastErr = fmt.Errorf("matcher: %w", err)
-			continue
-		}
-		if result.BestRef == "" || result.BestScore < re.Config.MinConfidence {
-			lastErr = fmt.Errorf("no match above threshold %.2f (best: %.2f)",
-				re.Config.MinConfidence, result.BestScore)
-			continue
-		}
-
-		// Confidence gate.
-		conf := semantic.CalibrateConfidence(result.BestScore)
-		if re.Config.PreferHighConfidence && conf == "low" {
-			lastErr = fmt.Errorf("match confidence too low: %s (%.2f)",
-				conf, result.BestScore)
-			continue
-		}
-
-		rr.NewRef = result.BestRef
-		rr.Score = result.BestScore
-		rr.Confidence = conf
-		rr.Strategy = result.Strategy
-
-		// 6. Resolve the new ref → nodeID.
-		nodeID, ok := re.ResolveNode(tabID, result.BestRef)
-		if !ok {
-			lastErr = fmt.Errorf("new ref %s not in cache after refresh", result.BestRef)
-			continue
-		}
-
-		// 7. Re-execute the action.
-		actionResult, execErr := exec(ctx, kind, nodeID)
-		rr.LatencyMs = time.Since(start).Milliseconds()
-		if execErr != nil {
-			lastErr = execErr
-			continue
-		}
-
-		rr.Recovered = true
-		return rr, actionResult, nil
-	}
-
-	rr.LatencyMs = time.Since(start).Milliseconds()
-	if lastErr != nil {
-		rr.Error = lastErr.Error()
-	}
-	return rr, nil, lastErr
+	return re.attemptRecovery(ctx, tabID, ref, kind, ft, exec)
 }
 
 // AttemptWithClassification is like Attempt but accepts the pre-classified
 // failure type so callers that already called ClassifyFailure don't
 // re-compute it.
 func (re *RecoveryEngine) AttemptWithClassification(
+	ctx context.Context,
+	tabID string,
+	ref string,
+	kind string,
+	ft FailureType,
+	exec ActionExecutor,
+) (RecoveryResult, map[string]any, error) {
+	return re.attemptRecovery(ctx, tabID, ref, kind, ft, exec)
+}
+
+// attemptRecovery is the shared implementation for Attempt and
+// AttemptWithClassification. It runs the retry loop: reconstruct query →
+// refresh snapshot → re-match → resolve node → re-execute action.
+func (re *RecoveryEngine) attemptRecovery(
 	ctx context.Context,
 	tabID string,
 	ref string,
