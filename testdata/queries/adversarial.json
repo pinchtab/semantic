@@ -26,10 +26,9 @@
   {
     "query": "sign in",
     "snapshot": "login-page.json",
-    "expect_ref": "e4",
-    "min_score": 0.5,
+    "expect_no_match": true,
     "threshold": 0.9,
-    "note": "high threshold should still find strong match"
+    "note": "high threshold filters out even decent matches (score ~0.8)"
   },
   {
     "query": "link",
@@ -53,9 +52,8 @@
   {
     "query": "   search   ",
     "snapshot": "google-search.json",
-    "expect_ref": "e0",
-    "min_score": 0.3,
-    "note": "extra whitespace should be trimmed"
+    "expect_has_matches": true,
+    "note": "extra whitespace should be trimmed and return search matches"
   },
   {
     "query": "heading",

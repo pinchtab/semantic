@@ -8,7 +8,7 @@ result=$(semantic find "log in" --snapshot /testdata/snapshots/login-page.json -
 assert_json_field "$result" ".best_ref" "e4" "synonym: log in → sign in (e4)"
 assert_json_gte "$result" ".best_score" "0.4" "synonym: log in score >= 0.4"
 
-# register → Create an account (needs lower threshold — synonym expands but score is modest)
+# register → Create an account (weak synonym, needs low threshold)
 result=$(semantic find "register" --snapshot /testdata/snapshots/login-page.json --format json --threshold 0.2)
 assert_json_field "$result" ".best_ref" "e6" "synonym: register → create account (e6)"
 
@@ -21,17 +21,16 @@ assert_json_gte "$result" ".best_score" "0.5" "synonym: forgot password score >=
 result=$(semantic find "purchase" --snapshot /testdata/snapshots/ecommerce-product.json --format json)
 assert_json_field "$result" ".best_ref" "e11" "synonym: purchase → buy now (e11)"
 
-# basket → View Cart (strongest cart synonym match)
+# basket → cart element (weak synonym, needs low threshold)
 result=$(semantic find "basket" --snapshot /testdata/snapshots/ecommerce-product.json --format json --threshold 0.2)
 best=$(echo "$result" | jq -r '.best_ref')
-# Either e10 (Add to Cart) or e17 (View Cart) is acceptable
 if [ "$best" = "e10" ] || [ "$best" = "e17" ]; then
   pass "synonym: basket → cart element ($best)"
 else
   fail "synonym: basket → cart" "got $best, want e10 or e17"
 fi
 
-# preferences → Settings (synonym match, needs lower threshold)
+# preferences → Settings (weak synonym, needs low threshold)
 result=$(semantic find "preferences" --snapshot /testdata/snapshots/dashboard.json --format json --threshold 0.2)
 assert_json_field "$result" ".best_ref" "e3" "synonym: preferences → settings (e3)"
 
@@ -46,5 +45,14 @@ assert_json_field "$result" ".best_ref" "e8" "synonym: download → export (e8)"
 # sign out → Log Out
 result=$(semantic find "sign out" --snapshot /testdata/snapshots/dashboard.json --format json)
 assert_json_field "$result" ".best_ref" "e15" "synonym: sign out → log out (e15)"
+
+# look up → Search (weak synonym, needs low threshold)
+result=$(semantic find "look up" --snapshot /testdata/snapshots/google-search.json --format json --threshold 0.1)
+best=$(echo "$result" | jq -r '.best_ref')
+if [ "$best" = "e0" ] || [ "$best" = "e1" ]; then
+  pass "synonym: look up → search element ($best)"
+else
+  fail "synonym: look up → search" "got $best, want e0 or e1"
+fi
 
 summary "find-synonyms"
