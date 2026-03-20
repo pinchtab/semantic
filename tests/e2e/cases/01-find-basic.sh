@@ -30,7 +30,7 @@ result=$(semantic find "log out" --snapshot /testdata/snapshots/dashboard.json -
 assert_json_field "$result" ".best_ref" "e15" "dashboard: log out → e15"
 
 # Search results
-result=$(semantic find "next page" --snapshot /testdata/snapshots/search-results.json --format json)
+result=$(semantic find "next page" --snapshot /testdata/snapshots/google-search.json --format json)
 assert_json_field "$result" ".best_ref" "e9" "search: next page → e9"
 
 summary "find-basic"

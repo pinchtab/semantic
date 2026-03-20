@@ -43,8 +43,50 @@
   },
   {
     "query": "next page",
-    "snapshot": "search-results.json",
+    "snapshot": "google-search.json",
     "expect_ref": "e9",
     "min_score": 0.5
+  },
+  {
+    "query": "star button",
+    "snapshot": "github-repo.json",
+    "expect_ref": "e10",
+    "min_score": 0.5
+  },
+  {
+    "query": "fork",
+    "snapshot": "github-repo.json",
+    "expect_ref": "e9",
+    "min_score": 0.5
+  },
+  {
+    "query": "pull requests tab",
+    "snapshot": "github-repo.json",
+    "expect_ref": "e4",
+    "min_score": 0.4
+  },
+  {
+    "query": "edit",
+    "snapshot": "wikipedia-article.json",
+    "expect_ref": "e6",
+    "min_score": 0.4
+  },
+  {
+    "query": "search wikipedia",
+    "snapshot": "wikipedia-article.json",
+    "expect_ref": "e0",
+    "min_score": 0.4
+  },
+  {
+    "query": "table of contents",
+    "snapshot": "wikipedia-article.json",
+    "expect_ref": "e9",
+    "min_score": 0.3
+  },
+  {
+    "query": "images tab",
+    "snapshot": "google-search.json",
+    "expect_ref": "e4",
+    "min_score": 0.4
   }
 ]

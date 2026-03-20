@@ -14,35 +14,6 @@ permissions:
 
 jobs:
   e2e:
-    name: E2E Tests (Docker)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Run E2E suite
-        run: |
-          docker compose -f tests/e2e/docker-compose.yml up \
-            --build \
-            --abort-on-container-exit \
-            --exit-code-from runner
-
-      - name: Upload results
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: e2e-results
-          path: tests/e2e/results/
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Post summary
-        if: always()
-        run: |
-          if [ -f tests/e2e/results/summary.txt ]; then
-            PASSED=$(grep 'passed=' tests/e2e/results/summary.txt | cut -d= -f2)
-            FAILED=$(grep 'failed=' tests/e2e/results/summary.txt | cut -d= -f2)
-            echo "## E2E Results" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Passed: $PASSED" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Failed: $FAILED" >> "$GITHUB_STEP_SUMMARY"
-          fi
+    uses: ./.github/workflows/reusable-e2e.yml
+    with:
+      timeout-minutes: 15

@@ -64,9 +64,44 @@
   },
   {
     "query": "look up",
-    "snapshot": "search-results.json",
+    "snapshot": "google-search.json",
     "expect_ref": "e0",
     "min_score": 0.3,
     "note": "look up → search synonym"
+  },
+  {
+    "query": "issues tab",
+    "snapshot": "github-repo.json",
+    "expect_ref": "e3",
+    "min_score": 0.4,
+    "note": "direct match on issues"
+  },
+  {
+    "query": "watch repository",
+    "snapshot": "github-repo.json",
+    "expect_ref": "e8",
+    "min_score": 0.4,
+    "note": "direct match on watch button"
+  },
+  {
+    "query": "create account",
+    "snapshot": "wikipedia-article.json",
+    "expect_ref": "e25",
+    "min_score": 0.4,
+    "note": "direct match on create account"
+  },
+  {
+    "query": "get PDF",
+    "snapshot": "wikipedia-article.json",
+    "expect_ref": "e21",
+    "min_score": 0.3,
+    "note": "get PDF → download as PDF"
+  },
+  {
+    "query": "clear search",
+    "snapshot": "google-search.json",
+    "expect_ref": "e2",
+    "min_score": 0.4,
+    "note": "direct match on clear"
   }
 ]

@@ -30,5 +30,37 @@
     "min_score": 0.5,
     "threshold": 0.9,
     "note": "high threshold should still find strong match"
+  },
+  {
+    "query": "link",
+    "snapshot": "github-repo.json",
+    "expect_has_matches": true,
+    "note": "generic role against many links should return matches"
+  },
+  {
+    "query": "asdfghjkl qwertyuiop",
+    "snapshot": "github-repo.json",
+    "expect_no_match": true,
+    "note": "keyboard smash against real page"
+  },
+  {
+    "query": "Sign In",
+    "snapshot": "login-page.json",
+    "expect_ref": "e4",
+    "min_score": 0.5,
+    "note": "case-insensitive matching"
+  },
+  {
+    "query": "   search   ",
+    "snapshot": "google-search.json",
+    "expect_ref": "e0",
+    "min_score": 0.3,
+    "note": "extra whitespace should be trimmed"
+  },
+  {
+    "query": "heading",
+    "snapshot": "wikipedia-article.json",
+    "expect_has_matches": true,
+    "note": "role-only query against page with multiple headings"
   }
 ]
