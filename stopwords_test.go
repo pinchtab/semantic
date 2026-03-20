@@ -172,3 +172,36 @@ func TestStopword_OnPreservedInLogOn(t *testing.T) {
 		t.Errorf("'on' should be preserved in 'log on' context, got %v", query)
 	}
 }
+
+
+// ===========================================================================
+// Stopword tests
+// ===========================================================================
+
+func TestIsStopword(t *testing.T) {
+	if !isStopword("the") {
+		t.Error("expected 'the' to be a stopword")
+	}
+	if isStopword("button") {
+		t.Error("expected 'button' not to be a stopword")
+	}
+}
+
+func TestRemoveStopwords(t *testing.T) {
+	tokens := []string{"click", "the", "submit", "button"}
+	filtered := removeStopwords(tokens)
+	if len(filtered) != 3 {
+		t.Errorf("expected 3 tokens after stopword removal, got %d: %v", len(filtered), filtered)
+	}
+
+	// When ALL tokens are stopwords, the original should be preserved.
+	allStop := []string{"the", "a", "is", "was"}
+	kept := removeStopwords(allStop)
+	if len(kept) != len(allStop) {
+		t.Errorf("expected original tokens when all are stopwords, got %d", len(kept))
+	}
+}
+
+// ===========================================================================
+// LexicalScore tests
+// ===========================================================================

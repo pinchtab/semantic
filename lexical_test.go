@@ -1,6 +1,8 @@
 package semantic
 
 import (
+	"context"
+	"math"
 	"testing"
 )
 
@@ -213,3 +215,109 @@ func TestLexicalScore_LogOn_vs_SignIn(t *testing.T) {
 		t.Errorf("'log on' vs '%s' should have meaningful score, got %.4f", desc, score)
 	}
 }
+
+
+// ===========================================================================
+// LexicalScore tests
+// ===========================================================================
+
+func TestLexicalScore_ExactMatch(t *testing.T) {
+	score := lexicalScore("submit button", "button: Submit")
+	if score < 0.5 {
+		t.Errorf("expected high score for exact match, got %f", score)
+	}
+}
+
+func TestLexicalScore_NoOverlap(t *testing.T) {
+	score := lexicalScore("download pdf", "button: Login")
+	if score > 0.3 {
+		t.Errorf("expected low score for no overlap, got %f", score)
+	}
+}
+
+func TestLexicalScore_RoleBoost(t *testing.T) {
+	// "button" is a role keyword; if it appears in both, a boost is applied.
+	withRole := lexicalScore("submit button", "button: Submit")
+	withoutRole := lexicalScore("submit action", "link: Submit")
+	if withRole <= withoutRole {
+		t.Errorf("expected role boost to increase score: withRole=%f, withoutRole=%f", withRole, withoutRole)
+	}
+}
+
+func TestLexicalScore_StopwordRemoval(t *testing.T) {
+	// "the" is a stopword — it should be removed so both queries score similarly.
+	s1 := lexicalScore("click the button", "button: Click")
+	s2 := lexicalScore("click button", "button: Click")
+	diff := math.Abs(s1 - s2)
+	if diff > 0.01 {
+		t.Errorf("stopwords should not affect score significantly: s1=%f, s2=%f, diff=%f", s1, s2, diff)
+	}
+}
+
+// ===========================================================================
+// LexicalMatcher (ElementMatcher interface) tests
+// ===========================================================================
+
+// ===========================================================================
+// LexicalMatcher (ElementMatcher interface) tests
+// ===========================================================================
+
+func TestLexicalMatcher_Find(t *testing.T) {
+	m := NewLexicalMatcher()
+
+	if m.Strategy() != "lexical" {
+		t.Errorf("expected strategy=lexical, got %s", m.Strategy())
+	}
+
+	elements := []ElementDescriptor{
+		{Ref: "e0", Role: "button", Name: "Log In"},
+		{Ref: "e1", Role: "link", Name: "Sign Up"},
+		{Ref: "e2", Role: "textbox", Name: "Email Address"},
+	}
+
+	result, err := m.Find(context.Background(), "log in button", elements, FindOptions{
+		Threshold: 0.1,
+		TopK:      3,
+	})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+
+	if result.ElementCount != 3 {
+		t.Errorf("expected ElementCount=3, got %d", result.ElementCount)
+	}
+	if result.BestRef != "e0" {
+		t.Errorf("expected BestRef=e0, got %s", result.BestRef)
+	}
+	if result.BestScore <= 0 {
+		t.Errorf("expected positive BestScore, got %f", result.BestScore)
+	}
+}
+
+func TestLexicalMatcher_ThresholdFiltering(t *testing.T) {
+	m := NewLexicalMatcher()
+
+	elements := []ElementDescriptor{
+		{Ref: "e0", Role: "button", Name: "Submit"},
+		{Ref: "e1", Role: "link", Name: "Home"},
+	}
+
+	result, err := m.Find(context.Background(), "submit button", elements, FindOptions{
+		Threshold: 0.99,
+		TopK:      5,
+	})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+
+	// Very high threshold — most likely nothing passes.
+	for _, m := range result.Matches {
+		if m.Score < 0.99 {
+			t.Errorf("match %s has score %f below threshold", m.Ref, m.Score)
+		}
+	}
+}
+
+// ===========================================================================
+// dummyEmbedder tests
+// ===========================================================================

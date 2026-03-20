@@ -86,3 +86,182 @@ func TestHashingEmbedder_PhraseAwareSynonymInjection(t *testing.T) {
 			"(got syn=%.4f, unrelated=%.4f)", simSyn, simUnrelated)
 	}
 }
+
+
+// ===========================================================================
+// Phase 3: HashingEmbedder tests
+// ===========================================================================
+
+func TestHashingEmbedder_Strategy(t *testing.T) {
+	e := NewHashingEmbedder(128)
+	if e.Strategy() != "hashing" {
+		t.Errorf("expected strategy=hashing, got %s", e.Strategy())
+	}
+}
+
+func TestHashingEmbedder_DefaultDim(t *testing.T) {
+	e := NewHashingEmbedder(0)
+	vecs, err := e.Embed([]string{"test"})
+	if err != nil {
+		t.Fatalf("Embed error: %v", err)
+	}
+	if len(vecs[0]) != 128 {
+		t.Errorf("expected default dim=128, got %d", len(vecs[0]))
+	}
+}
+
+func TestHashingEmbedder_Deterministic(t *testing.T) {
+	e := NewHashingEmbedder(128)
+	v1, err := e.Embed([]string{"click the submit button"})
+	if err != nil {
+		t.Fatalf("Embed error: %v", err)
+	}
+	v2, err := e.Embed([]string{"click the submit button"})
+	if err != nil {
+		t.Fatalf("Embed error: %v", err)
+	}
+
+	if len(v1[0]) != 128 {
+		t.Errorf("expected dim=128, got %d", len(v1[0]))
+	}
+	for i := range v1[0] {
+		if v1[0][i] != v2[0][i] {
+			t.Fatalf("HashingEmbedder not deterministic at dim %d: %f != %f", i, v1[0][i], v2[0][i])
+		}
+	}
+}
+
+func TestHashingEmbedder_Normalized(t *testing.T) {
+	e := NewHashingEmbedder(128)
+	vecs, err := e.Embed([]string{"button submit", "textbox username"})
+	if err != nil {
+		t.Fatalf("Embed error: %v", err)
+	}
+
+	for i, vec := range vecs {
+		var norm float64
+		for _, v := range vec {
+			norm += float64(v) * float64(v)
+		}
+		norm = math.Sqrt(norm)
+		if math.Abs(norm-1.0) > 0.01 {
+			t.Errorf("vector %d not unit-norm: norm=%f", i, norm)
+		}
+	}
+}
+
+func TestHashingEmbedder_EmptyInput(t *testing.T) {
+	e := NewHashingEmbedder(64)
+	vecs, err := e.Embed([]string{""})
+	if err != nil {
+		t.Fatalf("Embed error: %v", err)
+	}
+	if len(vecs[0]) != 64 {
+		t.Errorf("expected dim=64, got %d", len(vecs[0]))
+	}
+	// Empty string should produce a zero vector (no features to hash).
+	var sum float64
+	for _, v := range vecs[0] {
+		sum += float64(v) * float64(v)
+	}
+	if sum > 0 {
+		t.Error("empty input should produce zero vector")
+	}
+}
+
+func TestHashingEmbedder_SimilarTexts(t *testing.T) {
+	e := NewHashingEmbedder(256) // higher dim for less collision
+
+	vecs, err := e.Embed([]string{
+		"submit button",   // 0
+		"submit form",     // 1 – shares "submit"
+		"download report", // 2 – unrelated
+	})
+	if err != nil {
+		t.Fatalf("Embed error: %v", err)
+	}
+
+	simSameWord := cosineSimilarity(vecs[0], vecs[1])  // share "submit"
+	simUnrelated := cosineSimilarity(vecs[0], vecs[2]) // no shared words
+
+	if simSameWord <= simUnrelated {
+		t.Errorf("texts sharing 'submit' should be more similar: same=%f, unrelated=%f",
+			simSameWord, simUnrelated)
+	}
+}
+
+func TestHashingEmbedder_SubwordSimilarity(t *testing.T) {
+	e := NewHashingEmbedder(256)
+
+	// Character n-grams should give nonzero similarity between "button" and "btn".
+	vecs, err := e.Embed([]string{
+		"button", // full word
+		"btn",    // abbreviation – shares "bt" bigram via n-grams
+		"search", // unrelated
+	})
+	if err != nil {
+		t.Fatalf("Embed error: %v", err)
+	}
+
+	simAbbrev := cosineSimilarity(vecs[0], vecs[1])
+	simUnrelated := cosineSimilarity(vecs[0], vecs[2])
+
+	// The abbreviation similarity might be small, but should be greater
+	// than an unrelated word due to shared character n-grams.
+	if simAbbrev <= simUnrelated {
+		t.Errorf("abbreviation should be more similar: abbrev=%f, unrelated=%f",
+			simAbbrev, simUnrelated)
+	}
+}
+
+func TestHashingEmbedder_RoleFeatures(t *testing.T) {
+	e := NewHashingEmbedder(128)
+
+	// "button" is a role keyword; it should get an extra role feature.
+	vecs, err := e.Embed([]string{
+		"button submit",
+		"button cancel",
+		"textbox email",
+	})
+	if err != nil {
+		t.Fatalf("Embed error: %v", err)
+	}
+
+	// Both have "button" role features — should be more similar to each other
+	// than to "textbox email" which has a different role keyword.
+	simSameRole := cosineSimilarity(vecs[0], vecs[1])
+	simDiffRole := cosineSimilarity(vecs[0], vecs[2])
+
+	if simSameRole <= simDiffRole {
+		t.Errorf("same-role elements should be more similar: same=%f, diff=%f",
+			simSameRole, simDiffRole)
+	}
+}
+
+func TestHashingEmbedder_BatchConsistency(t *testing.T) {
+	e := NewHashingEmbedder(128)
+
+	texts := []string{"login button", "search box", "navigation menu"}
+	batchVecs, err := e.Embed(texts)
+	if err != nil {
+		t.Fatalf("batch embed error: %v", err)
+	}
+
+	// Each text embedded individually should match the batch result.
+	for i, text := range texts {
+		singleVecs, err := e.Embed([]string{text})
+		if err != nil {
+			t.Fatalf("single embed error: %v", err)
+		}
+		for j := range singleVecs[0] {
+			if singleVecs[0][j] != batchVecs[i][j] {
+				t.Errorf("batch[%d] != single at dim %d: %f != %f", i, j, batchVecs[i][j], singleVecs[0][j])
+				break
+			}
+		}
+	}
+}
+
+// ===========================================================================
+// Phase 3: CombinedMatcher tests
+// ===========================================================================

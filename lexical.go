@@ -21,19 +21,19 @@ const (
 // LexicalMatcher implements ElementMatcher using Jaccard similarity
 // with stopword removal, token frequency weighting, and role-aware boosting.
 // Zero external dependencies.
-type LexicalMatcher struct{}
+type lexicalMatcher struct{}
 
 // NewLexicalMatcher creates a new LexicalMatcher.
-func NewLexicalMatcher() *LexicalMatcher {
-	return &LexicalMatcher{}
+func NewLexicalMatcher() ElementMatcher {
+	return &lexicalMatcher{}
 }
 
 // Strategy returns "lexical".
-func (m *LexicalMatcher) Strategy() string { return "lexical" }
+func (m *lexicalMatcher) Strategy() string { return "lexical" }
 
 // Find scores all elements against the query using lexical similarity,
 // filters by threshold, sorts descending, and returns the top-K matches.
-func (m *LexicalMatcher) Find(_ context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
+func (m *lexicalMatcher) Find(_ context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
 	if opts.TopK <= 0 {
 		opts.TopK = 3
 	}

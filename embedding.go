@@ -7,8 +7,8 @@ import (
 )
 
 // Embedder is the interface for converting text into dense vector
-// representations. Implementations include HashingEmbedder (zero deps,
-// feature hashing) and DummyEmbedder (deterministic, for testing).
+// representations. The default implementation is NewHashingEmbedder
+// (zero deps, feature hashing).
 //
 // Custom implementations can be provided for real ML models
 // (sentence-transformers, OpenAI, etc.).
@@ -21,76 +21,26 @@ type Embedder interface {
 	Strategy() string
 }
 
-// DummyEmbedder generates deterministic fixed-dimension vectors using a
-// simple hash of each input string. Useful for testing without real ML
-// dependencies. For production use, prefer HashingEmbedder.
-type DummyEmbedder struct {
-	Dim int // vector dimensionality (default 64)
-}
-
-// NewDummyEmbedder creates a DummyEmbedder with the given dimensionality.
-func NewDummyEmbedder(dim int) *DummyEmbedder {
-	if dim <= 0 {
-		dim = 64
-	}
-	return &DummyEmbedder{Dim: dim}
-}
-
-// Strategy returns "test".
-func (d *DummyEmbedder) Strategy() string { return "test" }
-
-// Embed generates deterministic pseudo-vectors by hashing each character
-// of the input string into the vector dimensions.
-func (d *DummyEmbedder) Embed(texts []string) ([][]float32, error) {
-	result := make([][]float32, len(texts))
-	for i, text := range texts {
-		result[i] = d.hashVec(text)
-	}
-	return result, nil
-}
-
-func (d *DummyEmbedder) hashVec(s string) []float32 {
-	vec := make([]float32, d.Dim)
-	for i, c := range s {
-		idx := (i*31 + int(c)) % d.Dim
-		if idx < 0 {
-			idx = -idx
-		}
-		vec[idx] += float32(c) / 128.0
-	}
-	var norm float64
-	for _, v := range vec {
-		norm += float64(v) * float64(v)
-	}
-	if norm > 0 {
-		invNorm := float32(1.0 / math.Sqrt(norm))
-		for j := range vec {
-			vec[j] *= invNorm
-		}
-	}
-	return vec
-}
-
-// EmbeddingMatcher implements ElementMatcher using vector embeddings
+// embeddingMatcher implements ElementMatcher using vector embeddings
 // and cosine similarity. It delegates text → vector conversion to the
 // provided Embedder implementation.
-type EmbeddingMatcher struct {
+type embeddingMatcher struct {
 	embedder Embedder
 }
 
 // NewEmbeddingMatcher creates an EmbeddingMatcher backed by the given Embedder.
-func NewEmbeddingMatcher(e Embedder) *EmbeddingMatcher {
-	return &EmbeddingMatcher{embedder: e}
+func NewEmbeddingMatcher(e Embedder) ElementMatcher {
+	return &embeddingMatcher{embedder: e}
 }
 
 // Strategy returns "embedding:<embedder_strategy>".
-func (m *EmbeddingMatcher) Strategy() string {
+func (m *embeddingMatcher) Strategy() string {
 	return "embedding:" + m.embedder.Strategy()
 }
 
 // Find embeds the query and all element descriptions, ranks by cosine
 // similarity, filters by threshold, and returns top-K matches.
-func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
+func (m *embeddingMatcher) Find(_ context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
 	if opts.TopK <= 0 {
 		opts.TopK = 3
 	}

@@ -17,7 +17,7 @@ import (
 //   - Captures sub-word similarity (e.g. "btn" ↔ "button")
 //   - L2-normalized output for cosine similarity compatibility
 //   - Zero external dependencies — pure Go
-type HashingEmbedder struct {
+type hashingEmbedder struct {
 	dim         int     // vector dimensionality
 	ngramMin    int     // minimum character n-gram length
 	ngramMax    int     // maximum character n-gram length
@@ -28,11 +28,11 @@ type HashingEmbedder struct {
 // NewHashingEmbedder creates a HashingEmbedder with the given dimension.
 // Higher dimensions reduce hash collisions but use more memory.
 // Recommended: 128 for speed, 256 for accuracy.
-func NewHashingEmbedder(dim int) *HashingEmbedder {
+func NewHashingEmbedder(dim int) Embedder {
 	if dim <= 0 {
 		dim = 128
 	}
-	return &HashingEmbedder{
+	return &hashingEmbedder{
 		dim:         dim,
 		ngramMin:    2,
 		ngramMax:    4,
@@ -42,10 +42,10 @@ func NewHashingEmbedder(dim int) *HashingEmbedder {
 }
 
 // Strategy returns "hashing".
-func (h *HashingEmbedder) Strategy() string { return "hashing" }
+func (h *hashingEmbedder) Strategy() string { return "hashing" }
 
 // Embed converts a batch of texts into hashed feature vectors.
-func (h *HashingEmbedder) Embed(texts []string) ([][]float32, error) {
+func (h *hashingEmbedder) Embed(texts []string) ([][]float32, error) {
 	result := make([][]float32, len(texts))
 	for i, text := range texts {
 		result[i] = h.vectorize(text)
@@ -55,7 +55,7 @@ func (h *HashingEmbedder) Embed(texts []string) ([][]float32, error) {
 
 // vectorize converts a single text into a hashed feature vector combining
 // word-level, character n-gram, role-aware, and synonym features.
-func (h *HashingEmbedder) vectorize(text string) []float32 {
+func (h *hashingEmbedder) vectorize(text string) []float32 {
 	vec := make([]float32, h.dim)
 
 	// Normalize text
@@ -129,7 +129,7 @@ func (h *HashingEmbedder) vectorize(text string) []float32 {
 // hashFeature hashes a feature string into an index [0, dim) and a sign
 // (+1 or -1). The sign hash preserves inner-product properties (the
 // "signed hashing trick" per Weinberger et al. 2009).
-func (h *HashingEmbedder) hashFeature(feature string) (int, float32) {
+func (h *hashingEmbedder) hashFeature(feature string) (int, float32) {
 	// Index hash
 	hasher := fnv.New32a()
 	hasher.Write([]byte(feature))
@@ -150,7 +150,7 @@ func (h *HashingEmbedder) hashFeature(feature string) (int, float32) {
 }
 
 // normalize L2-normalizes a vector in-place.
-func (h *HashingEmbedder) normalize(vec []float32) {
+func (h *hashingEmbedder) normalize(vec []float32) {
 	var norm float64
 	for _, v := range vec {
 		norm += float64(v) * float64(v)

@@ -13,9 +13,9 @@ import (
 //
 // This gives the best of both worlds: exact word overlap from lexical
 // matching and fuzzy / sub-word similarity from embedding matching.
-type CombinedMatcher struct {
-	lexical   *LexicalMatcher
-	embedding *EmbeddingMatcher
+type combinedMatcher struct {
+	lexical   ElementMatcher
+	embedding ElementMatcher
 
 	// weight factors (should sum to 1.0 for interpretable scores).
 	lexicalWeight   float64
@@ -26,8 +26,8 @@ type CombinedMatcher struct {
 // (0.6 lexical, 0.4 embedding). The lexical component has higher weight
 // because it handles exact matches perfectly, while embeddings add value
 // for fuzzy / partial queries.
-func NewCombinedMatcher(embedder Embedder) *CombinedMatcher {
-	return &CombinedMatcher{
+func NewCombinedMatcher(embedder Embedder) ElementMatcher {
+	return &combinedMatcher{
 		lexical:         NewLexicalMatcher(),
 		embedding:       NewEmbeddingMatcher(embedder),
 		lexicalWeight:   0.6,
@@ -36,13 +36,13 @@ func NewCombinedMatcher(embedder Embedder) *CombinedMatcher {
 }
 
 // Strategy returns "combined:lexical+embedding:<embedder>".
-func (c *CombinedMatcher) Strategy() string {
+func (c *combinedMatcher) Strategy() string {
 	return "combined:lexical+" + c.embedding.Strategy()
 }
 
 // Find runs both lexical and embedding matchers, merges scores by ref,
 // applies weighted averaging, and returns the top-K candidates.
-func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
+func (c *combinedMatcher) Find(ctx context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
 	if opts.TopK <= 0 {
 		opts.TopK = 3
 	}
@@ -58,7 +58,7 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []Ele
 }
 
 // weights returns the lexical and embedding weights for this request.
-func (c *CombinedMatcher) weights(opts FindOptions) (float64, float64) {
+func (c *combinedMatcher) weights(opts FindOptions) (float64, float64) {
 	if opts.lexicalWeight > 0 || opts.embeddingWeight > 0 {
 		return opts.lexicalWeight, opts.embeddingWeight
 	}
@@ -72,7 +72,7 @@ type matcherResult struct {
 }
 
 // runBoth executes lexical and embedding matchers concurrently.
-func (c *CombinedMatcher) runBoth(ctx context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, FindResult, error) {
+func (c *combinedMatcher) runBoth(ctx context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, FindResult, error) {
 	internalOpts := FindOptions{
 		Threshold: opts.Threshold * 0.5,
 		TopK:      len(elements),
@@ -123,7 +123,7 @@ type scored struct {
 
 // mergeResults fuses lexical and embedding scores by ref, sorts, and
 // returns the top-K matches above threshold.
-func (c *CombinedMatcher) mergeResults(lexResult, embResult FindResult, elements []ElementDescriptor, opts FindOptions, lexW, embW float64) FindResult {
+func (c *combinedMatcher) mergeResults(lexResult, embResult FindResult, elements []ElementDescriptor, opts FindOptions, lexW, embW float64) FindResult {
 	lexScores := scoreMap(lexResult.Matches)
 	embScores := scoreMap(embResult.Matches)
 
