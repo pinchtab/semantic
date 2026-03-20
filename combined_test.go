@@ -6,14 +6,10 @@ import (
 	"testing"
 )
 
-// ===========================================================================
 // CATEGORY 6: Role Boost Accumulation Test (Bug Fix)
-// ===========================================================================
 
 
-// ===========================================================================
 // Phase 3: CombinedMatcher tests
-// ===========================================================================
 
 func TestCombinedMatcher_Strategy(t *testing.T) {
 	m := NewCombinedMatcher(NewHashingEmbedder(128))
@@ -184,9 +180,7 @@ func TestCombinedMatcher_NoElements(t *testing.T) {
 	}
 }
 
-// ===========================================================================
 // Phase 3: Complex UI test scenarios
-// ===========================================================================
 
 // complexFormElements returns a realistic form page with 15+ elements.
 func complexFormElements() []ElementDescriptor {
@@ -362,9 +356,7 @@ func TestCombinedMatcher_ComplexModal(t *testing.T) {
 	}
 }
 
-// ===========================================================================
 // Phase 3: Benchmark tests
-// ===========================================================================
 
 func BenchmarkLexicalMatcher_Find(b *testing.B) {
 	m := NewLexicalMatcher()

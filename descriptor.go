@@ -1,11 +1,9 @@
-// Package semantic provides lightweight lexical similarity matching
-// for accessibility tree elements. Zero external dependencies.
+// Package semantic provides natural language matching for accessibility tree elements.
 package semantic
 
 import "strings"
 
-// ElementDescriptor builds a composite text description from an
-// accessibility tree node's properties for similarity comparison.
+// ElementDescriptor represents an accessibility tree node.
 type ElementDescriptor struct {
 	Ref   string
 	Role  string
@@ -13,8 +11,7 @@ type ElementDescriptor struct {
 	Value string
 }
 
-// Composite returns a single string that captures the semantic identity
-// of an element, suitable for lexical similarity comparison.
+// Composite returns "role: name [value]" for similarity comparison.
 func (ed *ElementDescriptor) Composite() string {
 	var parts []string
 

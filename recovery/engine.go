@@ -8,7 +8,6 @@ import (
 	"github.com/pinchtab/semantic"
 )
 
-// RecoveryConfig tunes the self-healing behaviour.
 type RecoveryConfig struct {
 	// Enabled globally enables/disables recovery. Default true.
 	Enabled bool
@@ -27,7 +26,6 @@ type RecoveryConfig struct {
 	PreferHighConfidence bool
 }
 
-// DefaultRecoveryConfig returns a production-ready configuration.
 func DefaultRecoveryConfig() RecoveryConfig {
 	return RecoveryConfig{
 		Enabled:              true,
@@ -37,8 +35,6 @@ func DefaultRecoveryConfig() RecoveryConfig {
 	}
 }
 
-// RecoveryResult captures what the recovery engine did. It is embedded
-// into the action response when recovery was attempted.
 type RecoveryResult struct {
 	// Recovered is true if the action succeeded after re-matching.
 	Recovered bool `json:"recovered"`
@@ -71,22 +67,12 @@ type RecoveryResult struct {
 	Error string `json:"error,omitempty"`
 }
 
-// SnapshotRefresher is a callback the handler provides so the recovery
-// engine can force a fresh CDP accessibility tree fetch without importing
-// the bridge or chromedp packages.
 type SnapshotRefresher func(ctx context.Context, tabID string) error
 
-// NodeIDResolver maps a ref string to a node ID from the current
-// snapshot cache. Returns (nodeID, true) or (0, false).
 type NodeIDResolver func(tabID, ref string) (int64, bool)
 
-// ActionExecutor runs a single action and returns the result or error.
-// This is the same signature as Bridge.ExecuteAction.
 type ActionExecutor func(ctx context.Context, kind string, nodeID int64) (map[string]any, error)
 
-// DescriptorBuilder converts raw snapshot data into semantic.ElementDescriptors.
-// The handler provides this so the recovery engine stays decoupled from
-// bridge internals.
 type DescriptorBuilder func(tabID string) []semantic.ElementDescriptor
 
 // RecoveryEngine orchestrates self-healing when an action fails because
@@ -108,7 +94,6 @@ type RecoveryEngine struct {
 	BuildDescs  DescriptorBuilder
 }
 
-// NewRecoveryEngine creates a RecoveryEngine with the given dependencies.
 func NewRecoveryEngine(
 	cfg RecoveryConfig,
 	matcher semantic.ElementMatcher,
@@ -127,8 +112,6 @@ func NewRecoveryEngine(
 	}
 }
 
-// ShouldAttempt returns true when recovery is enabled and the failure
-// type is recoverable.
 func (re *RecoveryEngine) ShouldAttempt(err error, ref string) bool {
 	if !re.Config.Enabled || ref == "" {
 		return false
@@ -137,19 +120,7 @@ func (re *RecoveryEngine) ShouldAttempt(err error, ref string) bool {
 	return ft.Recoverable()
 }
 
-// Attempt tries to semantically re-locate a stale element and re-execute
-// the action. It returns a RecoveryResult and, if successful, the action's
-// result payload.
-//
-// Flow:
-//  1. Classify the failure.
-//  2. Reconstruct a search query from the IntentCache or the ref's last
-//     known descriptor.
-//  3. Force a fresh snapshot via the Refresh callback.
-//  4. Build new descriptors and run the Matcher.
-//  5. If a match exceeds MinConfidence, resolve its nodeID and call the
-//     ActionExecutor.
-//  6. Return the RecoveryResult.
+// Attempt re-locates a stale element and re-executes the action.
 func (re *RecoveryEngine) Attempt(
 	ctx context.Context,
 	tabID string,
@@ -161,9 +132,7 @@ func (re *RecoveryEngine) Attempt(
 	return re.attemptRecovery(ctx, tabID, ref, kind, ft, exec)
 }
 
-// AttemptWithClassification is like Attempt but accepts the pre-classified
-// failure type so callers that already called ClassifyFailure don't
-// re-compute it.
+// AttemptWithClassification is like Attempt but takes a pre-classified FailureType.
 func (re *RecoveryEngine) AttemptWithClassification(
 	ctx context.Context,
 	tabID string,
@@ -175,9 +144,7 @@ func (re *RecoveryEngine) AttemptWithClassification(
 	return re.attemptRecovery(ctx, tabID, ref, kind, ft, exec)
 }
 
-// attemptRecovery is the shared implementation for Attempt and
-// AttemptWithClassification. It runs the retry loop: reconstruct query →
-// refresh snapshot → re-match → resolve node → re-execute action.
+// attemptRecovery is the shared retry loop for Attempt and AttemptWithClassification.
 func (re *RecoveryEngine) attemptRecovery(
 	ctx context.Context,
 	tabID string,
@@ -272,9 +239,6 @@ func (re *RecoveryEngine) attemptRecovery(
 	return rr, nil, lastErr
 }
 
-// reconstructQuery builds the best possible search query from the
-// IntentCache. It prefers an explicit query string, falls back to the
-// element's composite descriptor.
 func (re *RecoveryEngine) reconstructQuery(tabID, ref string) string {
 	if re.IntentCache == nil {
 		return ""
@@ -289,8 +253,6 @@ func (re *RecoveryEngine) reconstructQuery(tabID, ref string) string {
 	return entry.Descriptor.Composite()
 }
 
-// RecordIntent is a convenience for the handler layer to cache element
-// intent after a successful /find or before an action execution.
 func (re *RecoveryEngine) RecordIntent(tabID, ref string, entry IntentEntry) {
 	if re.IntentCache != nil {
 		re.IntentCache.Store(tabID, ref, entry)

@@ -59,9 +59,7 @@ func cosineSim(a, b []float32) float64 {
 	return dot / (math.Sqrt(normA) * math.Sqrt(normB))
 }
 
-// ===========================================================================
 // Score Distribution Analysis Test
-// ===========================================================================
 
 func TestHashingEmbedder_PhraseAwareSynonymInjection(t *testing.T) {
 	emb := NewHashingEmbedder(256)
@@ -88,9 +86,7 @@ func TestHashingEmbedder_PhraseAwareSynonymInjection(t *testing.T) {
 }
 
 
-// ===========================================================================
 // Phase 3: HashingEmbedder tests
-// ===========================================================================
 
 func TestHashingEmbedder_Strategy(t *testing.T) {
 	e := NewHashingEmbedder(128)
@@ -262,6 +258,4 @@ func TestHashingEmbedder_BatchConsistency(t *testing.T) {
 	}
 }
 
-// ===========================================================================
 // Phase 3: CombinedMatcher tests
-// ===========================================================================

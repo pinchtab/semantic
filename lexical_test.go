@@ -36,9 +36,7 @@ func TestTokenPrefixScore_NoPrefix(t *testing.T) {
 	}
 }
 
-// ===========================================================================
 // LexicalScore with Improvements - Real-World Scenarios
-// ===========================================================================
 
 func TestLexicalScore_SignIn_vs_LogIn(t *testing.T) {
 	// This was the #1 failing case from the real-world evaluation
@@ -118,9 +116,7 @@ func TestLexicalScore_StillRejectsUnrelated(t *testing.T) {
 	}
 }
 
-// ===========================================================================
 // Combined Matcher with Improvements - Real-World Evaluation Scenarios
-// ===========================================================================
 
 // buildRealWorldElements creates elements mimicking real website structures
 func buildRealWorldElements() map[string][]ElementDescriptor {
@@ -188,9 +184,7 @@ func buildRealWorldElements() map[string][]ElementDescriptor {
 	}
 }
 
-// ===========================================================================
 // CATEGORY 1: Exact Match Tests
-// ===========================================================================
 
 func TestLexicalScore_MultipleRoleKeywordsAccumulate(t *testing.T) {
 	// "search input" has two role keywords: "search" and "input"
@@ -204,9 +198,7 @@ func TestLexicalScore_MultipleRoleKeywordsAccumulate(t *testing.T) {
 	}
 }
 
-// ===========================================================================
 // COMPREHENSIVE EVALUATION - Reproduces the exact tests from the issue
-// ===========================================================================
 
 func TestLexicalScore_LogOn_vs_SignIn(t *testing.T) {
 	desc := "link: Sign in"
@@ -217,9 +209,7 @@ func TestLexicalScore_LogOn_vs_SignIn(t *testing.T) {
 }
 
 
-// ===========================================================================
 // LexicalScore tests
-// ===========================================================================
 
 func TestLexicalScore_ExactMatch(t *testing.T) {
 	score := lexicalScore("submit button", "button: Submit")
@@ -254,13 +244,9 @@ func TestLexicalScore_StopwordRemoval(t *testing.T) {
 	}
 }
 
-// ===========================================================================
 // LexicalMatcher (ElementMatcher interface) tests
-// ===========================================================================
 
-// ===========================================================================
 // LexicalMatcher (ElementMatcher interface) tests
-// ===========================================================================
 
 func TestLexicalMatcher_Find(t *testing.T) {
 	m := NewLexicalMatcher()
@@ -318,6 +304,4 @@ func TestLexicalMatcher_ThresholdFiltering(t *testing.T) {
 	}
 }
 
-// ===========================================================================
 // dummyEmbedder tests
-// ===========================================================================

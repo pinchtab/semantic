@@ -2,9 +2,7 @@ package semantic
 
 import "context"
 
-// ElementMatcher is the interface for all element matching strategies.
-// Implementations include LexicalMatcher (Jaccard-based, zero deps) and
-// EmbeddingMatcher (cosine similarity on vector embeddings).
+// ElementMatcher scores accessibility tree elements against a natural language query.
 type ElementMatcher interface {
 	// Find scores elements against a natural language query and returns
 	// the top-K matches above the threshold.
@@ -14,7 +12,7 @@ type ElementMatcher interface {
 	Strategy() string
 }
 
-// FindOptions controls matching behaviour.
+// FindOptions controls matching behavior.
 type FindOptions struct {
 	// Threshold is the minimum similarity score for a match to be included.
 	Threshold float64
@@ -31,7 +29,7 @@ type FindOptions struct {
 	embeddingWeight float64
 }
 
-// FindResult holds the output of a Find operation.
+// FindResult holds the top matches from a Find call.
 type FindResult struct {
 	Matches      []ElementMatch
 	BestRef      string
@@ -40,13 +38,12 @@ type FindResult struct {
 	ElementCount int // total elements evaluated
 }
 
-// ConfidenceLabel returns a human-readable confidence level for the best
-// match score. Delegates to CalibrateConfidence for consistent labelling.
+// ConfidenceLabel returns "high", "medium", or "low" for the best match.
 func (r *FindResult) ConfidenceLabel() string {
 	return CalibrateConfidence(r.BestScore)
 }
 
-// ElementMatch holds a scored match result.
+// ElementMatch is a single scored match.
 type ElementMatch struct {
 	Ref   string  `json:"ref"`
 	Score float64 `json:"score"`
@@ -57,7 +54,7 @@ type ElementMatch struct {
 	Explain *MatchExplain `json:"explain,omitempty"`
 }
 
-// MatchExplain exposes the per-strategy score breakdown for debugging.
+// MatchExplain is the per-strategy score breakdown (when FindOptions.Explain is true).
 type MatchExplain struct {
 	LexicalScore   float64 `json:"lexical_score"`
 	EmbeddingScore float64 `json:"embedding_score"`

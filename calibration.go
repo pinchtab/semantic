@@ -1,8 +1,6 @@
 package semantic
 
-// CalibrateConfidence maps a numeric similarity score to a human-readable
-// confidence label. This function is shared across all matcher strategies
-// to ensure consistent labelling.
+// CalibrateConfidence maps a similarity score to "high", "medium", or "low".
 func CalibrateConfidence(score float64) string {
 	switch {
 	case score >= 0.8:

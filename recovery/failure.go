@@ -2,8 +2,6 @@ package recovery
 
 import "strings"
 
-// FailureType classifies the cause of an action failure so the recovery
-// engine can decide whether and how to attempt self-healing.
 type FailureType int
 
 const (
@@ -31,7 +29,6 @@ const (
 	FailureNetwork
 )
 
-// String returns a human-readable label for the failure type.
 func (f FailureType) String() string {
 	switch f {
 	case FailureElementNotFound:
@@ -49,8 +46,6 @@ func (f FailureType) String() string {
 	}
 }
 
-// Recoverable reports whether the failure type is eligible for automatic
-// self-healing. Network and unknown failures are not recoverable.
 func (f FailureType) Recoverable() bool {
 	switch f {
 	case FailureElementNotFound,
@@ -63,14 +58,11 @@ func (f FailureType) Recoverable() bool {
 	}
 }
 
-// classificationRule maps a set of error patterns to a FailureType.
 type classificationRule struct {
 	failureType FailureType
 	patterns    []string
 }
 
-// classificationRules is the ordered pattern table for error classification.
-// Rules are checked top-to-bottom; the first match wins.
 var classificationRules = []classificationRule{
 	{FailureElementNotFound, []string{
 		"could not find node", "node with given id", "no node",
@@ -96,11 +88,8 @@ var classificationRules = []classificationRule{
 	}},
 }
 
-// ClassifyFailure inspects an error string and returns the most likely
-// FailureType. The classification is intentionally broad — it matches
-// error messages produced by Chrome DevTools Protocol, chromedp, and
-// PinchTab's own bridge layer so that recovery works regardless of which
-// layer reported the failure.
+// ClassifyFailure maps an error to a FailureType by pattern-matching
+// against known CDP, chromedp, and PinchTab error messages.
 func ClassifyFailure(err error) FailureType {
 	if err == nil {
 		return FailureUnknown

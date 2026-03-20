@@ -7,10 +7,7 @@ import (
 	"github.com/pinchtab/semantic"
 )
 
-// IntentEntry captures the semantic identity of an element at the time an
-// action was requested. When the element's ref becomes stale, the
-// recovery engine uses this cached intent to build a semantic search
-// query against the fresh snapshot.
+// IntentEntry captures what the agent meant by a ref at action time.
 type IntentEntry struct {
 	// Query is the original natural-language query (if the action was
 	// preceded by /find). Otherwise empty.
@@ -30,7 +27,6 @@ type IntentEntry struct {
 }
 
 // IntentCache is a thread-safe, per-tab LRU cache of element intents.
-// Key hierarchy: tabID → ref → IntentEntry.
 type IntentCache struct {
 	mu      sync.RWMutex
 	tabs    map[string]map[string]IntentEntry
@@ -38,8 +34,6 @@ type IntentCache struct {
 	ttl     time.Duration // entry expiry
 }
 
-// NewIntentCache returns an IntentCache that evicts entries older than
-// ttl and limits each tab to maxRefs entries.
 func NewIntentCache(maxRefs int, ttl time.Duration) *IntentCache {
 	if maxRefs <= 0 {
 		maxRefs = 200
@@ -54,7 +48,6 @@ func NewIntentCache(maxRefs int, ttl time.Duration) *IntentCache {
 	}
 }
 
-// Store records (or updates) the intent for a given (tabID, ref) pair.
 func (c *IntentCache) Store(tabID, ref string, entry IntentEntry) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -87,7 +80,6 @@ func (c *IntentCache) Store(tabID, ref string, entry IntentEntry) {
 	tab[ref] = entry
 }
 
-// Lookup returns the cached intent for the ref, or (IntentEntry{}, false).
 func (c *IntentCache) Lookup(tabID, ref string) (IntentEntry, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -106,14 +98,12 @@ func (c *IntentCache) Lookup(tabID, ref string) (IntentEntry, bool) {
 	return entry, true
 }
 
-// InvalidateTab removes all cached intents for a tab.
 func (c *IntentCache) InvalidateTab(tabID string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	delete(c.tabs, tabID)
 }
 
-// Size returns the total number of cached entries across all tabs.
 func (c *IntentCache) Size() int {
 	c.mu.RLock()
 	defer c.mu.RUnlock()

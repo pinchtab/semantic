@@ -102,13 +102,9 @@ func TestComprehensiveEvaluation(t *testing.T) {
 	}
 }
 
-// ===========================================================================
 // Hashing Embedder Synonym Feature Tests
-// ===========================================================================
 
-// ===========================================================================
 // Hashing Embedder Synonym Feature Tests
-// ===========================================================================
 
 func TestScoreDistribution_BeforeVsExpected(t *testing.T) {
 	// This test documents the expected improvement in scores
@@ -155,13 +151,9 @@ func TestScoreDistribution_BeforeVsExpected(t *testing.T) {
 	}
 }
 
-// ===========================================================================
 // Stopword Edge Cases
-// ===========================================================================
 
-// ===========================================================================
 // Stopword Edge Cases
-// ===========================================================================
 
 func TestMultiSiteEvaluation(t *testing.T) {
 	sites := buildRealWorldElements()

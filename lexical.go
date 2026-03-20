@@ -18,21 +18,14 @@ const (
 	prefixMatchWeight = 0.20
 )
 
-// LexicalMatcher implements ElementMatcher using Jaccard similarity
-// with stopword removal, token frequency weighting, and role-aware boosting.
-// Zero external dependencies.
 type lexicalMatcher struct{}
 
-// NewLexicalMatcher creates a new LexicalMatcher.
 func NewLexicalMatcher() ElementMatcher {
 	return &lexicalMatcher{}
 }
 
-// Strategy returns "lexical".
 func (m *lexicalMatcher) Strategy() string { return "lexical" }
 
-// Find scores all elements against the query using lexical similarity,
-// filters by threshold, sorts descending, and returns the top-K matches.
 func (m *lexicalMatcher) Find(_ context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
 	if opts.TopK <= 0 {
 		opts.TopK = 3
@@ -82,9 +75,7 @@ func (m *lexicalMatcher) Find(_ context.Context, query string, elements []Elemen
 	return result, nil
 }
 
-// --- lexical scoring internals ---
 
-// tokenize splits a string into lowercase tokens, removing punctuation.
 func tokenize(s string) []string {
 	s = strings.ToLower(s)
 	return strings.FieldsFunc(s, func(r rune) bool {
@@ -92,7 +83,6 @@ func tokenize(s string) []string {
 	})
 }
 
-// tokenFreq returns token → count map.
 func tokenFreq(tokens []string) map[string]int {
 	m := make(map[string]int, len(tokens))
 	for _, t := range tokens {
@@ -101,7 +91,6 @@ func tokenFreq(tokens []string) map[string]int {
 	return m
 }
 
-// tokenSet converts a slice of tokens to a set (map).
 func tokenSet(tokens []string) map[string]bool {
 	m := make(map[string]bool, len(tokens))
 	for _, t := range tokens {
@@ -110,7 +99,6 @@ func tokenSet(tokens []string) map[string]bool {
 	return m
 }
 
-// roleKeywords are element roles that carry strong semantic signal.
 var roleKeywords = map[string]bool{
 	"button":   true,
 	"input":    true,
@@ -127,17 +115,9 @@ var roleKeywords = map[string]bool{
 	"search":   true,
 }
 
-// lexicalScore computes a similarity between a query and an element
-// description using Jaccard overlap on tokens with:
-//   - lowercase normalization
-//   - context-aware stopword removal
-//   - token frequency weighting (repeated tokens count proportionally)
-//   - role keyword boost (cumulative, capped at roleBoostCap)
-//   - synonym expansion (lightweight static synonym table)
-//   - prefix matching for abbreviations (e.g. "btn" → "button")
-//   - token importance weighting (rarer tokens score higher)
-//
-// Returns a value in [0, 1].
+// lexicalScore computes Jaccard similarity with synonym expansion,
+// context-aware stopwords, role boosting, and prefix matching.
+// Returns [0, 1].
 func lexicalScore(query, desc string) float64 {
 	rawQTokens := tokenize(query)
 	rawDTokens := tokenize(desc)
@@ -221,8 +201,6 @@ func lexicalScore(query, desc string) float64 {
 	return score
 }
 
-// tokenPrefixScore scores prefix overlap between query and description
-// tokens. Handles abbreviations like "btn" → "button", "nav" → "navigation".
 func tokenPrefixScore(qTokens, dTokens []string) float64 {
 	if len(qTokens) == 0 {
 		return 0

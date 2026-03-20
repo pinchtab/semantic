@@ -2,15 +2,7 @@ package semantic
 
 import "strings"
 
-// uiSynonyms maps common UI action/element terms to their synonyms.
-// During lexical scoring the query tokens are expanded with synonyms
-// so that "sign in" can match "log in", "register" can match
-// "create account", etc.
-//
-// Keys are canonical terms (lowercase). Values are slices of
-// equivalent terms that should be treated as matches. The mapping
-// is bidirectional: if "login" maps to "signin", then "signin"
-// also maps back to "login" via the reverse index built at init.
+// uiSynonyms maps UI terms to their equivalents. Bidirectional via synonymIndex.
 var uiSynonyms = map[string][]string{
 	// Authentication & account actions
 	"login":    {"signin", "log in", "sign in", "authenticate", "logon", "log on"},
@@ -81,17 +73,12 @@ var uiSynonyms = map[string][]string{
 	"reject":  {"deny", "decline", "refuse", "no"},
 }
 
-// synonymIndex is the flattened bidirectional lookup: given any token
-// it returns all equivalent tokens including those obtained by walking
-// the reverse mapping.
 var synonymIndex map[string]map[string]bool
 
 func init() {
 	synonymIndex = buildSynonymIndex(uiSynonyms)
 }
 
-// buildSynonymIndex builds a bidirectional synonym lookup from the
-// canonical synonym table.
 func buildSynonymIndex(table map[string][]string) map[string]map[string]bool {
 	idx := make(map[string]map[string]bool)
 
@@ -126,13 +113,8 @@ func buildSynonymIndex(table map[string][]string) map[string]map[string]bool {
 	return idx
 }
 
-// expandWithSynonyms takes a set of query tokens and returns an expanded
-// set that includes synonym matches. Multi-word synonyms are split into
-// individual tokens during expansion.
-//
-// The expansion is conservative: only ONE synonym expansion per token is
-// applied (the one that appears in the target description tokens) to
-// avoid combinatorial explosion.
+// expandWithSynonyms adds synonym tokens from descTokens. Conservative:
+// only one expansion per query token to avoid combinatorial explosion.
 func expandWithSynonyms(queryTokens []string, descTokens []string) []string {
 	descSet := make(map[string]bool, len(descTokens))
 	for _, dt := range descTokens {
@@ -187,15 +169,12 @@ func expandWithSynonyms(queryTokens []string, descTokens []string) []string {
 	return expanded
 }
 
-// phrase represents a multi-word phrase built from consecutive tokens.
 type phrase struct {
 	text     string
 	startIdx int
 	endIdx   int
 }
 
-// buildPhrases generates all consecutive n-gram phrases (up to maxN words)
-// from a token list.
 func buildPhrases(tokens []string, maxN int) []phrase {
 	var phrases []phrase
 	for n := 2; n <= maxN && n <= len(tokens); n++ {
@@ -210,10 +189,6 @@ func buildPhrases(tokens []string, maxN int) []phrase {
 	return phrases
 }
 
-// synonymScore computes an additional similarity contribution from
-// synonym matching between query and description tokens. Returns a
-// value in [0, 1] representing how much of the query was satisfied
-// via synonyms.
 func synonymScore(queryTokens, descTokens []string) float64 {
 	if len(queryTokens) == 0 || len(descTokens) == 0 {
 		return 0

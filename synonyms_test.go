@@ -101,9 +101,7 @@ func TestBuildPhrases(t *testing.T) {
 	}
 }
 
-// ===========================================================================
 // Context-Aware Stopword Tests
-// ===========================================================================
 
 func TestSynonymScore_NoDuplicateCounting(t *testing.T) {
 	// "sign in" should match the phrase "sign in" in synonymIndex.

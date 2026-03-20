@@ -49,9 +49,7 @@ func TestRemoveStopwordsContextAware_PreservesSemanticStopwordInContext(t *testi
 	}
 }
 
-// ===========================================================================
 // Prefix Matching Tests
-// ===========================================================================
 
 func TestStopword_InPreservedInSignIn(t *testing.T) {
 	// "in" should NOT be removed from "sign in" because it forms a synonym phrase
@@ -102,9 +100,7 @@ func TestStopword_NotPreservedInNotNow(t *testing.T) {
 	}
 }
 
-// ===========================================================================
 // Benchmark: Synonym Expansion Overhead
-// ===========================================================================
 
 func BenchmarkSynonymScore(b *testing.B) {
 	qTokens := tokenize("sign in button")
@@ -153,9 +149,7 @@ func BenchmarkCombinedMatcher_SynonymQuery(b *testing.B) {
 	}
 }
 
-// ===========================================================================
 // Multi-Site Comprehensive Evaluation (scoring table)
-// ===========================================================================
 
 func TestStopword_OnPreservedInLogOn(t *testing.T) {
 	query := removeStopwordsContextAware(
@@ -174,9 +168,7 @@ func TestStopword_OnPreservedInLogOn(t *testing.T) {
 }
 
 
-// ===========================================================================
 // Stopword tests
-// ===========================================================================
 
 func TestIsStopword(t *testing.T) {
 	if !isStopword("the") {
@@ -202,6 +194,4 @@ func TestRemoveStopwords(t *testing.T) {
 	}
 }
 
-// ===========================================================================
 // LexicalScore tests
-// ===========================================================================

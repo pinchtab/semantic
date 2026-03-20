@@ -1,8 +1,6 @@
 package semantic
 
-// stopwords is a set of common English words that carry little semantic
-// meaning and should be excluded from lexical matching to improve
-// signal-to-noise ratio.
+// stopwords that carry little semantic meaning in UI matching.
 var stopwords = map[string]bool{
 	"the": true, "a": true, "an": true, "is": true, "are": true,
 	"was": true, "were": true, "be": true, "been": true, "being": true,
@@ -21,10 +19,8 @@ var stopwords = map[string]bool{
 	"she": true, "his": true, "her": true, "they": true, "their": true,
 }
 
-// semanticStopwords are words that are normally stopwords but carry
-// meaningful signal in certain UI contexts (e.g. "in" in "sign in",
-// "not" in "do not"). They are removed ONLY if they don't appear in
-// the other side's token set (context-aware removal).
+// semanticStopwords are context-dependent: "in" is noise alone but
+// meaningful in "sign in". Removed only when absent from the other token set.
 var semanticStopwords = map[string]bool{
 	"in":  true, // "sign in", "log in"
 	"up":  true, // "sign up", "look up"
@@ -37,20 +33,14 @@ var semanticStopwords = map[string]bool{
 	"ok":  true, // acceptance button
 }
 
-// isStopword returns true if the token is a common English stopword.
 func isStopword(token string) bool {
 	return stopwords[token]
 }
 
-// isSemanticStopword returns true for words that are semi-stopwords:
-// normally low-value but can carry meaning in UI context.
 func isSemanticStopword(token string) bool {
 	return semanticStopwords[token]
 }
 
-// removeStopwords filters out stopwords from a token list.
-// If removal would empty the list, the original tokens are returned
-// to avoid zero-signal matching.
 func removeStopwords(tokens []string) []string {
 	filtered := make([]string, 0, len(tokens))
 	for _, t := range tokens {
@@ -64,15 +54,9 @@ func removeStopwords(tokens []string) []string {
 	return filtered
 }
 
-// removeStopwordsContextAware performs context-aware stopword removal.
-// A word is preserved if:
-//  1. It is not a stopword, OR
-//  2. It IS a semantic stopword AND it appears in the other set of
-//     tokens (meaning it carries matching signal), OR
-//  3. It forms part of a known synonym phrase with adjacent tokens
-//     (e.g. "sign" + "in" → "sign in" is a synonym entry).
-//
-// Falls back to returning original tokens if everything would be removed.
+// removeStopwordsContextAware preserves stopwords that appear in the other
+// token set or form part of known synonym phrases ("sign in", "log on").
+// Returns original tokens if removal would empty the list.
 func removeStopwordsContextAware(tokens []string, otherTokens []string) []string {
 	otherSet := make(map[string]bool, len(otherTokens))
 	for _, t := range otherTokens {

@@ -7,16 +7,9 @@ import (
 	"unicode"
 )
 
-// HashingEmbedder implements Embedder using a feature-hashing (hashing trick)
-// approach. It produces fixed-dimension vectors by hashing word unigrams and
-// character n-grams into a compact vector space. No vocabulary construction
-// is required, making each Embed call fully independent.
-//
-// Properties:
-//   - Fixed vector dimensionality regardless of vocabulary size
-//   - Captures sub-word similarity (e.g. "btn" ↔ "button")
-//   - L2-normalized output for cosine similarity compatibility
-//   - Zero external dependencies — pure Go
+// hashingEmbedder uses the hashing trick (Weinberger et al. 2009) to produce
+// fixed-dimension vectors from word unigrams and character n-grams.
+// No vocabulary construction needed.
 type hashingEmbedder struct {
 	dim         int     // vector dimensionality
 	ngramMin    int     // minimum character n-gram length
@@ -25,9 +18,6 @@ type hashingEmbedder struct {
 	ngramWeight float32 // weight factor for n-gram features
 }
 
-// NewHashingEmbedder creates a HashingEmbedder with the given dimension.
-// Higher dimensions reduce hash collisions but use more memory.
-// Recommended: 128 for speed, 256 for accuracy.
 func NewHashingEmbedder(dim int) Embedder {
 	if dim <= 0 {
 		dim = 128
@@ -41,10 +31,8 @@ func NewHashingEmbedder(dim int) Embedder {
 	}
 }
 
-// Strategy returns "hashing".
 func (h *hashingEmbedder) Strategy() string { return "hashing" }
 
-// Embed converts a batch of texts into hashed feature vectors.
 func (h *hashingEmbedder) Embed(texts []string) ([][]float32, error) {
 	result := make([][]float32, len(texts))
 	for i, text := range texts {
@@ -53,8 +41,6 @@ func (h *hashingEmbedder) Embed(texts []string) ([][]float32, error) {
 	return result, nil
 }
 
-// vectorize converts a single text into a hashed feature vector combining
-// word-level, character n-gram, role-aware, and synonym features.
 func (h *hashingEmbedder) vectorize(text string) []float32 {
 	vec := make([]float32, h.dim)
 
@@ -126,9 +112,6 @@ func (h *hashingEmbedder) vectorize(text string) []float32 {
 	return vec
 }
 
-// hashFeature hashes a feature string into an index [0, dim) and a sign
-// (+1 or -1). The sign hash preserves inner-product properties (the
-// "signed hashing trick" per Weinberger et al. 2009).
 func (h *hashingEmbedder) hashFeature(feature string) (int, float32) {
 	// Index hash
 	hasher := fnv.New32a()
@@ -149,7 +132,6 @@ func (h *hashingEmbedder) hashFeature(feature string) (int, float32) {
 	return idx, sign
 }
 
-// normalize L2-normalizes a vector in-place.
 func (h *hashingEmbedder) normalize(vec []float32) {
 	var norm float64
 	for _, v := range vec {
@@ -163,7 +145,6 @@ func (h *hashingEmbedder) normalize(vec []float32) {
 	}
 }
 
-// tokenizeForEmbedding splits text into lowercase tokens for embedding.
 func tokenizeForEmbedding(s string) []string {
 	return strings.FieldsFunc(s, func(r rune) bool {
 		return !unicode.IsLetter(r) && !unicode.IsDigit(r)

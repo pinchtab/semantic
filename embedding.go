@@ -6,12 +6,7 @@ import (
 	"sort"
 )
 
-// Embedder is the interface for converting text into dense vector
-// representations. The default implementation is NewHashingEmbedder
-// (zero deps, feature hashing).
-//
-// Custom implementations can be provided for real ML models
-// (sentence-transformers, OpenAI, etc.).
+// Embedder converts text into dense vectors. See NewHashingEmbedder.
 type Embedder interface {
 	// Embed converts a batch of text strings into float32 vectors.
 	// All returned vectors must have the same dimensionality.
@@ -21,25 +16,18 @@ type Embedder interface {
 	Strategy() string
 }
 
-// embeddingMatcher implements ElementMatcher using vector embeddings
-// and cosine similarity. It delegates text → vector conversion to the
-// provided Embedder implementation.
 type embeddingMatcher struct {
 	embedder Embedder
 }
 
-// NewEmbeddingMatcher creates an EmbeddingMatcher backed by the given Embedder.
 func NewEmbeddingMatcher(e Embedder) ElementMatcher {
 	return &embeddingMatcher{embedder: e}
 }
 
-// Strategy returns "embedding:<embedder_strategy>".
 func (m *embeddingMatcher) Strategy() string {
 	return "embedding:" + m.embedder.Strategy()
 }
 
-// Find embeds the query and all element descriptions, ranks by cosine
-// similarity, filters by threshold, and returns top-K matches.
 func (m *embeddingMatcher) Find(_ context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
 	if opts.TopK <= 0 {
 		opts.TopK = 3
@@ -104,8 +92,6 @@ func (m *embeddingMatcher) Find(_ context.Context, query string, elements []Elem
 	return result, nil
 }
 
-// cosineSimilarity computes cosine similarity between two float32 vectors.
-// Returns a value in [-1, 1]; for normalized vectors this is in [0, 1].
 func cosineSimilarity(a, b []float32) float64 {
 	if len(a) != len(b) || len(a) == 0 {
 		return 0

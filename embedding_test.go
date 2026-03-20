@@ -8,9 +8,7 @@ import (
 
 
 
-// ===========================================================================
 // dummyEmbedder tests
-// ===========================================================================
 
 func TestDummyEmbedder_Deterministic(t *testing.T) {
 	e := newDummyEmbedder(64)
@@ -66,13 +64,9 @@ func TestDummyEmbedder_NormalizedOutput(t *testing.T) {
 	}
 }
 
-// ===========================================================================
 // CosineSimilarity tests
-// ===========================================================================
 
-// ===========================================================================
 // CosineSimilarity tests
-// ===========================================================================
 
 func TestCosineSimilarity_Identical(t *testing.T) {
 	v := []float32{1, 0, 0, 0}
@@ -107,13 +101,9 @@ func TestCosineSimilarity_DifferentLengths(t *testing.T) {
 	}
 }
 
-// ===========================================================================
 // EmbeddingMatcher tests
-// ===========================================================================
 
-// ===========================================================================
 // EmbeddingMatcher tests
-// ===========================================================================
 
 func TestEmbeddingMatcher_Strategy(t *testing.T) {
 	m := NewEmbeddingMatcher(newDummyEmbedder(64))
@@ -178,6 +168,4 @@ func TestEmbeddingMatcher_ThresholdFiltering(t *testing.T) {
 	}
 }
 
-// ===========================================================================
 // FindResult.ConfidenceLabel tests
-// ===========================================================================
