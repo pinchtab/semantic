@@ -1,0 +1,34 @@
+{
+  "name": "@pinchtab/semantic",
+  "version": "0.1.0",
+  "description": "Zero-dependency semantic matching for accessibility tree elements",
+  "bin": {
+    "semantic": "bin/semantic"
+  },
+  "repository": "github:pinchtab/semantic",
+  "homepage": "https://github.com/pinchtab/semantic#readme",
+  "bugs": "https://github.com/pinchtab/semantic/issues",
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js"
+  },
+  "files": [
+    "bin",
+    "scripts/postinstall.js",
+    "LICENSE"
+  ],
+  "keywords": [
+    "semantic",
+    "matching",
+    "accessibility",
+    "a11y",
+    "browser",
+    "automation",
+    "ai-agent",
+    "natural-language"
+  ],
+  "author": "Pinchtab <hello@pinchtab.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16"
+  }
+}

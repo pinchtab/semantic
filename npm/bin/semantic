@@ -1,0 +1,70 @@
+#!/usr/bin/env node
+
+const path = require('path');
+const { spawn } = require('child_process');
+const os = require('os');
+const fs = require('fs');
+
+function getBinaryName() {
+  const platform = process.platform;
+  const arch = process.arch === 'arm64' || process.arch === 'aarch64' ? 'arm64' : 'amd64';
+
+  if (platform === 'darwin') {
+    return `semantic-darwin-${arch}`;
+  } else if (platform === 'linux') {
+    return `semantic-linux-${arch}`;
+  } else if (platform === 'win32') {
+    return `semantic-windows-${arch}.exe`;
+  }
+
+  throw new Error(`Unsupported platform: ${platform}`);
+}
+
+function getVersion() {
+  const pkgPath = path.join(__dirname, '..', 'package.json');
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+  return pkg.version;
+}
+
+function getBinaryPath() {
+  if (process.env.SEMANTIC_BINARY_PATH) {
+    return process.env.SEMANTIC_BINARY_PATH;
+  }
+
+  const version = getVersion();
+  const versionedPath = path.join(os.homedir(), '.semantic', 'bin', version, getBinaryName());
+  if (fs.existsSync(versionedPath)) {
+    return versionedPath;
+  }
+
+  return path.join(os.homedir(), '.semantic', 'bin', getBinaryName());
+}
+
+const binaryPath = getBinaryPath();
+
+if (!fs.existsSync(binaryPath)) {
+  console.error('❌ Semantic binary not found at:');
+  console.error(`  ${binaryPath}`);
+  console.error('\nTo fix this, run:');
+  console.error('  npm rebuild @pinchtab/semantic');
+  console.error('\nOr set a custom binary path:');
+  console.error('  SEMANTIC_BINARY_PATH=/path/to/binary semantic');
+  process.exit(1);
+}
+
+const proc = spawn(binaryPath, process.argv.slice(2), {
+  stdio: 'inherit',
+  shell: false,
+});
+
+proc.on('error', (err) => {
+  console.error(`Failed to run Semantic: ${err.message}`);
+  process.exit(1);
+});
+
+proc.on('close', (code) => {
+  process.exit(code ?? 0);
+});
+
+process.on('SIGINT', () => proc.kill());
+process.on('SIGTERM', () => proc.kill());

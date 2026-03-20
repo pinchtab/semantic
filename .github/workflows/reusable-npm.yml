@@ -1,0 +1,43 @@
+name: Reusable / npm
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  npm-check:
+    name: npm Dry Run
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Verify package version
+        working-directory: npm
+        run: |
+          CURRENT="$(jq -r .version package.json)"
+          DESIRED="${{ inputs.version }}"
+          if [ "$CURRENT" != "$DESIRED" ]; then
+            npm version "$DESIRED" --no-git-tag-version
+          else
+            echo "Version already correct: $CURRENT"
+          fi
+
+      - name: Dry-run publish
+        working-directory: npm
+        run: npm publish --dry-run

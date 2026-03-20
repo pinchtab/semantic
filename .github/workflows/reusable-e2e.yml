@@ -3,6 +3,10 @@ name: Reusable / E2E
 on:
   workflow_call:
     inputs:
+      ref:
+        required: false
+        type: string
+        default: ''
       timeout-minutes:
         type: number
         default: 15
@@ -17,6 +21,8 @@ jobs:
     timeout-minutes: ${{ inputs.timeout-minutes }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Run E2E suite
         run: |
