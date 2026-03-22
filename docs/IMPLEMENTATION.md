@@ -85,9 +85,9 @@ The internal threshold for each sub-matcher is halved so candidates marginal in 
 Per-tab LRU cache (default: 200 entries, 10-minute TTL). Stores the semantic identity of elements at action time:
 
 ```go
-IntentEntry{
+recovery.IntentEntry{
     Query:      "checkout button",
-    Descriptor: {Ref: "e5", Role: "button", Name: "Checkout"},
+    Descriptor: semantic.ElementDescriptor{Ref: "e5", Role: "button", Name: "Checkout"},
     Score:      0.87,
     Confidence: "high",
 }

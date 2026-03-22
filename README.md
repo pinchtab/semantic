@@ -53,6 +53,18 @@ result, err := matcher.Find(ctx, "log in button", elements, semantic.FindOptions
 // result.BestScore = 0.82
 ```
 
+## Package Layout
+
+```
+semantic.go              Public API (types + constructors)
+internal/types/          Type definitions (interfaces, structs)
+internal/engine/         Matching implementations (hidden from consumers)
+recovery/                Error recovery + intent caching (public subpackage)
+cmd/semantic/            CLI tool
+```
+
+Implementations are internal — consumers use the `ElementMatcher` interface and constructors. Swap matching strategies without breaking your code.
+
 ## How It Works
 
 ```
@@ -107,7 +119,9 @@ result, err := matcher.Find(ctx, "log in button", elements, semantic.FindOptions
 ## Error Classification
 
 ```go
-ft := semantic.ClassifyFailure(err)
+import "github.com/pinchtab/semantic/recovery"
+
+ft := recovery.ClassifyFailure(err)
 // ft.Recoverable() → true/false
 ```
 
@@ -125,10 +139,15 @@ ft := semantic.ClassifyFailure(err)
 When an action fails on a stale ref, the `RecoveryEngine` reconstructs the original query from its intent cache, refreshes the DOM, re-matches, and re-executes — all through callback interfaces so it works with any browser automation framework:
 
 ```go
-intentCache := semantic.NewIntentCache(200, 10*time.Minute)
+import (
+    "github.com/pinchtab/semantic"
+    "github.com/pinchtab/semantic/recovery"
+)
 
-recovery := semantic.NewRecoveryEngine(
-    semantic.DefaultRecoveryConfig(),
+intentCache := recovery.NewIntentCache(200, 10*time.Minute)
+
+re := recovery.NewRecoveryEngine(
+    recovery.DefaultRecoveryConfig(),
     matcher,
     intentCache,
     refreshSnapshot,  // your callback to refresh the DOM
@@ -137,14 +156,14 @@ recovery := semantic.NewRecoveryEngine(
 )
 
 // Cache intent after successful find
-recovery.RecordIntent(tabID, "e5", semantic.IntentEntry{
+re.RecordIntent(tabID, "e5", recovery.IntentEntry{
     Query:      "checkout button",
     Descriptor: semantic.ElementDescriptor{Ref: "e5", Role: "button", Name: "Checkout"},
 })
 
 // Recover on failure
-if err != nil && recovery.ShouldAttempt(err, ref) {
-    rr, _, _ := recovery.Attempt(ctx, tabID, ref, "click", executeAction)
+if err != nil && re.ShouldAttempt(err, ref) {
+    rr, _, _ := re.Attempt(ctx, tabID, ref, "click", executeAction)
     // rr.Recovered = true, rr.NewRef = "e12"
 }
 ```
