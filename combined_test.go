@@ -438,3 +438,31 @@ func BenchmarkCombinedMatcher_LargeElementSet(b *testing.B) {
 		_, _ = m.Find(ctx, "click the action button number 42", elements, opts)
 	}
 }
+
+func TestCombinedMatcher_WeightsApplied(t *testing.T) {
+	m := NewCombinedMatcher(NewHashingEmbedder(128))
+
+	// Override weights to emphasize embedding.
+	m.LexicalWeight = 0.2
+	m.EmbeddingWeight = 0.8
+
+	elements := []ElementDescriptor{
+		{Ref: "e0", Role: "button", Name: "Log In"},
+		{Ref: "e1", Role: "link", Name: "Sign Up"},
+	}
+
+	result, err := m.Find(context.Background(), "log in", elements, FindOptions{
+		Threshold: 0.01,
+		TopK:      3,
+	})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+
+	if result.ElementCount != 2 {
+		t.Errorf("expected ElementCount=2, got %d", result.ElementCount)
+	}
+	if result.BestRef != "e0" {
+		t.Errorf("expected BestRef=e0, got %s", result.BestRef)
+	}
+}
