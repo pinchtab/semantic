@@ -841,13 +841,14 @@ func TestBenchmarkStudy(t *testing.T) {
 			shortQ = shortQ[:26] + "..."
 		}
 		var winner string
-		if !lex.hit1 && emb.hit1 {
+		switch {
+		case !lex.hit1 && emb.hit1:
 			winner = "Embedding"
-		} else if lex.hit1 && !emb.hit1 {
+		case lex.hit1 && !emb.hit1:
 			winner = "Lexical"
-		} else if lex.hit1 && emb.hit1 {
+		case lex.hit1 && emb.hit1:
 			winner = "both"
-		} else {
+		default:
 			winner = "none"
 		}
 		t.Logf("  %3d  %-30s  %-6s  %9.3f  %9.3f  %9.3f  %s",
@@ -864,7 +865,9 @@ func TestBenchmarkStudy(t *testing.T) {
 
 	allTotal := len(cases) + len(hardCases)
 	for _, m := range matchers {
-		combined := append(allResults[m.name], allHard[m.name]...)
+		combined := make([]studyResult, 0, len(allResults[m.name])+len(allHard[m.name]))
+		combined = append(combined, allResults[m.name]...)
+		combined = append(combined, allHard[m.name]...)
 		h1, _ := acc(combined, 1)
 		h3, _ := acc(combined, 3)
 		lat := meanLatencyUs(combined)

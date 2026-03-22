@@ -151,7 +151,7 @@ func TestCombinedMatcher_FusesBothStrategies(t *testing.T) {
 	}
 
 	// Combined score should differ from both pure strategies (it's a weighted fusion).
-	if combResult.BestScore == lexResult.BestScore && combResult.BestScore == embResult.BestScore {
+	if combResult.BestScore == lexResult.BestScore && combResult.BestScore == embResult.BestScore { //nolint:gocritic // intentional equality check
 		t.Errorf("combined score (%.4f) identical to both lexical (%.4f) and embedding (%.4f) — fusion not working",
 			combResult.BestScore, lexResult.BestScore, embResult.BestScore)
 	}
