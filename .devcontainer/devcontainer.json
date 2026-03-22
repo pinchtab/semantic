@@ -1,0 +1,15 @@
+{
+  "name": "Semantic",
+  "image": "mcr.microsoft.com/devcontainers/go:1.26",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "postCreateCommand": "go mod download && go build ./... && echo 'Done! Run: ./dev check'",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go"
+      ]
+    }
+  }
+}
