@@ -126,6 +126,19 @@ fi
 
 section "Project"
 
+# ── Git hooks ────────────────────────────────────────────────────────
+
+if [ -f "$ROOT_DIR/.git/hooks/pre-commit" ]; then
+  ok "Git hooks"
+else
+  warn "Git hooks not installed" "Pre-commit runs gofmt + golangci-lint on staged files."
+  if confirm "Install git hooks now?"; then
+    bash "$ROOT_DIR/scripts/install-hooks.sh" && ok "Git hooks installed" && WARNINGS=$((WARNINGS - 1))
+  else
+    hint "./scripts/install-hooks.sh"
+  fi
+fi
+
 # ── Go dependencies ─────────────────────────────────────────────────
 
 if [ -f "$ROOT_DIR/go.mod" ]; then
