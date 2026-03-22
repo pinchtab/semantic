@@ -10,7 +10,10 @@ import (
 // hashingEmbedder uses the hashing trick (Weinberger et al. 2009) to produce
 // fixed-dimension vectors from word unigrams and character n-grams.
 // No vocabulary construction needed.
-type hashingEmbedder struct {
+// HashingEmbedder uses the hashing trick (Weinberger et al. 2009) to produce
+// fixed-dimension vectors from word unigrams and character n-grams.
+// Zero external dependencies.
+type HashingEmbedder struct {
 	dim         int     // vector dimensionality
 	ngramMin    int     // minimum character n-gram length
 	ngramMax    int     // maximum character n-gram length
@@ -18,11 +21,13 @@ type hashingEmbedder struct {
 	ngramWeight float32 // weight factor for n-gram features
 }
 
-func NewHashingEmbedder(dim int) Embedder {
+// NewHashingEmbedder creates a hashing-based embedder with the given
+// vector dimensionality. Default: 128.
+func NewHashingEmbedder(dim int) *HashingEmbedder {
 	if dim <= 0 {
 		dim = 128
 	}
-	return &hashingEmbedder{
+	return &HashingEmbedder{
 		dim:         dim,
 		ngramMin:    2,
 		ngramMax:    4,
@@ -31,9 +36,9 @@ func NewHashingEmbedder(dim int) Embedder {
 	}
 }
 
-func (h *hashingEmbedder) Strategy() string { return "hashing" }
+func (h *HashingEmbedder) Strategy() string { return "hashing" }
 
-func (h *hashingEmbedder) Embed(texts []string) ([][]float32, error) {
+func (h *HashingEmbedder) Embed(texts []string) ([][]float32, error) {
 	result := make([][]float32, len(texts))
 	for i, text := range texts {
 		result[i] = h.vectorize(text)
@@ -41,7 +46,7 @@ func (h *hashingEmbedder) Embed(texts []string) ([][]float32, error) {
 	return result, nil
 }
 
-func (h *hashingEmbedder) vectorize(text string) []float32 {
+func (h *HashingEmbedder) vectorize(text string) []float32 {
 	vec := make([]float32, h.dim)
 
 	// Normalize text
@@ -112,7 +117,7 @@ func (h *hashingEmbedder) vectorize(text string) []float32 {
 	return vec
 }
 
-func (h *hashingEmbedder) hashFeature(feature string) (int, float32) {
+func (h *HashingEmbedder) hashFeature(feature string) (int, float32) {
 	// Index hash
 	hasher := fnv.New32a()
 	hasher.Write([]byte(feature))
@@ -132,7 +137,7 @@ func (h *hashingEmbedder) hashFeature(feature string) (int, float32) {
 	return idx, sign
 }
 
-func (h *hashingEmbedder) normalize(vec []float32) {
+func (h *HashingEmbedder) normalize(vec []float32) {
 	var norm float64
 	for _, v := range vec {
 		norm += float64(v) * float64(v)

@@ -34,14 +34,14 @@ func benchElements() []ElementDescriptor {
 func BenchmarkLexicalScoreFn(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		lexicalScore("sign in button", "button: Sign In")
+		LexicalScore("sign in button", "button: Sign In")
 	}
 }
 
 func BenchmarkLexicalScoreFn_Synonym(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		lexicalScore("log in", "button: Sign In")
+		LexicalScore("log in", "button: Sign In")
 	}
 }
 
@@ -144,7 +144,7 @@ func BenchmarkCosineSim(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		cosineSimilarity(a, v)
+		CosineSimilarity(a, v)
 	}
 }
 

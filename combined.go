@@ -9,29 +9,35 @@ import (
 // combinedMatcher fuses lexical and embedding scores:
 //
 //	score = 0.6 * lexical + 0.4 * embedding
-type combinedMatcher struct {
-	lexical   ElementMatcher
-	embedding ElementMatcher
+// CombinedMatcher fuses lexical and embedding scores:
+//
+//	score = LexicalWeight * lexical + EmbeddingWeight * embedding
+type CombinedMatcher struct {
+	lexical   *LexicalMatcher
+	embedding *EmbeddingMatcher
 
-	// weight factors (should sum to 1.0 for interpretable scores).
-	lexicalWeight   float64
-	embeddingWeight float64
+	// LexicalWeight and EmbeddingWeight should sum to 1.0 for
+	// interpretable scores. Defaults: 0.6 / 0.4.
+	LexicalWeight   float64
+	EmbeddingWeight float64
 }
 
-func NewCombinedMatcher(embedder Embedder) ElementMatcher {
-	return &combinedMatcher{
+// NewCombinedMatcher creates a matcher that fuses lexical and embedding
+// strategies with default weights (0.6 lexical, 0.4 embedding).
+func NewCombinedMatcher(embedder Embedder) *CombinedMatcher {
+	return &CombinedMatcher{
 		lexical:         NewLexicalMatcher(),
 		embedding:       NewEmbeddingMatcher(embedder),
-		lexicalWeight:   0.6,
-		embeddingWeight: 0.4,
+		LexicalWeight:   0.6,
+		EmbeddingWeight: 0.4,
 	}
 }
 
-func (c *combinedMatcher) Strategy() string {
+func (c *CombinedMatcher) Strategy() string {
 	return "combined:lexical+" + c.embedding.Strategy()
 }
 
-func (c *combinedMatcher) Find(ctx context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
+func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
 	if opts.TopK <= 0 {
 		opts.TopK = 3
 	}
@@ -46,11 +52,11 @@ func (c *combinedMatcher) Find(ctx context.Context, query string, elements []Ele
 	return c.mergeResults(lexResult, embResult, elements, opts, lexW, embW), nil
 }
 
-func (c *combinedMatcher) weights(opts FindOptions) (float64, float64) {
-	if opts.lexicalWeight > 0 || opts.embeddingWeight > 0 {
-		return opts.lexicalWeight, opts.embeddingWeight
+func (c *CombinedMatcher) weights(opts FindOptions) (float64, float64) {
+	if opts.LexicalWeight > 0 || opts.EmbeddingWeight > 0 {
+		return opts.LexicalWeight, opts.EmbeddingWeight
 	}
-	return c.lexicalWeight, c.embeddingWeight
+	return c.LexicalWeight, c.EmbeddingWeight
 }
 
 type matcherResult struct {
@@ -58,7 +64,7 @@ type matcherResult struct {
 	err    error
 }
 
-func (c *combinedMatcher) runBoth(ctx context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, FindResult, error) {
+func (c *CombinedMatcher) runBoth(ctx context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, FindResult, error) {
 	internalOpts := FindOptions{
 		Threshold: opts.Threshold * 0.5,
 		TopK:      len(elements),
@@ -106,7 +112,7 @@ type scored struct {
 	embScore float64
 }
 
-func (c *combinedMatcher) mergeResults(lexResult, embResult FindResult, elements []ElementDescriptor, opts FindOptions, lexW, embW float64) FindResult {
+func (c *CombinedMatcher) mergeResults(lexResult, embResult FindResult, elements []ElementDescriptor, opts FindOptions, lexW, embW float64) FindResult {
 	lexScores := scoreMap(lexResult.Matches)
 	embScores := scoreMap(embResult.Matches)
 

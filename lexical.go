@@ -18,15 +18,18 @@ const (
 	prefixMatchWeight = 0.20
 )
 
-type lexicalMatcher struct{}
+// LexicalMatcher scores elements using Jaccard similarity with synonym
+// expansion, context-aware stopwords, role boosting, and prefix matching.
+type LexicalMatcher struct{}
 
-func NewLexicalMatcher() ElementMatcher {
-	return &lexicalMatcher{}
+// NewLexicalMatcher creates a stateless lexical matcher.
+func NewLexicalMatcher() *LexicalMatcher {
+	return &LexicalMatcher{}
 }
 
-func (m *lexicalMatcher) Strategy() string { return "lexical" }
+func (m *LexicalMatcher) Strategy() string { return "lexical" }
 
-func (m *lexicalMatcher) Find(_ context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
+func (m *LexicalMatcher) Find(_ context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
 	if opts.TopK <= 0 {
 		opts.TopK = 3
 	}
@@ -39,7 +42,7 @@ func (m *lexicalMatcher) Find(_ context.Context, query string, elements []Elemen
 	var candidates []scored
 	for _, el := range elements {
 		composite := el.Composite()
-		score := lexicalScore(query, composite)
+		score := LexicalScore(query, composite)
 		if score >= opts.Threshold {
 			candidates = append(candidates, scored{desc: el, score: score})
 		}
@@ -115,10 +118,10 @@ var roleKeywords = map[string]bool{
 	"search":   true,
 }
 
-// lexicalScore computes Jaccard similarity with synonym expansion,
+// LexicalScore computes Jaccard similarity with synonym expansion,
 // context-aware stopwords, role boosting, and prefix matching.
 // Returns [0, 1].
-func lexicalScore(query, desc string) float64 {
+func LexicalScore(query, desc string) float64 {
 	rawQTokens := tokenize(query)
 	rawDTokens := tokenize(desc)
 

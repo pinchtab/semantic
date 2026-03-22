@@ -138,12 +138,12 @@ func TestScoreDistribution_BeforeVsExpected(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.label, func(t *testing.T) {
-			score := lexicalScore(tc.query, tc.desc)
+			score := LexicalScore(tc.query, tc.desc)
 			status := "PASS"
 			if score < tc.minScore {
 				status = "FAIL"
 			}
-			t.Logf("[%s] lexicalScore(%q, %q) = %.4f (min: %.2f)", status, tc.query, tc.desc, score, tc.minScore)
+			t.Logf("[%s] LexicalScore(%q, %q) = %.4f (min: %.2f)", status, tc.query, tc.desc, score, tc.minScore)
 			if score < tc.minScore {
 				t.Errorf("score %.4f below minimum %.2f", score, tc.minScore)
 			}

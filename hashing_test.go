@@ -177,8 +177,8 @@ func TestHashingEmbedder_SimilarTexts(t *testing.T) {
 		t.Fatalf("Embed error: %v", err)
 	}
 
-	simSameWord := cosineSimilarity(vecs[0], vecs[1])  // share "submit"
-	simUnrelated := cosineSimilarity(vecs[0], vecs[2]) // no shared words
+	simSameWord := CosineSimilarity(vecs[0], vecs[1])  // share "submit"
+	simUnrelated := CosineSimilarity(vecs[0], vecs[2]) // no shared words
 
 	if simSameWord <= simUnrelated {
 		t.Errorf("texts sharing 'submit' should be more similar: same=%f, unrelated=%f",
@@ -199,8 +199,8 @@ func TestHashingEmbedder_SubwordSimilarity(t *testing.T) {
 		t.Fatalf("Embed error: %v", err)
 	}
 
-	simAbbrev := cosineSimilarity(vecs[0], vecs[1])
-	simUnrelated := cosineSimilarity(vecs[0], vecs[2])
+	simAbbrev := CosineSimilarity(vecs[0], vecs[1])
+	simUnrelated := CosineSimilarity(vecs[0], vecs[2])
 
 	// The abbreviation similarity might be small, but should be greater
 	// than an unrelated word due to shared character n-grams.
@@ -225,8 +225,8 @@ func TestHashingEmbedder_RoleFeatures(t *testing.T) {
 
 	// Both have "button" role features — should be more similar to each other
 	// than to "textbox email" which has a different role keyword.
-	simSameRole := cosineSimilarity(vecs[0], vecs[1])
-	simDiffRole := cosineSimilarity(vecs[0], vecs[2])
+	simSameRole := CosineSimilarity(vecs[0], vecs[1])
+	simDiffRole := CosineSimilarity(vecs[0], vecs[2])
 
 	if simSameRole <= simDiffRole {
 		t.Errorf("same-role elements should be more similar: same=%f, diff=%f",

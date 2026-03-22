@@ -20,13 +20,13 @@ type FindOptions struct {
 	// TopK is the maximum number of matches to return.
 	TopK int
 
+	// Per-request weight overrides (optional). If both are zero the
+	// matcher's default weights are used.
+	LexicalWeight   float64
+	EmbeddingWeight float64
+
 	// Explain enables verbose per-match scoring breakdown.
 	Explain bool
-
-	// lexicalWeight and embeddingWeight are per-request weight overrides
-	// used internally by CombinedMatcher. Not part of the public API.
-	lexicalWeight   float64
-	embeddingWeight float64
 }
 
 // FindResult holds the top matches from a Find call.

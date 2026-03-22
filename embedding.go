@@ -16,19 +16,22 @@ type Embedder interface {
 	Strategy() string
 }
 
-type embeddingMatcher struct {
+// EmbeddingMatcher scores elements using cosine similarity on dense
+// vectors produced by an Embedder.
+type EmbeddingMatcher struct {
 	embedder Embedder
 }
 
-func NewEmbeddingMatcher(e Embedder) ElementMatcher {
-	return &embeddingMatcher{embedder: e}
+// NewEmbeddingMatcher creates an embedding-based matcher.
+func NewEmbeddingMatcher(e Embedder) *EmbeddingMatcher {
+	return &EmbeddingMatcher{embedder: e}
 }
 
-func (m *embeddingMatcher) Strategy() string {
+func (m *EmbeddingMatcher) Strategy() string {
 	return "embedding:" + m.embedder.Strategy()
 }
 
-func (m *embeddingMatcher) Find(_ context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
+func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
 	if opts.TopK <= 0 {
 		opts.TopK = 3
 	}
@@ -56,7 +59,7 @@ func (m *embeddingMatcher) Find(_ context.Context, query string, elements []Elem
 
 	var candidates []scored
 	for i, el := range elements {
-		sim := cosineSimilarity(queryVec, elemVecs[i])
+		sim := CosineSimilarity(queryVec, elemVecs[i])
 		if sim >= opts.Threshold {
 			candidates = append(candidates, scored{desc: el, score: sim})
 		}
@@ -92,7 +95,8 @@ func (m *embeddingMatcher) Find(_ context.Context, query string, elements []Elem
 	return result, nil
 }
 
-func cosineSimilarity(a, b []float32) float64 {
+// CosineSimilarity computes the cosine similarity between two float32 vectors.
+func CosineSimilarity(a, b []float32) float64 {
 	if len(a) != len(b) || len(a) == 0 {
 		return 0
 	}

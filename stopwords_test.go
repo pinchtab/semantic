@@ -123,14 +123,14 @@ func BenchmarkExpandWithSynonyms(b *testing.B) {
 func BenchmarkLexicalScore_WithSynonyms(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		lexicalScore("sign in button", "button: Log in")
+		LexicalScore("sign in button", "button: Log in")
 	}
 }
 
 func BenchmarkLexicalScore_ExactMatch(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		lexicalScore("submit button", "button: Submit")
+		LexicalScore("submit button", "button: Submit")
 	}
 }
 

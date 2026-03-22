@@ -70,7 +70,7 @@ func TestDummyEmbedder_NormalizedOutput(t *testing.T) {
 
 func TestCosineSimilarity_Identical(t *testing.T) {
 	v := []float32{1, 0, 0, 0}
-	sim := cosineSimilarity(v, v)
+	sim := CosineSimilarity(v, v)
 	if math.Abs(sim-1.0) > 1e-6 {
 		t.Errorf("identical vectors should have similarity 1.0, got %f", sim)
 	}
@@ -79,14 +79,14 @@ func TestCosineSimilarity_Identical(t *testing.T) {
 func TestCosineSimilarity_Orthogonal(t *testing.T) {
 	a := []float32{1, 0, 0, 0}
 	b := []float32{0, 1, 0, 0}
-	sim := cosineSimilarity(a, b)
+	sim := CosineSimilarity(a, b)
 	if math.Abs(sim) > 1e-6 {
 		t.Errorf("orthogonal vectors should have similarity ~0, got %f", sim)
 	}
 }
 
 func TestCosineSimilarity_Empty(t *testing.T) {
-	sim := cosineSimilarity(nil, nil)
+	sim := CosineSimilarity(nil, nil)
 	if sim != 0 {
 		t.Errorf("empty vectors should have similarity 0, got %f", sim)
 	}
@@ -95,7 +95,7 @@ func TestCosineSimilarity_Empty(t *testing.T) {
 func TestCosineSimilarity_DifferentLengths(t *testing.T) {
 	a := []float32{1, 0}
 	b := []float32{1, 0, 0}
-	sim := cosineSimilarity(a, b)
+	sim := CosineSimilarity(a, b)
 	if sim != 0 {
 		t.Errorf("different-length vectors should return 0, got %f", sim)
 	}

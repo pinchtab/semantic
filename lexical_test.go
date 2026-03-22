@@ -40,24 +40,24 @@ func TestTokenPrefixScore_NoPrefix(t *testing.T) {
 
 func TestLexicalScore_SignIn_vs_LogIn(t *testing.T) {
 	// This was the #1 failing case from the real-world evaluation
-	score := lexicalScore("sign in", "link: Log in")
-	t.Logf("lexicalScore('sign in', 'link: Log in') = %f", score)
+	score := LexicalScore("sign in", "link: Log in")
+	t.Logf("LexicalScore('sign in', 'link: Log in') = %f", score)
 	if score < 0.15 {
 		t.Errorf("expected improved score for 'sign in' vs 'Log in', got %f (was 0.207 before improvements)", score)
 	}
 }
 
 func TestLexicalScore_Register_vs_CreateAccount(t *testing.T) {
-	score := lexicalScore("register", "link: Create account")
-	t.Logf("lexicalScore('register', 'link: Create account') = %f", score)
+	score := LexicalScore("register", "link: Create account")
+	t.Logf("LexicalScore('register', 'link: Create account') = %f", score)
 	if score < 0.10 {
 		t.Errorf("expected improved score for 'register' vs 'Create account', got %f (was 0.134 before)", score)
 	}
 }
 
 func TestLexicalScore_LookUp_vs_Search(t *testing.T) {
-	score := lexicalScore("look up", "search: Search")
-	t.Logf("lexicalScore('look up', 'search: Search') = %f", score)
+	score := LexicalScore("look up", "search: Search")
+	t.Logf("LexicalScore('look up', 'search: Search') = %f", score)
 	// Lexical-only score is 0.15; combined matcher finds it at 0.215 which is sufficient.
 	if score < 0.10 {
 		t.Errorf("expected improved score for 'look up' vs 'Search', got %f", score)
@@ -65,52 +65,52 @@ func TestLexicalScore_LookUp_vs_Search(t *testing.T) {
 }
 
 func TestLexicalScore_Navigation_vs_MainMenu(t *testing.T) {
-	score := lexicalScore("navigation", "menu: Main menu")
-	t.Logf("lexicalScore('navigation', 'menu: Main menu') = %f", score)
+	score := LexicalScore("navigation", "menu: Main menu")
+	t.Logf("LexicalScore('navigation', 'menu: Main menu') = %f", score)
 	if score < 0.15 {
 		t.Errorf("expected improved score for 'navigation' vs 'Main menu', got %f (was 0.206 before)", score)
 	}
 }
 
 func TestLexicalScore_Download_vs_Export(t *testing.T) {
-	score := lexicalScore("download report", "button: Export")
-	t.Logf("lexicalScore('download report', 'button: Export') = %f", score)
+	score := LexicalScore("download report", "button: Export")
+	t.Logf("LexicalScore('download report', 'button: Export') = %f", score)
 	if score < 0.10 {
 		t.Errorf("expected improved score for 'download' vs 'Export', got %f", score)
 	}
 }
 
 func TestLexicalScore_Proceed_vs_PlaceOrder(t *testing.T) {
-	score := lexicalScore("proceed to payment", "button: Place order")
-	t.Logf("lexicalScore('proceed to payment', 'button: Place order') = %f", score)
+	score := LexicalScore("proceed to payment", "button: Place order")
+	t.Logf("LexicalScore('proceed to payment', 'button: Place order') = %f", score)
 	// This is a hard case — "proceed" maps to "next/continue", "payment" maps to checkout family
 }
 
 func TestLexicalScore_Dismiss_vs_Close(t *testing.T) {
-	score := lexicalScore("dismiss dialog", "button: Close")
-	t.Logf("lexicalScore('dismiss dialog', 'button: Close') = %f", score)
+	score := LexicalScore("dismiss dialog", "button: Close")
+	t.Logf("LexicalScore('dismiss dialog', 'button: Close') = %f", score)
 	if score < 0.10 {
 		t.Errorf("expected improved score for 'dismiss' vs 'Close', got %f", score)
 	}
 }
 
 func TestLexicalScore_PrefixAbbreviation(t *testing.T) {
-	score := lexicalScore("btn submit", "button: Submit")
-	t.Logf("lexicalScore('btn submit', 'button: Submit') = %f", score)
+	score := LexicalScore("btn submit", "button: Submit")
+	t.Logf("LexicalScore('btn submit', 'button: Submit') = %f", score)
 	if score < 0.3 {
 		t.Errorf("expected good score for 'btn submit' vs 'button: Submit', got %f", score)
 	}
 }
 
 func TestLexicalScore_StillExactMatch(t *testing.T) {
-	score := lexicalScore("submit button", "button: Submit")
+	score := LexicalScore("submit button", "button: Submit")
 	if score < 0.5 {
 		t.Errorf("expected high score for exact match after improvements, got %f", score)
 	}
 }
 
 func TestLexicalScore_StillRejectsUnrelated(t *testing.T) {
-	score := lexicalScore("download pdf", "button: Login")
+	score := LexicalScore("download pdf", "button: Login")
 	if score > 0.35 {
 		t.Errorf("expected low score for unrelated query after improvements, got %f", score)
 	}
@@ -189,8 +189,8 @@ func buildRealWorldElements() map[string][]ElementDescriptor {
 func TestLexicalScore_MultipleRoleKeywordsAccumulate(t *testing.T) {
 	// "search input" has two role keywords: "search" and "input"
 	// Should get cumulative boost, not just one
-	scoreMulti := lexicalScore("search input", "search: Email Input")
-	scoreSingle := lexicalScore("search something", "search: Email Input")
+	scoreMulti := LexicalScore("search input", "search: Email Input")
+	scoreSingle := LexicalScore("search something", "search: Email Input")
 
 	t.Logf("Multi-role score: %f, Single-role score: %f", scoreMulti, scoreSingle)
 	if scoreMulti <= scoreSingle {
@@ -202,7 +202,7 @@ func TestLexicalScore_MultipleRoleKeywordsAccumulate(t *testing.T) {
 
 func TestLexicalScore_LogOn_vs_SignIn(t *testing.T) {
 	desc := "link: Sign in"
-	score := lexicalScore("log on", desc)
+	score := LexicalScore("log on", desc)
 	if score < 0.10 {
 		t.Errorf("'log on' vs '%s' should have meaningful score, got %.4f", desc, score)
 	}
@@ -212,14 +212,14 @@ func TestLexicalScore_LogOn_vs_SignIn(t *testing.T) {
 // LexicalScore tests
 
 func TestLexicalScore_ExactMatch(t *testing.T) {
-	score := lexicalScore("submit button", "button: Submit")
+	score := LexicalScore("submit button", "button: Submit")
 	if score < 0.5 {
 		t.Errorf("expected high score for exact match, got %f", score)
 	}
 }
 
 func TestLexicalScore_NoOverlap(t *testing.T) {
-	score := lexicalScore("download pdf", "button: Login")
+	score := LexicalScore("download pdf", "button: Login")
 	if score > 0.3 {
 		t.Errorf("expected low score for no overlap, got %f", score)
 	}
@@ -227,8 +227,8 @@ func TestLexicalScore_NoOverlap(t *testing.T) {
 
 func TestLexicalScore_RoleBoost(t *testing.T) {
 	// "button" is a role keyword; if it appears in both, a boost is applied.
-	withRole := lexicalScore("submit button", "button: Submit")
-	withoutRole := lexicalScore("submit action", "link: Submit")
+	withRole := LexicalScore("submit button", "button: Submit")
+	withoutRole := LexicalScore("submit action", "link: Submit")
 	if withRole <= withoutRole {
 		t.Errorf("expected role boost to increase score: withRole=%f, withoutRole=%f", withRole, withoutRole)
 	}
@@ -236,8 +236,8 @@ func TestLexicalScore_RoleBoost(t *testing.T) {
 
 func TestLexicalScore_StopwordRemoval(t *testing.T) {
 	// "the" is a stopword — it should be removed so both queries score similarly.
-	s1 := lexicalScore("click the button", "button: Click")
-	s2 := lexicalScore("click button", "button: Click")
+	s1 := LexicalScore("click the button", "button: Click")
+	s2 := LexicalScore("click button", "button: Click")
 	diff := math.Abs(s1 - s2)
 	if diff > 0.01 {
 		t.Errorf("stopwords should not affect score significantly: s1=%f, s2=%f, diff=%f", s1, s2, diff)
