@@ -21,7 +21,7 @@ commands=(
   "vet:🔬:Run go vet"
   "check:✅:Run all checks (fmt + vet + lint + test)"
   "build:📦:Build CLI binary"
-  "benchmark:⏱️:Run benchmark study"
+  "benchmark:🏋:Run benchmark study"
   "e2e:🐳:Run E2E tests (Docker)"
 )
 
