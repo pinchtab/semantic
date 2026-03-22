@@ -1,0 +1,18 @@
+{
+  "main": [
+    "semantic.md",
+    "get-started.md",
+    "core-concepts.md"
+  ],
+  "guides": [
+    "guides/contributing.md"
+  ],
+  "architecture": [
+    "architecture/design-decisions.md",
+    "architecture/implementation.md"
+  ],
+  "reference": [
+    "reference/api.md",
+    "reference/cli.md"
+  ]
+}
