@@ -1,13 +1,14 @@
-package semantic
+package engine
 
 import (
+	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"testing"
 )
 
 // benchElements returns a realistic set of elements for benchmarking.
-func benchElements() []ElementDescriptor {
-	return []ElementDescriptor{
+func benchElements() []types.ElementDescriptor {
+	return []types.ElementDescriptor{
 		{Ref: "e0", Role: "heading", Name: "Welcome Back"},
 		{Ref: "e1", Role: "textbox", Name: "Email address", Value: ""},
 		{Ref: "e2", Role: "textbox", Name: "Password", Value: ""},
@@ -49,7 +50,7 @@ func BenchmarkLexicalFind(b *testing.B) {
 	m := NewLexicalMatcher()
 	elements := benchElements()
 	ctx := context.Background()
-	opts := FindOptions{Threshold: 0.3, TopK: 3}
+	opts := types.FindOptions{Threshold: 0.3, TopK: 3}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -81,7 +82,7 @@ func BenchmarkEmbeddingFind(b *testing.B) {
 	m := NewEmbeddingMatcher(NewHashingEmbedder(128))
 	elements := benchElements()
 	ctx := context.Background()
-	opts := FindOptions{Threshold: 0.3, TopK: 3}
+	opts := types.FindOptions{Threshold: 0.3, TopK: 3}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -93,7 +94,7 @@ func BenchmarkCombinedFind(b *testing.B) {
 	m := NewCombinedMatcher(NewHashingEmbedder(128))
 	elements := benchElements()
 	ctx := context.Background()
-	opts := FindOptions{Threshold: 0.3, TopK: 3}
+	opts := types.FindOptions{Threshold: 0.3, TopK: 3}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -105,7 +106,7 @@ func BenchmarkCombinedFind_Synonym(b *testing.B) {
 	m := NewCombinedMatcher(NewHashingEmbedder(128))
 	elements := benchElements()
 	ctx := context.Background()
-	opts := FindOptions{Threshold: 0.3, TopK: 3}
+	opts := types.FindOptions{Threshold: 0.3, TopK: 3}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -117,7 +118,7 @@ func BenchmarkCombinedFind_100Elements(b *testing.B) {
 	m := NewCombinedMatcher(NewHashingEmbedder(128))
 	base := benchElements()
 	// Repeat to get ~100 elements
-	elements := make([]ElementDescriptor, 0, 100)
+	elements := make([]types.ElementDescriptor, 0, 100)
 	for len(elements) < 100 {
 		for _, e := range base {
 			e.Ref = "e" + string(rune('0'+len(elements)))
@@ -128,7 +129,7 @@ func BenchmarkCombinedFind_100Elements(b *testing.B) {
 		}
 	}
 	ctx := context.Background()
-	opts := FindOptions{Threshold: 0.3, TopK: 3}
+	opts := types.FindOptions{Threshold: 0.3, TopK: 3}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -151,6 +152,6 @@ func BenchmarkCosineSim(b *testing.B) {
 func BenchmarkCalibrateConfidence(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		CalibrateConfidence(0.75)
+		types.CalibrateConfidence(0.75)
 	}
 }

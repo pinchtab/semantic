@@ -1,4 +1,4 @@
-package semantic
+package engine
 
 // stopwords that carry little semantic meaning in UI matching.
 var stopwords = map[string]bool{

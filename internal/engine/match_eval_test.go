@@ -1,10 +1,11 @@
-package semantic
+package engine
 
 // Comprehensive evaluation tests.
 // Multi-site accuracy benchmarks, score distribution validation,
 // and cross-page-type evaluation suites.
 
 import (
+	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"fmt"
 	"strings"
@@ -54,7 +55,7 @@ func TestComprehensiveEvaluation(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(fmt.Sprintf("%s/%s", tc.category, tc.query), func(t *testing.T) {
-			result, err := matcher.Find(context.Background(), tc.query, sites[tc.site], FindOptions{
+			result, err := matcher.Find(context.Background(), tc.query, sites[tc.site], types.FindOptions{
 				Threshold: 0.1,
 				TopK:      5,
 			})
@@ -207,7 +208,7 @@ func TestMultiSiteEvaluation(t *testing.T) {
 
 	for _, tc := range allCases {
 		t.Run(fmt.Sprintf("%s_%s_%s", tc.site, tc.category, strings.ReplaceAll(tc.query, " ", "_")), func(t *testing.T) {
-			result, err := matcher.Find(context.Background(), tc.query, sites[tc.site], FindOptions{
+			result, err := matcher.Find(context.Background(), tc.query, sites[tc.site], types.FindOptions{
 				Threshold: 0.1,
 				TopK:      5,
 			})

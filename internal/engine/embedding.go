@@ -1,6 +1,7 @@
-package semantic
+package engine
 
 import (
+	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"math"
 	"sort"
@@ -31,7 +32,7 @@ func (m *EmbeddingMatcher) Strategy() string {
 	return "embedding:" + m.embedder.Strategy()
 }
 
-func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
+func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
 	if opts.TopK <= 0 {
 		opts.TopK = 3
 	}
@@ -46,14 +47,14 @@ func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []Elem
 	texts := append([]string{query}, descs...)
 	vectors, err := m.embedder.Embed(texts)
 	if err != nil {
-		return FindResult{}, err
+		return types.FindResult{}, err
 	}
 
 	queryVec := vectors[0]
 	elemVecs := vectors[1:]
 
 	type scored struct {
-		desc  ElementDescriptor
+		desc  types.ElementDescriptor
 		score float64
 	}
 
@@ -73,13 +74,13 @@ func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []Elem
 		candidates = candidates[:opts.TopK]
 	}
 
-	result := FindResult{
+	result := types.FindResult{
 		Strategy:     m.Strategy(),
 		ElementCount: len(elements),
 	}
 
 	for _, c := range candidates {
-		result.Matches = append(result.Matches, ElementMatch{
+		result.Matches = append(result.Matches, types.ElementMatch{
 			Ref:   c.desc.Ref,
 			Score: c.score,
 			Role:  c.desc.Role,

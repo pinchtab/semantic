@@ -1,6 +1,11 @@
-package semantic
+// Package types defines the public API types for the semantic library.
+// These are re-exported by the root semantic package.
+package types
 
-import "context"
+import (
+	"context"
+	"strings"
+)
 
 // ElementMatcher scores accessibility tree elements against a natural language query.
 type ElementMatcher interface {
@@ -9,6 +14,16 @@ type ElementMatcher interface {
 	Find(ctx context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error)
 
 	// Strategy returns the name of the matching strategy (e.g. "lexical", "embedding").
+	Strategy() string
+}
+
+// Embedder converts text into dense vectors. See NewHashingEmbedder.
+type Embedder interface {
+	// Embed converts a batch of text strings into float32 vectors.
+	// All returned vectors must have the same dimensionality.
+	Embed(texts []string) ([][]float32, error)
+
+	// Strategy returns the name of the embedding strategy (e.g. "hashing", "openai").
 	Strategy() string
 }
 
@@ -59,4 +74,42 @@ type MatchExplain struct {
 	LexicalScore   float64 `json:"lexical_score"`
 	EmbeddingScore float64 `json:"embedding_score"`
 	Composite      string  `json:"composite"`
+}
+
+// ElementDescriptor describes a single accessibility tree node.
+type ElementDescriptor struct {
+	Ref   string
+	Role  string
+	Name  string
+	Value string
+}
+
+// Composite returns a single string combining role, name, and value
+// for matching purposes: "role: name [value]".
+func (ed *ElementDescriptor) Composite() string {
+	var parts []string
+
+	if ed.Role != "" {
+		parts = append(parts, ed.Role+":")
+	}
+	if ed.Name != "" {
+		parts = append(parts, ed.Name)
+	}
+	if ed.Value != "" && ed.Value != ed.Name {
+		parts = append(parts, "["+ed.Value+"]")
+	}
+
+	return strings.Join(parts, " ")
+}
+
+// CalibrateConfidence maps a score to a human-readable confidence level.
+func CalibrateConfidence(score float64) string {
+	switch {
+	case score >= 0.8:
+		return "high"
+	case score >= 0.6:
+		return "medium"
+	default:
+		return "low"
+	}
 }

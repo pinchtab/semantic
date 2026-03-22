@@ -1,6 +1,7 @@
-package semantic
+package engine
 
 import (
+	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"sort"
 	"strings"
@@ -29,13 +30,13 @@ func NewLexicalMatcher() *LexicalMatcher {
 
 func (m *LexicalMatcher) Strategy() string { return "lexical" }
 
-func (m *LexicalMatcher) Find(_ context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
+func (m *LexicalMatcher) Find(_ context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
 	if opts.TopK <= 0 {
 		opts.TopK = 3
 	}
 
 	type scored struct {
-		desc  ElementDescriptor
+		desc  types.ElementDescriptor
 		score float64
 	}
 
@@ -56,13 +57,13 @@ func (m *LexicalMatcher) Find(_ context.Context, query string, elements []Elemen
 		candidates = candidates[:opts.TopK]
 	}
 
-	result := FindResult{
+	result := types.FindResult{
 		Strategy:     "lexical",
 		ElementCount: len(elements),
 	}
 
 	for _, c := range candidates {
-		result.Matches = append(result.Matches, ElementMatch{
+		result.Matches = append(result.Matches, types.ElementMatch{
 			Ref:   c.desc.Ref,
 			Score: c.score,
 			Role:  c.desc.Role,

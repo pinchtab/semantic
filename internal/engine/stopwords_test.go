@@ -1,6 +1,7 @@
-package semantic
+package engine
 
 import (
+	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"testing"
 )
@@ -138,7 +139,7 @@ func BenchmarkCombinedMatcher_SynonymQuery(b *testing.B) {
 	elements := buildRealWorldElements()["wikipedia"]
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
 	ctx := context.Background()
-	opts := FindOptions{Threshold: 0.15, TopK: 3}
+	opts := types.FindOptions{Threshold: 0.15, TopK: 3}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		result, err := matcher.Find(ctx, "sign in", elements, opts)

@@ -1,4 +1,4 @@
-package semantic
+package engine
 
 // benchmark_study_test.go — Controlled benchmark study
 //
@@ -19,6 +19,7 @@ package semantic
 //     go test ./internal/semantic/ -run TestBenchmarkStudy -v -count 5
 
 import (
+	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"fmt"
 	"sort"
@@ -36,7 +37,7 @@ type studyCase struct {
 	page        string // human-readable page name
 	query       string // natural language query
 	expectedRef string // ref of the ground-truth element
-	elements    []ElementDescriptor
+	elements    []types.ElementDescriptor
 }
 
 // studyResult records one matcher's answer for one case.
@@ -57,7 +58,7 @@ type studyResult struct {
 
 func studyCases() []studyCase {
 	// ---- Page 1: Login Form ------------------------------------------------
-	login := []ElementDescriptor{
+	login := []types.ElementDescriptor{
 		{Ref: "e0", Role: "heading", Name: "Sign In"},
 		{Ref: "e1", Role: "textbox", Name: "Email address"},
 		{Ref: "e2", Role: "textbox", Name: "Password"},
@@ -71,7 +72,7 @@ func studyCases() []studyCase {
 	}
 
 	// ---- Page 2: Registration Form -----------------------------------------
-	register := []ElementDescriptor{
+	register := []types.ElementDescriptor{
 		{Ref: "e0", Role: "heading", Name: "Create your account"},
 		{Ref: "e1", Role: "textbox", Name: "First name"},
 		{Ref: "e2", Role: "textbox", Name: "Last name"},
@@ -87,7 +88,7 @@ func studyCases() []studyCase {
 	}
 
 	// ---- Page 3: E-commerce Product Page -----------------------------------
-	product := []ElementDescriptor{
+	product := []types.ElementDescriptor{
 		{Ref: "e0", Role: "heading", Name: "Wireless Noise-Cancelling Headphones"},
 		{Ref: "e1", Role: "text", Name: "$299.99"},
 		{Ref: "e2", Role: "combobox", Name: "Color", Value: "Midnight Black"},
@@ -103,7 +104,7 @@ func studyCases() []studyCase {
 	}
 
 	// ---- Page 4: Navigation Header -----------------------------------------
-	nav := []ElementDescriptor{
+	nav := []types.ElementDescriptor{
 		{Ref: "e0", Role: "img", Name: "Site logo"},
 		{Ref: "e1", Role: "link", Name: "Home"},
 		{Ref: "e2", Role: "link", Name: "Products"},
@@ -119,7 +120,7 @@ func studyCases() []studyCase {
 	}
 
 	// ---- Page 5: Analytics Dashboard ---------------------------------------
-	dashboard := []ElementDescriptor{
+	dashboard := []types.ElementDescriptor{
 		{Ref: "e0", Role: "heading", Name: "Dashboard Overview"},
 		{Ref: "e1", Role: "button", Name: "Export Report"},
 		{Ref: "e2", Role: "button", Name: "Add Widget"},
@@ -137,7 +138,7 @@ func studyCases() []studyCase {
 	}
 
 	// ---- Page 6: Search Results Page ---------------------------------------
-	search := []ElementDescriptor{
+	search := []types.ElementDescriptor{
 		{Ref: "e0", Role: "search", Name: "Search"},
 		{Ref: "e1", Role: "button", Name: "Search"},
 		{Ref: "e2", Role: "heading", Name: "Search Results for \"golang\""},
@@ -152,7 +153,7 @@ func studyCases() []studyCase {
 	}
 
 	// ---- Page 7: Admin Data Table ------------------------------------------
-	table := []ElementDescriptor{
+	table := []types.ElementDescriptor{
 		{Ref: "e0", Role: "heading", Name: "Order Management"},
 		{Ref: "e1", Role: "search", Name: "Search orders"},
 		{Ref: "e2", Role: "button", Name: "Create order"},
@@ -170,7 +171,7 @@ func studyCases() []studyCase {
 	}
 
 	// ---- Page 8: Confirmation Modal ----------------------------------------
-	modal := []ElementDescriptor{
+	modal := []types.ElementDescriptor{
 		{Ref: "e0", Role: "heading", Name: "Dashboard"},
 		{Ref: "e1", Role: "button", Name: "New Project"},
 		{Ref: "e2", Role: "dialog", Name: "Delete Project"},
@@ -184,7 +185,7 @@ func studyCases() []studyCase {
 	}
 
 	// ---- Page 9: Settings / Preferences Page --------------------------------
-	settings := []ElementDescriptor{
+	settings := []types.ElementDescriptor{
 		{Ref: "e0", Role: "heading", Name: "Account Settings"},
 		{Ref: "e1", Role: "textbox", Name: "Display name"},
 		{Ref: "e2", Role: "textbox", Name: "Email address"},
@@ -201,7 +202,7 @@ func studyCases() []studyCase {
 	}
 
 	// ---- Page 10: Checkout / Payment Page ----------------------------------
-	checkout := []ElementDescriptor{
+	checkout := []types.ElementDescriptor{
 		{Ref: "e0", Role: "heading", Name: "Checkout"},
 		{Ref: "e1", Role: "textbox", Name: "Full name"},
 		{Ref: "e2", Role: "textbox", Name: "Email"},
@@ -278,7 +279,7 @@ func studyHardCases() []studyCase {
 	cases := studyCases()
 
 	// Helper: find element slice for a given page name.
-	pageElems := map[string][]ElementDescriptor{}
+	pageElems := map[string][]types.ElementDescriptor{}
 	for _, c := range cases {
 		if _, ok := pageElems[c.page]; !ok {
 			pageElems[c.page] = c.elements
@@ -338,11 +339,11 @@ func studyHardCases() []studyCase {
 
 func runMatcher(
 	name string,
-	matcher ElementMatcher,
+	matcher types.ElementMatcher,
 	cases []studyCase,
 ) []studyResult {
 	ctx := context.Background()
-	opts := FindOptions{Threshold: 0.0, TopK: 3}
+	opts := types.FindOptions{Threshold: 0.0, TopK: 3}
 	results := make([]studyResult, 0, len(cases))
 
 	for _, c := range cases {
@@ -437,7 +438,7 @@ func TestBenchmarkStudy(t *testing.T) {
 
 	matchers := []struct {
 		name    string
-		matcher ElementMatcher
+		matcher types.ElementMatcher
 	}{
 		{"Lexical", NewLexicalMatcher()},
 		{"Embedding", NewEmbeddingMatcher(NewHashingEmbedder(128))},

@@ -1,6 +1,7 @@
-package semantic
+package engine
 
 import (
+	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"math"
 	"testing"
@@ -116,13 +117,13 @@ func TestEmbeddingMatcher_Strategy(t *testing.T) {
 func TestEmbeddingMatcher_Find(t *testing.T) {
 	m := NewEmbeddingMatcher(newDummyEmbedder(64))
 
-	elements := []ElementDescriptor{
+	elements := []types.ElementDescriptor{
 		{Ref: "e0", Role: "button", Name: "Login"},
 		{Ref: "e1", Role: "textbox", Name: "Username"},
 		{Ref: "e2", Role: "link", Name: "Forgot Password"},
 	}
 
-	result, err := m.Find(context.Background(), "login button", elements, FindOptions{
+	result, err := m.Find(context.Background(), "login button", elements, types.FindOptions{
 		Threshold: 0.0,
 		TopK:      3,
 	})
@@ -148,12 +149,12 @@ func TestEmbeddingMatcher_Find(t *testing.T) {
 func TestEmbeddingMatcher_ThresholdFiltering(t *testing.T) {
 	m := NewEmbeddingMatcher(newDummyEmbedder(64))
 
-	elements := []ElementDescriptor{
+	elements := []types.ElementDescriptor{
 		{Ref: "e0", Role: "button", Name: "Submit"},
 		{Ref: "e1", Role: "link", Name: "Cancel"},
 	}
 
-	result, err := m.Find(context.Background(), "xyz completely unrelated", elements, FindOptions{
+	result, err := m.Find(context.Background(), "xyz completely unrelated", elements, types.FindOptions{
 		Threshold: 0.99,
 		TopK:      5,
 	})

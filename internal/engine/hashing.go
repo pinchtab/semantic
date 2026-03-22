@@ -1,4 +1,4 @@
-package semantic
+package engine
 
 import (
 	"hash/fnv"

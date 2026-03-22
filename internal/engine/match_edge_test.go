@@ -1,10 +1,11 @@
-package semantic
+package engine
 
 // Edge case tests.
 // Verify graceful handling of empty queries, gibberish, all-stopword input,
 // very long queries, and single-character queries.
 
 import (
+	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"testing"
 )
@@ -15,9 +16,9 @@ import (
 
 func TestCombined_EdgeCase_EmptyQuery(t *testing.T) {
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
-	elements := []ElementDescriptor{{Ref: "e1", Role: "button", Name: "Submit"}}
+	elements := []types.ElementDescriptor{{Ref: "e1", Role: "button", Name: "Submit"}}
 
-	result, err := matcher.Find(context.Background(), "", elements, FindOptions{
+	result, err := matcher.Find(context.Background(), "", elements, types.FindOptions{
 		Threshold: 0.1,
 		TopK:      3,
 	})
@@ -33,7 +34,7 @@ func TestCombined_EdgeCase_GibberishQuery(t *testing.T) {
 	sites := buildRealWorldElements()
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	result, err := matcher.Find(context.Background(), "xyzzy plugh qwerty", sites["wikipedia"], FindOptions{
+	result, err := matcher.Find(context.Background(), "xyzzy plugh qwerty", sites["wikipedia"], types.FindOptions{
 		Threshold: 0.3,
 		TopK:      3,
 	})
@@ -49,12 +50,12 @@ func TestCombined_EdgeCase_GibberishQuery(t *testing.T) {
 
 func TestCombined_EdgeCase_AllStopwords(t *testing.T) {
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
-	elements := []ElementDescriptor{
+	elements := []types.ElementDescriptor{
 		{Ref: "e1", Role: "button", Name: "Submit"},
 		{Ref: "e2", Role: "link", Name: "The"},
 	}
 
-	result, err := matcher.Find(context.Background(), "the a is", elements, FindOptions{
+	result, err := matcher.Find(context.Background(), "the a is", elements, types.FindOptions{
 		Threshold: 0.1,
 		TopK:      3,
 	})
@@ -66,12 +67,12 @@ func TestCombined_EdgeCase_AllStopwords(t *testing.T) {
 
 func TestCombined_EdgeCase_VeryLongQuery(t *testing.T) {
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
-	elements := []ElementDescriptor{
+	elements := []types.ElementDescriptor{
 		{Ref: "e1", Role: "button", Name: "Submit"},
 	}
 
 	longQuery := "I want to find the submit button that is located on the bottom right of the page and click on it to submit the form"
-	result, err := matcher.Find(context.Background(), longQuery, elements, FindOptions{
+	result, err := matcher.Find(context.Background(), longQuery, elements, types.FindOptions{
 		Threshold: 0.1,
 		TopK:      3,
 	})
@@ -86,12 +87,12 @@ func TestCombined_EdgeCase_VeryLongQuery(t *testing.T) {
 
 func TestCombined_EdgeCase_SingleCharQuery(t *testing.T) {
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
-	elements := []ElementDescriptor{
+	elements := []types.ElementDescriptor{
 		{Ref: "e1", Role: "link", Name: "X"},
 		{Ref: "e2", Role: "button", Name: "Close"},
 	}
 
-	result, err := matcher.Find(context.Background(), "x", elements, FindOptions{
+	result, err := matcher.Find(context.Background(), "x", elements, types.FindOptions{
 		Threshold: 0.1,
 		TopK:      3,
 	})

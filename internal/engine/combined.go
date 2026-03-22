@@ -1,6 +1,7 @@
-package semantic
+package engine
 
 import (
+	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"fmt"
 	"sort"
@@ -37,7 +38,7 @@ func (c *CombinedMatcher) Strategy() string {
 	return "combined:lexical+" + c.embedding.Strategy()
 }
 
-func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, error) {
+func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
 	if opts.TopK <= 0 {
 		opts.TopK = 3
 	}
@@ -46,13 +47,13 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []Ele
 
 	lexResult, embResult, err := c.runBoth(ctx, query, elements, opts)
 	if err != nil {
-		return FindResult{}, err
+		return types.FindResult{}, err
 	}
 
 	return c.mergeResults(lexResult, embResult, elements, opts, lexW, embW), nil
 }
 
-func (c *CombinedMatcher) weights(opts FindOptions) (float64, float64) {
+func (c *CombinedMatcher) weights(opts types.FindOptions) (float64, float64) {
 	if opts.LexicalWeight > 0 || opts.EmbeddingWeight > 0 {
 		return opts.LexicalWeight, opts.EmbeddingWeight
 	}
@@ -60,12 +61,12 @@ func (c *CombinedMatcher) weights(opts FindOptions) (float64, float64) {
 }
 
 type matcherResult struct {
-	result FindResult
+	result types.FindResult
 	err    error
 }
 
-func (c *CombinedMatcher) runBoth(ctx context.Context, query string, elements []ElementDescriptor, opts FindOptions) (FindResult, FindResult, error) {
-	internalOpts := FindOptions{
+func (c *CombinedMatcher) runBoth(ctx context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, types.FindResult, error) {
+	internalOpts := types.FindOptions{
 		Threshold: opts.Threshold * 0.5,
 		TopK:      len(elements),
 	}
@@ -96,10 +97,10 @@ func (c *CombinedMatcher) runBoth(ctx context.Context, query string, elements []
 	embRes := <-embCh
 
 	if lexRes.err != nil {
-		return FindResult{}, FindResult{}, lexRes.err
+		return types.FindResult{}, types.FindResult{}, lexRes.err
 	}
 	if embRes.err != nil {
-		return FindResult{}, FindResult{}, embRes.err
+		return types.FindResult{}, types.FindResult{}, embRes.err
 	}
 	return lexRes.result, embRes.result, nil
 }
@@ -107,16 +108,16 @@ func (c *CombinedMatcher) runBoth(ctx context.Context, query string, elements []
 type scored struct {
 	ref      string
 	score    float64
-	el       ElementDescriptor
+	el       types.ElementDescriptor
 	lexScore float64
 	embScore float64
 }
 
-func (c *CombinedMatcher) mergeResults(lexResult, embResult FindResult, elements []ElementDescriptor, opts FindOptions, lexW, embW float64) FindResult {
+func (c *CombinedMatcher) mergeResults(lexResult, embResult types.FindResult, elements []types.ElementDescriptor, opts types.FindOptions, lexW, embW float64) types.FindResult {
 	lexScores := scoreMap(lexResult.Matches)
 	embScores := scoreMap(embResult.Matches)
 
-	refToElem := make(map[string]ElementDescriptor, len(elements))
+	refToElem := make(map[string]types.ElementDescriptor, len(elements))
 	for _, el := range elements {
 		refToElem[el.Ref] = el
 	}
@@ -150,19 +151,19 @@ func (c *CombinedMatcher) mergeResults(lexResult, embResult FindResult, elements
 		candidates = candidates[:opts.TopK]
 	}
 
-	result := FindResult{
+	result := types.FindResult{
 		Strategy:     c.Strategy(),
 		ElementCount: len(elements),
 	}
 	for _, cand := range candidates {
-		em := ElementMatch{
+		em := types.ElementMatch{
 			Ref:   cand.ref,
 			Score: cand.score,
 			Role:  cand.el.Role,
 			Name:  cand.el.Name,
 		}
 		if opts.Explain {
-			em.Explain = &MatchExplain{
+			em.Explain = &types.MatchExplain{
 				LexicalScore:   cand.lexScore,
 				EmbeddingScore: cand.embScore,
 				Composite:      cand.el.Composite(),
@@ -177,7 +178,7 @@ func (c *CombinedMatcher) mergeResults(lexResult, embResult FindResult, elements
 	return result
 }
 
-func scoreMap(matches []ElementMatch) map[string]float64 {
+func scoreMap(matches []types.ElementMatch) map[string]float64 {
 	m := make(map[string]float64, len(matches))
 	for _, match := range matches {
 		m[match.Ref] = match.Score

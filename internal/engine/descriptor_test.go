@@ -1,37 +1,38 @@
-package semantic
+package engine
 
 import (
+	"github.com/pinchtab/semantic/internal/types"
 	"testing"
 )
 
 
 
-// ElementDescriptor tests
+// types.ElementDescriptor tests
 
 func TestComposite(t *testing.T) {
 	tests := []struct {
 		name string
-		desc ElementDescriptor
+		desc types.ElementDescriptor
 		want string
 	}{
 		{
 			name: "role and name",
-			desc: ElementDescriptor{Ref: "e0", Role: "button", Name: "Submit"},
+			desc: types.ElementDescriptor{Ref: "e0", Role: "button", Name: "Submit"},
 			want: "button: Submit",
 		},
 		{
 			name: "role name and value",
-			desc: ElementDescriptor{Ref: "e1", Role: "textbox", Name: "Email", Value: "user@pinchtab.com"},
+			desc: types.ElementDescriptor{Ref: "e1", Role: "textbox", Name: "Email", Value: "user@pinchtab.com"},
 			want: "textbox: Email [user@pinchtab.com]",
 		},
 		{
 			name: "name only",
-			desc: ElementDescriptor{Ref: "e2", Name: "Heading"},
+			desc: types.ElementDescriptor{Ref: "e2", Name: "Heading"},
 			want: "Heading",
 		},
 		{
 			name: "empty",
-			desc: ElementDescriptor{Ref: "e3"},
+			desc: types.ElementDescriptor{Ref: "e3"},
 			want: "",
 		},
 	}
@@ -64,9 +65,9 @@ func TestCalibrateConfidence(t *testing.T) {
 		{0.0, "low"},
 	}
 	for _, c := range cases {
-		got := CalibrateConfidence(c.score)
+		got := types.CalibrateConfidence(c.score)
 		if got != c.want {
-			t.Errorf("CalibrateConfidence(%f) = %q, want %q", c.score, got, c.want)
+			t.Errorf("types.CalibrateConfidence(%f) = %q, want %q", c.score, got, c.want)
 		}
 	}
 }
@@ -76,7 +77,7 @@ func TestCalibrateConfidence(t *testing.T) {
 // FindResult.ConfidenceLabel tests
 
 func TestFindResult_ConfidenceLabel(t *testing.T) {
-	r := &FindResult{BestScore: 0.9}
+	r := &types.FindResult{BestScore: 0.9}
 	if r.ConfidenceLabel() != "high" {
 		t.Errorf("expected high, got %s", r.ConfidenceLabel())
 	}

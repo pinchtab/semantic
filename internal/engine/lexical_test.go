@@ -1,6 +1,7 @@
-package semantic
+package engine
 
 import (
+	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"math"
 	"testing"
@@ -119,8 +120,8 @@ func TestLexicalScore_StillRejectsUnrelated(t *testing.T) {
 // Combined Matcher with Improvements - Real-World Evaluation Scenarios
 
 // buildRealWorldElements creates elements mimicking real website structures
-func buildRealWorldElements() map[string][]ElementDescriptor {
-	return map[string][]ElementDescriptor{
+func buildRealWorldElements() map[string][]types.ElementDescriptor {
+	return map[string][]types.ElementDescriptor{
 		"wikipedia": {
 			{Ref: "e1", Role: "search", Name: "Search Wikipedia"},
 			{Ref: "e2", Role: "button", Name: "Search"},
@@ -244,9 +245,9 @@ func TestLexicalScore_StopwordRemoval(t *testing.T) {
 	}
 }
 
-// LexicalMatcher (ElementMatcher interface) tests
+// LexicalMatcher (types.ElementMatcher interface) tests
 
-// LexicalMatcher (ElementMatcher interface) tests
+// LexicalMatcher (types.ElementMatcher interface) tests
 
 func TestLexicalMatcher_Find(t *testing.T) {
 	m := NewLexicalMatcher()
@@ -255,13 +256,13 @@ func TestLexicalMatcher_Find(t *testing.T) {
 		t.Errorf("expected strategy=lexical, got %s", m.Strategy())
 	}
 
-	elements := []ElementDescriptor{
+	elements := []types.ElementDescriptor{
 		{Ref: "e0", Role: "button", Name: "Log In"},
 		{Ref: "e1", Role: "link", Name: "Sign Up"},
 		{Ref: "e2", Role: "textbox", Name: "Email Address"},
 	}
 
-	result, err := m.Find(context.Background(), "log in button", elements, FindOptions{
+	result, err := m.Find(context.Background(), "log in button", elements, types.FindOptions{
 		Threshold: 0.1,
 		TopK:      3,
 	})
@@ -283,12 +284,12 @@ func TestLexicalMatcher_Find(t *testing.T) {
 func TestLexicalMatcher_ThresholdFiltering(t *testing.T) {
 	m := NewLexicalMatcher()
 
-	elements := []ElementDescriptor{
+	elements := []types.ElementDescriptor{
 		{Ref: "e0", Role: "button", Name: "Submit"},
 		{Ref: "e1", Role: "link", Name: "Home"},
 	}
 
-	result, err := m.Find(context.Background(), "submit button", elements, FindOptions{
+	result, err := m.Find(context.Background(), "submit button", elements, types.FindOptions{
 		Threshold: 0.99,
 		TopK:      5,
 	})

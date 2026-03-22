@@ -1,10 +1,11 @@
-package semantic
+package engine
 
 // Synonym and paraphrase resolution tests.
 // Verify that Find() correctly matches queries using alternate vocabulary
 // ("log in" → "Sign In", "purchase" → "Checkout", etc.).
 
 import (
+	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"testing"
 )
@@ -29,7 +30,7 @@ func TestCombined_ExactMatch_Wikipedia(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.query, func(t *testing.T) {
-			result, err := matcher.Find(context.Background(), tt.query, sites["wikipedia"], FindOptions{
+			result, err := matcher.Find(context.Background(), tt.query, sites["wikipedia"], types.FindOptions{
 				Threshold: 0.2,
 				TopK:      3,
 			})
@@ -60,7 +61,7 @@ func TestCombined_Synonym_SignIn_LogIn(t *testing.T) {
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
 
 	// "sign in" should find "Log in" on Wikipedia
-	result, err := matcher.Find(context.Background(), "sign in", sites["wikipedia"], FindOptions{
+	result, err := matcher.Find(context.Background(), "sign in", sites["wikipedia"], types.FindOptions{
 		Threshold: 0.15,
 		TopK:      5,
 	})
@@ -81,7 +82,7 @@ func TestCombined_Synonym_Register_CreateAccount(t *testing.T) {
 	sites := buildRealWorldElements()
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	result, err := matcher.Find(context.Background(), "register", sites["wikipedia"], FindOptions{
+	result, err := matcher.Find(context.Background(), "register", sites["wikipedia"], types.FindOptions{
 		Threshold: 0.15,
 		TopK:      5,
 	})
@@ -109,7 +110,7 @@ func TestCombined_Synonym_LookUp_Search(t *testing.T) {
 	sites := buildRealWorldElements()
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	result, err := matcher.Find(context.Background(), "look up", sites["wikipedia"], FindOptions{
+	result, err := matcher.Find(context.Background(), "look up", sites["wikipedia"], types.FindOptions{
 		Threshold: 0.15,
 		TopK:      5,
 	})
@@ -137,7 +138,7 @@ func TestCombined_Synonym_Navigation_MainMenu(t *testing.T) {
 	sites := buildRealWorldElements()
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	result, err := matcher.Find(context.Background(), "navigation", sites["wikipedia"], FindOptions{
+	result, err := matcher.Find(context.Background(), "navigation", sites["wikipedia"], types.FindOptions{
 		Threshold: 0.15,
 		TopK:      5,
 	})
@@ -159,7 +160,7 @@ func TestCombined_Synonym_Login_SignIn(t *testing.T) {
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
 
 	// GitHub login page: "login" should find "Sign in" button
-	result, err := matcher.Find(context.Background(), "login", sites["github_login"], FindOptions{
+	result, err := matcher.Find(context.Background(), "login", sites["github_login"], types.FindOptions{
 		Threshold: 0.15,
 		TopK:      5,
 	})
@@ -187,7 +188,7 @@ func TestCombined_Synonym_Purchase_Checkout(t *testing.T) {
 	sites := buildRealWorldElements()
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	result, err := matcher.Find(context.Background(), "purchase", sites["ecommerce"], FindOptions{
+	result, err := matcher.Find(context.Background(), "purchase", sites["ecommerce"], types.FindOptions{
 		Threshold: 0.15,
 		TopK:      5,
 	})
@@ -215,7 +216,7 @@ func TestCombined_Synonym_ProceedToPayment_PlaceOrder(t *testing.T) {
 	sites := buildRealWorldElements()
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	result, err := matcher.Find(context.Background(), "proceed to payment", sites["ecommerce"], FindOptions{
+	result, err := matcher.Find(context.Background(), "proceed to payment", sites["ecommerce"], types.FindOptions{
 		Threshold: 0.15,
 		TopK:      5,
 	})
@@ -235,7 +236,7 @@ func TestCombined_Synonym_Dismiss_Close(t *testing.T) {
 	sites := buildRealWorldElements()
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	result, err := matcher.Find(context.Background(), "dismiss", sites["ecommerce"], FindOptions{
+	result, err := matcher.Find(context.Background(), "dismiss", sites["ecommerce"], types.FindOptions{
 		Threshold: 0.15,
 		TopK:      5,
 	})
@@ -256,7 +257,7 @@ func TestCombined_Synonym_Download_Export(t *testing.T) {
 	sites := buildRealWorldElements()
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	result, err := matcher.Find(context.Background(), "download orders", sites["ecommerce"], FindOptions{
+	result, err := matcher.Find(context.Background(), "download orders", sites["ecommerce"], types.FindOptions{
 		Threshold: 0.15,
 		TopK:      5,
 	})
@@ -285,7 +286,7 @@ func TestCombined_Paraphrase_ForgotPassword(t *testing.T) {
 	sites := buildRealWorldElements()
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	result, err := matcher.Find(context.Background(), "reset password", sites["github_login"], FindOptions{
+	result, err := matcher.Find(context.Background(), "reset password", sites["github_login"], types.FindOptions{
 		Threshold: 0.15,
 		TopK:      5,
 	})
@@ -306,7 +307,7 @@ func TestCombined_Paraphrase_ShoppingBag(t *testing.T) {
 	sites := buildRealWorldElements()
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	result, err := matcher.Find(context.Background(), "shopping bag", sites["ecommerce"], FindOptions{
+	result, err := matcher.Find(context.Background(), "shopping bag", sites["ecommerce"], types.FindOptions{
 		Threshold: 0.15,
 		TopK:      5,
 	})

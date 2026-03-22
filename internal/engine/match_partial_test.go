@@ -1,9 +1,10 @@
-package semantic
+package engine
 
 // Partial match and abbreviation tests.
 // Verify that Find() handles shortened forms ("btn" → "button", "nav" → "navigation").
 
 import (
+	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"testing"
 )
@@ -13,14 +14,14 @@ import (
 // CATEGORY 4: Partial Match / Abbreviation Tests
 
 func TestCombined_Partial_Btn(t *testing.T) {
-	elements := []ElementDescriptor{
+	elements := []types.ElementDescriptor{
 		{Ref: "e1", Role: "button", Name: "Submit"},
 		{Ref: "e2", Role: "link", Name: "Home"},
 		{Ref: "e3", Role: "textbox", Name: "Email"},
 	}
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	result, err := matcher.Find(context.Background(), "submit btn", elements, FindOptions{
+	result, err := matcher.Find(context.Background(), "submit btn", elements, types.FindOptions{
 		Threshold: 0.15,
 		TopK:      3,
 	})
@@ -37,7 +38,7 @@ func TestCombined_Partial_Nav(t *testing.T) {
 	sites := buildRealWorldElements()
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	result, err := matcher.Find(context.Background(), "nav menu", sites["ecommerce"], FindOptions{
+	result, err := matcher.Find(context.Background(), "nav menu", sites["ecommerce"], types.FindOptions{
 		Threshold: 0.15,
 		TopK:      5,
 	})
@@ -58,7 +59,7 @@ func TestCombined_Partial_Qty(t *testing.T) {
 	sites := buildRealWorldElements()
 	matcher := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	result, err := matcher.Find(context.Background(), "qty", sites["ecommerce"], FindOptions{
+	result, err := matcher.Find(context.Background(), "qty", sites["ecommerce"], types.FindOptions{
 		Threshold: 0.15,
 		TopK:      5,
 	})

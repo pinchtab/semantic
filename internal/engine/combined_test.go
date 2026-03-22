@@ -1,6 +1,7 @@
-package semantic
+package engine
 
 import (
+	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"fmt"
 	"testing"
@@ -22,13 +23,13 @@ func TestCombinedMatcher_Strategy(t *testing.T) {
 func TestCombinedMatcher_Find(t *testing.T) {
 	m := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	elements := []ElementDescriptor{
+	elements := []types.ElementDescriptor{
 		{Ref: "e0", Role: "button", Name: "Log In"},
 		{Ref: "e1", Role: "link", Name: "Sign Up"},
 		{Ref: "e2", Role: "textbox", Name: "Email Address"},
 	}
 
-	result, err := m.Find(context.Background(), "log in button", elements, FindOptions{
+	result, err := m.Find(context.Background(), "log in button", elements, types.FindOptions{
 		Threshold: 0.1,
 		TopK:      3,
 	})
@@ -53,12 +54,12 @@ func TestCombinedMatcher_Find(t *testing.T) {
 func TestCombinedMatcher_ThresholdFiltering(t *testing.T) {
 	m := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	elements := []ElementDescriptor{
+	elements := []types.ElementDescriptor{
 		{Ref: "e0", Role: "button", Name: "Submit"},
 		{Ref: "e1", Role: "link", Name: "Home"},
 	}
 
-	result, err := m.Find(context.Background(), "submit button", elements, FindOptions{
+	result, err := m.Find(context.Background(), "submit button", elements, types.FindOptions{
 		Threshold: 0.99,
 		TopK:      5,
 	})
@@ -76,7 +77,7 @@ func TestCombinedMatcher_ThresholdFiltering(t *testing.T) {
 func TestCombinedMatcher_TopK(t *testing.T) {
 	m := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	elements := []ElementDescriptor{
+	elements := []types.ElementDescriptor{
 		{Ref: "e0", Role: "button", Name: "Submit"},
 		{Ref: "e1", Role: "button", Name: "Cancel"},
 		{Ref: "e2", Role: "button", Name: "Reset"},
@@ -84,7 +85,7 @@ func TestCombinedMatcher_TopK(t *testing.T) {
 		{Ref: "e4", Role: "textbox", Name: "Name"},
 	}
 
-	result, err := m.Find(context.Background(), "button", elements, FindOptions{
+	result, err := m.Find(context.Background(), "button", elements, types.FindOptions{
 		Threshold: 0.01,
 		TopK:      2,
 	})
@@ -100,14 +101,14 @@ func TestCombinedMatcher_TopK(t *testing.T) {
 func TestCombinedMatcher_ScoresDescending(t *testing.T) {
 	m := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	elements := []ElementDescriptor{
+	elements := []types.ElementDescriptor{
 		{Ref: "e0", Role: "button", Name: "Login"},
 		{Ref: "e1", Role: "textbox", Name: "Username"},
 		{Ref: "e2", Role: "link", Name: "Forgot Password"},
 		{Ref: "e3", Role: "heading", Name: "Welcome Page"},
 	}
 
-	result, err := m.Find(context.Background(), "login button", elements, FindOptions{
+	result, err := m.Find(context.Background(), "login button", elements, types.FindOptions{
 		Threshold: 0.01,
 		TopK:      10,
 	})
@@ -128,13 +129,13 @@ func TestCombinedMatcher_FusesBothStrategies(t *testing.T) {
 	lexical := NewLexicalMatcher()
 	embedding := NewEmbeddingMatcher(NewHashingEmbedder(128))
 
-	elements := []ElementDescriptor{
+	elements := []types.ElementDescriptor{
 		{Ref: "e0", Role: "button", Name: "Log In"},
 		{Ref: "e1", Role: "link", Name: "Sign Up"},
 	}
 
 	ctx := context.Background()
-	opts := FindOptions{Threshold: 0.01, TopK: 3}
+	opts := types.FindOptions{Threshold: 0.01, TopK: 3}
 
 	combResult, err := combined.Find(ctx, "log in", elements, opts)
 	if err != nil {
@@ -164,7 +165,7 @@ func TestCombinedMatcher_FusesBothStrategies(t *testing.T) {
 func TestCombinedMatcher_NoElements(t *testing.T) {
 	m := NewCombinedMatcher(NewHashingEmbedder(128))
 
-	result, err := m.Find(context.Background(), "anything", nil, FindOptions{
+	result, err := m.Find(context.Background(), "anything", nil, types.FindOptions{
 		Threshold: 0.1,
 		TopK:      3,
 	})
@@ -183,8 +184,8 @@ func TestCombinedMatcher_NoElements(t *testing.T) {
 // Phase 3: Complex UI test scenarios
 
 // complexFormElements returns a realistic form page with 15+ elements.
-func complexFormElements() []ElementDescriptor {
-	return []ElementDescriptor{
+func complexFormElements() []types.ElementDescriptor {
+	return []types.ElementDescriptor{
 		{Ref: "e0", Role: "heading", Name: "Registration Form"},
 		{Ref: "e1", Role: "textbox", Name: "First Name"},
 		{Ref: "e2", Role: "textbox", Name: "Last Name"},
@@ -205,8 +206,8 @@ func complexFormElements() []ElementDescriptor {
 }
 
 // complexTableElements returns a data table with columns and actions.
-func complexTableElements() []ElementDescriptor {
-	return []ElementDescriptor{
+func complexTableElements() []types.ElementDescriptor {
+	return []types.ElementDescriptor{
 		{Ref: "e0", Role: "heading", Name: "User Management"},
 		{Ref: "e1", Role: "search", Name: "Search Users"},
 		{Ref: "e2", Role: "button", Name: "Add New User"},
@@ -230,8 +231,8 @@ func complexTableElements() []ElementDescriptor {
 }
 
 // complexModalElements returns a page with a modal dialog overlay.
-func complexModalElements() []ElementDescriptor {
-	return []ElementDescriptor{
+func complexModalElements() []types.ElementDescriptor {
+	return []types.ElementDescriptor{
 		{Ref: "e0", Role: "heading", Name: "Dashboard"},
 		{Ref: "e1", Role: "button", Name: "Settings"},
 		{Ref: "e2", Role: "button", Name: "Notifications"},
@@ -268,7 +269,7 @@ func TestCombinedMatcher_ComplexForm(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			result, err := m.Find(context.Background(), tt.query, elements, FindOptions{
+			result, err := m.Find(context.Background(), tt.query, elements, types.FindOptions{
 				Threshold: 0.01,
 				TopK:      3,
 			})
@@ -303,7 +304,7 @@ func TestCombinedMatcher_ComplexTable(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			result, err := m.Find(context.Background(), tt.query, elements, FindOptions{
+			result, err := m.Find(context.Background(), tt.query, elements, types.FindOptions{
 				Threshold: 0.01,
 				TopK:      3,
 			})
@@ -338,7 +339,7 @@ func TestCombinedMatcher_ComplexModal(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			result, err := m.Find(context.Background(), tt.query, elements, FindOptions{
+			result, err := m.Find(context.Background(), tt.query, elements, types.FindOptions{
 				Threshold: 0.01,
 				TopK:      3,
 			})
@@ -361,7 +362,7 @@ func TestCombinedMatcher_ComplexModal(t *testing.T) {
 func BenchmarkLexicalMatcher_Find(b *testing.B) {
 	m := NewLexicalMatcher()
 	elements := complexFormElements()
-	opts := FindOptions{Threshold: 0.1, TopK: 3}
+	opts := types.FindOptions{Threshold: 0.1, TopK: 3}
 	ctx := context.Background()
 
 	b.ResetTimer()
@@ -397,7 +398,7 @@ func BenchmarkHashingEmbedder_EmbedBatch(b *testing.B) {
 func BenchmarkEmbeddingMatcher_Find(b *testing.B) {
 	m := NewEmbeddingMatcher(NewHashingEmbedder(128))
 	elements := complexFormElements()
-	opts := FindOptions{Threshold: 0.1, TopK: 3}
+	opts := types.FindOptions{Threshold: 0.1, TopK: 3}
 	ctx := context.Background()
 
 	b.ResetTimer()
@@ -409,7 +410,7 @@ func BenchmarkEmbeddingMatcher_Find(b *testing.B) {
 func BenchmarkCombinedMatcher_Find(b *testing.B) {
 	m := NewCombinedMatcher(NewHashingEmbedder(128))
 	elements := complexFormElements()
-	opts := FindOptions{Threshold: 0.1, TopK: 3}
+	opts := types.FindOptions{Threshold: 0.1, TopK: 3}
 	ctx := context.Background()
 
 	b.ResetTimer()
@@ -421,16 +422,16 @@ func BenchmarkCombinedMatcher_Find(b *testing.B) {
 func BenchmarkCombinedMatcher_LargeElementSet(b *testing.B) {
 	m := NewCombinedMatcher(NewHashingEmbedder(128))
 	// Build a large element set (100 elements) simulating a complex page.
-	elements := make([]ElementDescriptor, 100)
+	elements := make([]types.ElementDescriptor, 100)
 	roles := []string{"button", "link", "textbox", "heading", "img", "checkbox", "combobox"}
 	for i := 0; i < 100; i++ {
-		elements[i] = ElementDescriptor{
+		elements[i] = types.ElementDescriptor{
 			Ref:  fmt.Sprintf("e%d", i),
 			Role: roles[i%len(roles)],
 			Name: fmt.Sprintf("Element %d action item", i),
 		}
 	}
-	opts := FindOptions{Threshold: 0.1, TopK: 5}
+	opts := types.FindOptions{Threshold: 0.1, TopK: 5}
 	ctx := context.Background()
 
 	b.ResetTimer()
@@ -446,12 +447,12 @@ func TestCombinedMatcher_WeightsApplied(t *testing.T) {
 	m.LexicalWeight = 0.2
 	m.EmbeddingWeight = 0.8
 
-	elements := []ElementDescriptor{
+	elements := []types.ElementDescriptor{
 		{Ref: "e0", Role: "button", Name: "Log In"},
 		{Ref: "e1", Role: "link", Name: "Sign Up"},
 	}
 
-	result, err := m.Find(context.Background(), "log in", elements, FindOptions{
+	result, err := m.Find(context.Background(), "log in", elements, types.FindOptions{
 		Threshold: 0.01,
 		TopK:      3,
 	})
