@@ -11,6 +11,7 @@ ERROR=$'\033[38;2;230;57;70m'
 NC=$'\033[0m'
 
 commands=(
+  "doctor:🩺:Setup dev environment"
   "test:🧪:Run unit tests"
   "test verbose:🧪:Run unit tests (verbose)"
   "test race:🧪:Run unit tests with race detector"
@@ -128,6 +129,7 @@ run_e2e() {
 }
 
 case "${1:-help}" in
+  doctor)    exec bash scripts/doctor.sh ;;
   test)
     case "${2:-}" in
       verbose) run_test_verbose ;;
