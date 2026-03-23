@@ -1,8 +1,8 @@
 package engine
 
 import (
-	"github.com/pinchtab/semantic/internal/types"
 	"context"
+	"github.com/pinchtab/semantic/internal/types"
 	"sort"
 	"strings"
 	"unicode"
@@ -78,7 +78,6 @@ func (m *LexicalMatcher) Find(_ context.Context, query string, elements []types.
 
 	return result, nil
 }
-
 
 func tokenize(s string) []string {
 	s = strings.ToLower(s)

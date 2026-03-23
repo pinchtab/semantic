@@ -156,4 +156,3 @@ func TestSynonymIndex_LogOnBidirectional(t *testing.T) {
 		t.Error("'login' should map back to 'log on'")
 	}
 }
-

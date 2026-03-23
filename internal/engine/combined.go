@@ -1,15 +1,16 @@
 package engine
 
 import (
-	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"fmt"
+	"github.com/pinchtab/semantic/internal/types"
 	"sort"
 )
 
 // combinedMatcher fuses lexical and embedding scores:
 //
 //	score = 0.6 * lexical + 0.4 * embedding
+//
 // CombinedMatcher fuses lexical and embedding scores:
 //
 //	score = LexicalWeight * lexical + EmbeddingWeight * embedding

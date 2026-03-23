@@ -19,9 +19,9 @@ package engine
 //     go test ./internal/semantic/ -run TestBenchmarkStudy -v -count 5
 
 import (
-	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"fmt"
+	"github.com/pinchtab/semantic/internal/types"
 	"sort"
 	"strings"
 	"testing"

@@ -1,14 +1,13 @@
 package engine
 
 import (
-	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"fmt"
+	"github.com/pinchtab/semantic/internal/types"
 	"testing"
 )
 
 // CATEGORY 6: Role Boost Accumulation Test (Bug Fix)
-
 
 // Phase 3: CombinedMatcher tests
 

@@ -5,9 +5,9 @@ package engine
 // and cross-page-type evaluation suites.
 
 import (
-	"github.com/pinchtab/semantic/internal/types"
 	"context"
 	"fmt"
+	"github.com/pinchtab/semantic/internal/types"
 	"strings"
 	"testing"
 )

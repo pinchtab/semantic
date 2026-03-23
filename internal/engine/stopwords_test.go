@@ -1,8 +1,8 @@
 package engine
 
 import (
-	"github.com/pinchtab/semantic/internal/types"
 	"context"
+	"github.com/pinchtab/semantic/internal/types"
 	"testing"
 )
 
@@ -167,7 +167,6 @@ func TestStopword_OnPreservedInLogOn(t *testing.T) {
 		t.Errorf("'on' should be preserved in 'log on' context, got %v", query)
 	}
 }
-
 
 // Stopword tests
 
