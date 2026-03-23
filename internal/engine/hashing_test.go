@@ -85,7 +85,6 @@ func TestHashingEmbedder_PhraseAwareSynonymInjection(t *testing.T) {
 	}
 }
 
-
 // Phase 3: HashingEmbedder tests
 
 func TestHashingEmbedder_Strategy(t *testing.T) {

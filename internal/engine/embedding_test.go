@@ -1,13 +1,11 @@
 package engine
 
 import (
-	"github.com/pinchtab/semantic/internal/types"
 	"context"
+	"github.com/pinchtab/semantic/internal/types"
 	"math"
 	"testing"
 )
-
-
 
 // dummyEmbedder tests
 

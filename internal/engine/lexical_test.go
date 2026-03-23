@@ -1,8 +1,8 @@
 package engine
 
 import (
-	"github.com/pinchtab/semantic/internal/types"
 	"context"
+	"github.com/pinchtab/semantic/internal/types"
 	"math"
 	"testing"
 )
@@ -208,7 +208,6 @@ func TestLexicalScore_LogOn_vs_SignIn(t *testing.T) {
 		t.Errorf("'log on' vs '%s' should have meaningful score, got %.4f", desc, score)
 	}
 }
-
 
 // LexicalScore tests
 

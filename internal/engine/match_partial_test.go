@@ -4,8 +4,8 @@ package engine
 // Verify that Find() handles shortened forms ("btn" → "button", "nav" → "navigation").
 
 import (
-	"github.com/pinchtab/semantic/internal/types"
 	"context"
+	"github.com/pinchtab/semantic/internal/types"
 	"testing"
 )
 

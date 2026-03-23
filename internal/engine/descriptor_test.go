@@ -5,8 +5,6 @@ import (
 	"testing"
 )
 
-
-
 // types.ElementDescriptor tests
 
 func TestComposite(t *testing.T) {

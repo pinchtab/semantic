@@ -5,8 +5,8 @@ package engine
 // very long queries, and single-character queries.
 
 import (
-	"github.com/pinchtab/semantic/internal/types"
 	"context"
+	"github.com/pinchtab/semantic/internal/types"
 	"testing"
 )
 
@@ -103,6 +103,5 @@ func TestCombined_EdgeCase_SingleCharQuery(t *testing.T) {
 }
 
 // CATEGORY 6: Role Boost Accumulation Test (Bug Fix)
-
 
 // Phase 3: CombinedMatcher tests

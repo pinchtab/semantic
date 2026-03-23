@@ -5,12 +5,10 @@ package engine
 // ("log in" → "Sign In", "purchase" → "Checkout", etc.).
 
 import (
-	"github.com/pinchtab/semantic/internal/types"
 	"context"
+	"github.com/pinchtab/semantic/internal/types"
 	"testing"
 )
-
-
 
 func TestCombined_ExactMatch_Wikipedia(t *testing.T) {
 	sites := buildRealWorldElements()
