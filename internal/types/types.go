@@ -78,10 +78,11 @@ type MatchExplain struct {
 
 // ElementDescriptor describes a single accessibility tree node.
 type ElementDescriptor struct {
-	Ref   string
-	Role  string
-	Name  string
-	Value string
+	Ref         string
+	Role        string
+	Name        string
+	Value       string
+	Interactive bool
 }
 
 // Composite returns a single string combining role, name, and value

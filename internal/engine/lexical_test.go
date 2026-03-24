@@ -267,7 +267,48 @@ func TestLexicalScore_PhraseBonus_NoPhraseMatch(t *testing.T) {
 	}
 }
 
-// LexicalMatcher (types.ElementMatcher interface) tests
+func TestInteractiveBoost_ActionVerbDetection(t *testing.T) {
+	if !containsActionVerb(tokenize("click submit")) {
+		t.Fatalf("expected action verb detection for action-oriented query")
+	}
+	if containsActionVerb(tokenize("account settings")) {
+		t.Fatalf("did not expect action verb detection for non-action query")
+	}
+}
+
+func TestInteractiveBoost_NonActionUsesMildBoost(t *testing.T) {
+	action := interactiveBoost(tokenize("click submit"), true)
+	nonAction := interactiveBoost(tokenize("account settings"), true)
+	if nonAction <= 0 {
+		t.Fatalf("expected non-action interactive boost to be positive")
+	}
+	if action <= nonAction {
+		t.Fatalf("expected action boost to be larger than non-action boost, action=%f nonAction=%f", action, nonAction)
+	}
+}
+
+func TestLexicalMatcher_ActionQueryPrefersInteractiveElement(t *testing.T) {
+	m := NewLexicalMatcher()
+
+	elements := []types.ElementDescriptor{
+		{Ref: "e1", Role: "button", Name: "Submit", Interactive: false},
+		{Ref: "e2", Role: "button", Name: "Submit", Interactive: true},
+	}
+
+	result, err := m.Find(context.Background(), "click submit", elements, types.FindOptions{
+		Threshold: 0,
+		TopK:      2,
+	})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if len(result.Matches) < 2 {
+		t.Fatalf("expected 2 matches, got %d", len(result.Matches))
+	}
+	if result.BestRef != "e2" {
+		t.Fatalf("expected interactive element to rank first, got %s", result.BestRef)
+	}
+}
 
 // LexicalMatcher (types.ElementMatcher interface) tests
 
