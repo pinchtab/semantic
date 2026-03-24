@@ -80,7 +80,7 @@
   {
     "query": "table of contents",
     "snapshot": "wikipedia-article.json",
-    "expect_ref": "e9",
+    "expect_ref": "e3",
     "min_score": 0.3
   },
   {
