@@ -17,6 +17,10 @@ const (
 	synonymBoostWeight = 0.30
 	// prefixMatchWeight controls how much prefix matches contribute.
 	prefixMatchWeight = 0.20
+	// phraseExactBonus rewards full multi-word phrase containment.
+	phraseExactBonus = 0.15
+	// phrasePartialBonus rewards partial phrase containment (bigrams/trigrams).
+	phrasePartialBonus = 0.08
 )
 
 // LexicalMatcher scores elements using Jaccard similarity with synonym
@@ -197,11 +201,45 @@ func LexicalScore(query, desc string) float64 {
 		roleBoost = roleBoostCap
 	}
 
-	score := jaccard + synScore + prefixScore + roleBoost
+	// --- 5. Phrase bonus for preserving multi-word intent ---
+	phraseBoost := phraseBonus(qTokens, dTokens)
+
+	score := jaccard + synScore + prefixScore + roleBoost + phraseBoost
 	if score > 1.0 {
 		score = 1.0
 	}
 	return score
+}
+
+func phraseBonus(qTokens, dTokens []string) float64 {
+	if len(qTokens) < 2 || len(dTokens) < 2 {
+		return 0
+	}
+
+	qPhrase := strings.Join(qTokens, " ")
+	dPhrase := strings.Join(dTokens, " ")
+	if strings.Contains(dPhrase, qPhrase) {
+		return phraseExactBonus
+	}
+
+	// Fallback: reward any matching significant query sub-phrase.
+	for n := minInt(3, len(qTokens)); n >= 2; n-- {
+		for i := 0; i+n <= len(qTokens); i++ {
+			sub := strings.Join(qTokens[i:i+n], " ")
+			if strings.Contains(dPhrase, sub) {
+				return phrasePartialBonus
+			}
+		}
+	}
+
+	return 0
+}
+
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 func tokenPrefixScore(qTokens, dTokens []string) float64 {
