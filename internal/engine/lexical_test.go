@@ -244,6 +244,29 @@ func TestLexicalScore_StopwordRemoval(t *testing.T) {
 	}
 }
 
+func TestLexicalScore_PhraseBonus_ExactPhraseBeatsPartial(t *testing.T) {
+	exact := LexicalScore("add to cart", "button: Add to cart")
+	partial := LexicalScore("add to cart", "button: Add")
+	if exact <= partial {
+		t.Errorf("expected exact phrase match to score higher, exact=%f partial=%f", exact, partial)
+	}
+}
+
+func TestLexicalScore_PhraseBonus_PartialSubPhrase(t *testing.T) {
+	withPartial := LexicalScore("create account now", "button: Create account")
+	withoutPartial := LexicalScore("create account now", "button: Register")
+	if withPartial <= withoutPartial {
+		t.Errorf("expected partial phrase match to score higher, withPartial=%f withoutPartial=%f", withPartial, withoutPartial)
+	}
+}
+
+func TestLexicalScore_PhraseBonus_NoPhraseMatch(t *testing.T) {
+	nonMatch := LexicalScore("security settings", "button: Export report")
+	if nonMatch > 0.35 {
+		t.Errorf("expected low score when no phrase exists, got %f", nonMatch)
+	}
+}
+
 // LexicalMatcher (types.ElementMatcher interface) tests
 
 // LexicalMatcher (types.ElementMatcher interface) tests

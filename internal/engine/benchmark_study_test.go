@@ -239,6 +239,8 @@ func studyCases() []studyCase {
 		// Page 5: Dashboard — 2 queries
 		{"Analytics Dashboard", "export report", "e1", dashboard},
 		{"Analytics Dashboard", "date range selector", "e3", dashboard},
+		// Phrase-sensitive: prefer exact phrase over token-only overlap.
+		{"Analytics Dashboard", "add widget", "e2", dashboard},
 
 		// Page 6: Search Results — 2 queries
 		{"Search Results", "search input", "e0", search},
@@ -259,6 +261,9 @@ func studyCases() []studyCase {
 		// Page 10: Checkout — 2 queries
 		{"Checkout Page", "place order button", "e11", checkout},
 		{"Checkout Page", "card number field", "e7", checkout},
+
+		// Phrase-sensitive: keep multi-word intent intact.
+		{"Product Page", "add to cart button", "e4", product},
 	}
 }
 
