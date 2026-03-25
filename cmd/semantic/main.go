@@ -62,10 +62,11 @@ Flags (find/match):
 
 // snapshotElement is the JSON shape from pinchtab's /snapshot endpoint.
 type snapshotElement struct {
-	Ref   string `json:"ref"`
-	Role  string `json:"role"`
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Ref         string `json:"ref"`
+	Role        string `json:"role"`
+	Name        string `json:"name"`
+	Value       string `json:"value"`
+	Interactive bool   `json:"interactive"`
 }
 
 func loadSnapshot(path string) ([]semantic.ElementDescriptor, error) {
@@ -94,10 +95,11 @@ func loadSnapshot(path string) ([]semantic.ElementDescriptor, error) {
 	descs := make([]semantic.ElementDescriptor, len(elements))
 	for i, e := range elements {
 		descs[i] = semantic.ElementDescriptor{
-			Ref:   e.Ref,
-			Role:  e.Role,
-			Name:  e.Name,
-			Value: e.Value,
+			Ref:         e.Ref,
+			Role:        e.Role,
+			Name:        e.Name,
+			Value:       e.Value,
+			Interactive: e.Interactive,
 		}
 	}
 	return descs, nil

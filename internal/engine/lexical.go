@@ -21,6 +21,10 @@ const (
 	phraseExactBonus = 0.15
 	// phrasePartialBonus rewards partial phrase containment (bigrams/trigrams).
 	phrasePartialBonus = 0.08
+	// interactiveActionBoost is applied when action verbs imply intent to interact.
+	interactiveActionBoost = 0.10
+	// interactiveBaseBoost lightly favors interactive elements for generic queries.
+	interactiveBaseBoost = 0.05
 )
 
 // LexicalMatcher scores elements using Jaccard similarity with synonym
@@ -47,7 +51,7 @@ func (m *LexicalMatcher) Find(_ context.Context, query string, elements []types.
 	var candidates []scored
 	for _, el := range elements {
 		composite := el.Composite()
-		score := LexicalScore(query, composite)
+		score := lexicalScore(query, composite, el.Interactive)
 		if score >= opts.Threshold {
 			candidates = append(candidates, scored{desc: el, score: score})
 		}
@@ -122,10 +126,27 @@ var roleKeywords = map[string]bool{
 	"search":   true,
 }
 
+var actionVerbs = map[string]bool{
+	"click":  true,
+	"press":  true,
+	"tap":    true,
+	"type":   true,
+	"enter":  true,
+	"select": true,
+	"check":  true,
+	"toggle": true,
+	"submit": true,
+	"fill":   true,
+}
+
 // LexicalScore computes Jaccard similarity with synonym expansion,
 // context-aware stopwords, role boosting, and prefix matching.
 // Returns [0, 1].
 func LexicalScore(query, desc string) float64 {
+	return lexicalScore(query, desc, false)
+}
+
+func lexicalScore(query, desc string, interactive bool) float64 {
 	rawQTokens := tokenize(query)
 	rawDTokens := tokenize(desc)
 
@@ -204,7 +225,10 @@ func LexicalScore(query, desc string) float64 {
 	// --- 5. Phrase bonus for preserving multi-word intent ---
 	phraseBoost := phraseBonus(qTokens, dTokens)
 
-	score := jaccard + synScore + prefixScore + roleBoost + phraseBoost
+	// --- 6. Interactive boost for action-oriented queries ---
+	interactiveScore := interactiveBoost(qTokens, interactive)
+
+	score := jaccard + synScore + prefixScore + roleBoost + phraseBoost + interactiveScore
 	if score > 1.0 {
 		score = 1.0
 	}
@@ -240,6 +264,25 @@ func minInt(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func interactiveBoost(qTokens []string, isInteractive bool) float64 {
+	if !isInteractive {
+		return 0
+	}
+	if containsActionVerb(qTokens) {
+		return interactiveActionBoost
+	}
+	return interactiveBaseBoost
+}
+
+func containsActionVerb(tokens []string) bool {
+	for _, t := range tokens {
+		if actionVerbs[t] {
+			return true
+		}
+	}
+	return false
 }
 
 func tokenPrefixScore(qTokens, dTokens []string) float64 {
