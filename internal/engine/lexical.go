@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"github.com/pinchtab/semantic/internal/types"
+	"math"
 	"sort"
 	"strings"
 	"unicode"
@@ -43,6 +44,8 @@ func (m *LexicalMatcher) Find(_ context.Context, query string, elements []types.
 		opts.TopK = 3
 	}
 
+	ef := BuildElementFrequency(elements)
+
 	type scored struct {
 		desc  types.ElementDescriptor
 		score float64
@@ -51,7 +54,7 @@ func (m *LexicalMatcher) Find(_ context.Context, query string, elements []types.
 	var candidates []scored
 	for _, el := range elements {
 		composite := el.Composite()
-		score := lexicalScore(query, composite, el.Interactive)
+		score := lexicalScore(query, composite, el.Interactive, ef)
 		if score >= opts.Threshold {
 			candidates = append(candidates, scored{desc: el, score: score})
 		}
@@ -139,14 +142,59 @@ var actionVerbs = map[string]bool{
 	"fill":   true,
 }
 
+// ElementFrequency holds per-snapshot token document frequencies.
+// It is used to compute inverse element frequency (IEF) token weights.
+type ElementFrequency struct {
+	tokenDF map[string]int
+	total   int
+}
+
+// BuildElementFrequency creates and fills frequency statistics for one snapshot.
+func BuildElementFrequency(elements []types.ElementDescriptor) *ElementFrequency {
+	ef := &ElementFrequency{}
+	ef.Build(elements)
+	return ef
+}
+
+// Build recomputes token frequencies from a snapshot.
+func (ef *ElementFrequency) Build(elements []types.ElementDescriptor) {
+	ef.tokenDF = make(map[string]int)
+	ef.total = len(elements)
+
+	for _, el := range elements {
+		seen := tokenSet(tokenize(el.Composite()))
+		for t := range seen {
+			ef.tokenDF[t]++
+		}
+	}
+}
+
+// IEF returns inverse element frequency for a token.
+func (ef *ElementFrequency) IEF(token string) float64 {
+	if ef == nil || ef.total <= 0 {
+		return 0
+	}
+	df := ef.tokenDF[token]
+	if df <= 0 {
+		return 0
+	}
+	return math.Log(1 + float64(ef.total)/float64(df))
+}
+
 // LexicalScore computes Jaccard similarity with synonym expansion,
 // context-aware stopwords, role boosting, and prefix matching.
 // Returns [0, 1].
 func LexicalScore(query, desc string) float64 {
-	return lexicalScore(query, desc, false)
+	return lexicalScore(query, desc, false, nil)
 }
 
-func lexicalScore(query, desc string, interactive bool) float64 {
+// LexicalScoreWithFrequency computes lexical similarity with optional
+// snapshot-level IEF weighting (nil keeps default equal-weight behavior).
+func LexicalScoreWithFrequency(query, desc string, ef *ElementFrequency) float64 {
+	return lexicalScore(query, desc, false, ef)
+}
+
+func lexicalScore(query, desc string, interactive bool, ef *ElementFrequency) float64 {
 	rawQTokens := tokenize(query)
 	rawDTokens := tokenize(desc)
 
@@ -168,7 +216,7 @@ func lexicalScore(query, desc string, interactive bool) float64 {
 			if dc < minC {
 				minC = dc
 			}
-			intersectW += float64(minC)
+			intersectW += float64(minC) * tokenWeight(t, ef)
 		}
 	}
 
@@ -181,7 +229,7 @@ func lexicalScore(query, desc string, interactive bool) float64 {
 		if dc > maxC {
 			maxC = dc
 		}
-		unionW += float64(maxC)
+		unionW += float64(maxC) * tokenWeight(t, ef)
 	}
 
 	if unionW == 0 {
@@ -283,6 +331,17 @@ func containsActionVerb(tokens []string) bool {
 		}
 	}
 	return false
+}
+
+func tokenWeight(token string, ef *ElementFrequency) float64 {
+	if ef == nil {
+		return 1.0
+	}
+	w := ef.IEF(token)
+	if w <= 0 {
+		return 1.0
+	}
+	return w
 }
 
 func tokenPrefixScore(qTokens, dTokens []string) float64 {

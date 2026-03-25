@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/pinchtab/semantic/internal/types"
 	"math"
+	"strconv"
 	"testing"
 )
 
@@ -307,6 +308,57 @@ func TestLexicalMatcher_ActionQueryPrefersInteractiveElement(t *testing.T) {
 	}
 	if result.BestRef != "e2" {
 		t.Fatalf("expected interactive element to rank first, got %s", result.BestRef)
+	}
+}
+
+func TestElementFrequency_IEF_RareTokenHigherThanCommon(t *testing.T) {
+	elements := []types.ElementDescriptor{
+		{Ref: "e1", Role: "button", Name: "Checkout"},
+		{Ref: "e2", Role: "button", Name: "Continue"},
+		{Ref: "e3", Role: "button", Name: "Cancel"},
+		{Ref: "e4", Role: "button", Name: "Back"},
+	}
+
+	ef := BuildElementFrequency(elements)
+	if ef == nil {
+		t.Fatalf("expected non-nil ElementFrequency")
+	}
+	if ef.IEF("checkout") <= ef.IEF("button") {
+		t.Fatalf("expected rare token IEF to be higher than common token IEF")
+	}
+}
+
+func TestLexicalScoreWithFrequency_NilMatchesDefault(t *testing.T) {
+	base := LexicalScore("checkout button", "button: Checkout")
+	weightedNil := LexicalScoreWithFrequency("checkout button", "button: Checkout", nil)
+	if math.Abs(base-weightedNil) > 1e-9 {
+		t.Fatalf("expected nil frequency scoring to match default, base=%f weightedNil=%f", base, weightedNil)
+	}
+}
+
+func TestLexicalMatcher_Find_CheckoutButtonDiscrimination(t *testing.T) {
+	m := NewLexicalMatcher()
+
+	elements := make([]types.ElementDescriptor, 0, 32)
+	elements = append(elements, types.ElementDescriptor{Ref: "checkout-btn", Role: "button", Name: "Checkout"})
+	elements = append(elements, types.ElementDescriptor{Ref: "checkout-link", Role: "link", Name: "Checkout"})
+	for i := 0; i < 30; i++ {
+		elements = append(elements, types.ElementDescriptor{Ref: "btn-generic-" + strconv.Itoa(i), Role: "button", Name: "Continue"})
+	}
+
+	result, err := m.Find(context.Background(), "checkout button", elements, types.FindOptions{Threshold: 0, TopK: 3})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if result.BestRef != "checkout-btn" {
+		t.Fatalf("expected checkout button to be best match, got %s", result.BestRef)
+	}
+	if len(result.Matches) < 2 {
+		t.Fatalf("expected at least 2 matches, got %d", len(result.Matches))
+	}
+	margin := result.Matches[0].Score - result.Matches[1].Score
+	if margin < 0.15 {
+		t.Fatalf("expected strong preference margin for checkout button, got %.4f", margin)
 	}
 }
 

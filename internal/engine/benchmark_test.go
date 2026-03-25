@@ -58,6 +58,24 @@ func BenchmarkLexicalFind(b *testing.B) {
 	}
 }
 
+func BenchmarkLexicalFind_200Elements(b *testing.B) {
+	m := NewLexicalMatcher()
+	base := benchElements()
+	elements := make([]types.ElementDescriptor, 0, 200)
+	for len(elements) < 200 {
+		elements = append(elements, base...)
+	}
+	elements = elements[:200]
+
+	ctx := context.Background()
+	opts := types.FindOptions{Threshold: 0.0, TopK: 3}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = m.Find(ctx, "checkout button", elements, opts)
+	}
+}
+
 func BenchmarkHashingEmbed(b *testing.B) {
 	h := NewHashingEmbedder(128)
 	texts := []string{"sign in button"}
