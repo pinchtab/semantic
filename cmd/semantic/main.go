@@ -67,6 +67,8 @@ type snapshotElement struct {
 	Name        string `json:"name"`
 	Value       string `json:"value"`
 	Interactive bool   `json:"interactive"`
+	Parent      string `json:"parent"`
+	Section     string `json:"section"`
 }
 
 func loadSnapshot(path string) ([]semantic.ElementDescriptor, error) {
@@ -100,6 +102,8 @@ func loadSnapshot(path string) ([]semantic.ElementDescriptor, error) {
 			Name:        e.Name,
 			Value:       e.Value,
 			Interactive: e.Interactive,
+			Parent:      e.Parent,
+			Section:     e.Section,
 		}
 	}
 	return descs, nil

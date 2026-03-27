@@ -79,3 +79,10 @@ func TestElementDescriptor_Composite(t *testing.T) {
 		t.Errorf("unexpected composite: %q", d.Composite())
 	}
 }
+
+func TestElementDescriptor_Composite_IncludesSection(t *testing.T) {
+	d := semantic.ElementDescriptor{Role: "button", Name: "Submit", Section: "Login form"}
+	if d.Composite() != "button: Submit {Login form}" {
+		t.Errorf("unexpected composite with section: %q", d.Composite())
+	}
+}

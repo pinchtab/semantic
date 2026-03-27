@@ -12,8 +12,8 @@ func TestLoadSnapshot_PropagatesInteractiveFlag(t *testing.T) {
 	}
 
 	json := `[
-		{"ref":"e1","role":"button","name":"Submit","interactive":true},
-		{"ref":"e2","role":"text","name":"Submit","interactive":false}
+		{"ref":"e1","role":"button","name":"Submit","interactive":true,"parent":"Login form","section":"Authentication"},
+		{"ref":"e2","role":"text","name":"Submit","interactive":false,"parent":"Payment form","section":"Checkout"}
 	]`
 	if _, err := f.WriteString(json); err != nil {
 		t.Fatalf("WriteString failed: %v", err)
@@ -32,7 +32,19 @@ func TestLoadSnapshot_PropagatesInteractiveFlag(t *testing.T) {
 	if !descs[0].Interactive {
 		t.Fatalf("expected first descriptor interactive=true")
 	}
+	if descs[0].Parent != "Login form" {
+		t.Fatalf("expected first descriptor parent=Login form, got %q", descs[0].Parent)
+	}
+	if descs[0].Section != "Authentication" {
+		t.Fatalf("expected first descriptor section=Authentication, got %q", descs[0].Section)
+	}
 	if descs[1].Interactive {
 		t.Fatalf("expected second descriptor interactive=false")
+	}
+	if descs[1].Parent != "Payment form" {
+		t.Fatalf("expected second descriptor parent=Payment form, got %q", descs[1].Parent)
+	}
+	if descs[1].Section != "Checkout" {
+		t.Fatalf("expected second descriptor section=Checkout, got %q", descs[1].Section)
 	}
 }

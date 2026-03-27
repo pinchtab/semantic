@@ -83,6 +83,8 @@ type ElementDescriptor struct {
 	Name        string
 	Value       string
 	Interactive bool
+	Parent      string
+	Section     string
 }
 
 // Composite returns a single string combining role, name, and value
@@ -98,6 +100,9 @@ func (ed *ElementDescriptor) Composite() string {
 	}
 	if ed.Value != "" && ed.Value != ed.Name {
 		parts = append(parts, "["+ed.Value+"]")
+	}
+	if ed.Section != "" {
+		parts = append(parts, "{"+ed.Section+"}")
 	}
 
 	return strings.Join(parts, " ")
