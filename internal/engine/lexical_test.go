@@ -311,6 +311,32 @@ func TestLexicalMatcher_ActionQueryPrefersInteractiveElement(t *testing.T) {
 	}
 }
 
+func TestLexicalMatcher_SectionContextDisambiguatesSubmitButtons(t *testing.T) {
+	m := NewLexicalMatcher()
+
+	elements := []types.ElementDescriptor{
+		{Ref: "login-submit", Role: "button", Name: "Submit", Parent: "Login form", Section: "Login form"},
+		{Ref: "payment-submit", Role: "button", Name: "Submit", Parent: "Payment form", Section: "Payment form"},
+	}
+
+	result, err := m.Find(context.Background(), "submit button in login", elements, types.FindOptions{
+		Threshold: 0,
+		TopK:      2,
+	})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if len(result.Matches) < 2 {
+		t.Fatalf("expected 2 matches, got %d", len(result.Matches))
+	}
+	if result.BestRef != "login-submit" {
+		t.Fatalf("expected login submit to rank first, got %s", result.BestRef)
+	}
+	if result.Matches[0].Score <= result.Matches[1].Score {
+		t.Fatalf("expected login submit score > payment submit score, got %f <= %f", result.Matches[0].Score, result.Matches[1].Score)
+	}
+}
+
 func TestElementFrequency_IEF_RareTokenHigherThanCommon(t *testing.T) {
 	elements := []types.ElementDescriptor{
 		{Ref: "e1", Role: "button", Name: "Checkout"},
