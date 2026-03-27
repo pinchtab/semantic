@@ -92,6 +92,7 @@ type RecoveryEngine struct {
 	Refresh     SnapshotRefresher
 	ResolveNode NodeIDResolver
 	BuildDescs  DescriptorBuilder
+	Confidence  *ConfidenceTracker
 }
 
 func NewRecoveryEngine(
@@ -109,6 +110,7 @@ func NewRecoveryEngine(
 		Refresh:     refresh,
 		ResolveNode: resolve,
 		BuildDescs:  buildDescs,
+		Confidence:  NewConfidenceTracker(200, 20),
 	}
 }
 
@@ -172,6 +174,11 @@ func (re *RecoveryEngine) attemptRecovery(
 		maxRetries = 1
 	}
 
+	threshold := re.Config.MinConfidence
+	if re.Confidence != nil {
+		threshold = re.Confidence.OptimalThresholdWithDefault(re.Config.MinConfidence)
+	}
+
 	var lastErr error
 	for attempt := 1; attempt <= maxRetries; attempt++ {
 		rr.Attempts = attempt
@@ -190,21 +197,27 @@ func (re *RecoveryEngine) attemptRecovery(
 		}
 
 		result, err := re.Matcher.Find(ctx, query, descs, semantic.FindOptions{
-			Threshold: re.Config.MinConfidence,
+			Threshold: threshold,
 			TopK:      1,
 		})
 		if err != nil {
 			lastErr = fmt.Errorf("matcher: %w", err)
 			continue
 		}
-		if result.BestRef == "" || result.BestScore < re.Config.MinConfidence {
+		if result.BestRef == "" || result.BestScore < threshold {
+			if re.Confidence != nil && result.BestScore > 0 {
+				re.Confidence.Record(result.BestScore, false)
+			}
 			lastErr = fmt.Errorf("no match above threshold %.2f (best: %.2f)",
-				re.Config.MinConfidence, result.BestScore)
+				threshold, result.BestScore)
 			continue
 		}
 
 		conf := semantic.CalibrateConfidence(result.BestScore)
 		if re.Config.PreferHighConfidence && conf == "low" {
+			if re.Confidence != nil {
+				re.Confidence.Record(result.BestScore, false)
+			}
 			lastErr = fmt.Errorf("match confidence too low: %s (%.2f)",
 				conf, result.BestScore)
 			continue
@@ -217,6 +230,9 @@ func (re *RecoveryEngine) attemptRecovery(
 
 		nodeID, ok := re.ResolveNode(tabID, result.BestRef)
 		if !ok {
+			if re.Confidence != nil {
+				re.Confidence.Record(result.BestScore, false)
+			}
 			lastErr = fmt.Errorf("new ref %s not in cache after refresh", result.BestRef)
 			continue
 		}
@@ -224,10 +240,16 @@ func (re *RecoveryEngine) attemptRecovery(
 		actionResult, execErr := exec(ctx, kind, nodeID)
 		rr.LatencyMs = time.Since(start).Milliseconds()
 		if execErr != nil {
+			if re.Confidence != nil {
+				re.Confidence.Record(result.BestScore, false)
+			}
 			lastErr = execErr
 			continue
 		}
 
+		if re.Confidence != nil {
+			re.Confidence.Record(result.BestScore, true)
+		}
 		rr.Recovered = true
 		return rr, actionResult, nil
 	}
@@ -257,4 +279,12 @@ func (re *RecoveryEngine) RecordIntent(tabID, ref string, entry IntentEntry) {
 	if re.IntentCache != nil {
 		re.IntentCache.Store(tabID, ref, entry)
 	}
+}
+
+// ConfidenceStats returns adaptive-threshold diagnostics for observability.
+func (re *RecoveryEngine) ConfidenceStats() ConfidenceStats {
+	if re.Confidence == nil {
+		return ConfidenceStats{CurrentThreshold: re.Config.MinConfidence}
+	}
+	return re.Confidence.Stats(re.Config.MinConfidence)
 }
