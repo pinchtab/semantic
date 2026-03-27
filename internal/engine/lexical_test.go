@@ -354,6 +354,55 @@ func TestElementFrequency_IEF_RareTokenHigherThanCommon(t *testing.T) {
 	}
 }
 
+func TestWeightedJaccard_NilIDFMatchesUnitWeights(t *testing.T) {
+	q := []string{"status", "order", "1049"}
+	d := []string{"status", "order", "1001"}
+
+	withNil := weightedJaccard(q, d, nil)
+	withUnit := weightedJaccard(q, d, map[string]float64{
+		"status": 1,
+		"order":  1,
+		"1049":   1,
+		"1001":   1,
+	})
+
+	if math.Abs(withNil-withUnit) > 1e-9 {
+		t.Fatalf("expected nil IDF to match unit-weight Jaccard, nil=%f unit=%f", withNil, withUnit)
+	}
+}
+
+func TestLexicalScoreWithFrequency_50RowTableImprovesIdentifierSeparation(t *testing.T) {
+	elements := make([]types.ElementDescriptor, 0, 50)
+	for i := 1000; i < 1050; i++ {
+		elements = append(elements, types.ElementDescriptor{
+			Ref:  "row-" + strconv.Itoa(i),
+			Role: "row",
+			Name: "Order " + strconv.Itoa(i) + " status price name",
+		})
+	}
+
+	ef := BuildElementFrequency(elements)
+	if ef == nil {
+		t.Fatalf("expected non-nil ElementFrequency")
+	}
+
+	query := "order 1049 status price"
+	targetComposite := elements[49].Composite() // row-1049
+	distractorComposite := elements[0].Composite()
+
+	targetUnweighted := lexicalScore(query, targetComposite, false, nil)
+	distractorUnweighted := lexicalScore(query, distractorComposite, false, nil)
+	targetWeighted := lexicalScore(query, targetComposite, false, ef)
+	distractorWeighted := lexicalScore(query, distractorComposite, false, ef)
+
+	unweightedMargin := targetUnweighted - distractorUnweighted
+	weightedMargin := targetWeighted - distractorWeighted
+
+	if weightedMargin <= unweightedMargin {
+		t.Fatalf("expected weighted scoring to improve unique identifier separation, unweightedMargin=%f weightedMargin=%f", unweightedMargin, weightedMargin)
+	}
+}
+
 func TestLexicalScoreWithFrequency_NilMatchesDefault(t *testing.T) {
 	base := LexicalScore("checkout button", "button: Checkout")
 	weightedNil := LexicalScoreWithFrequency("checkout button", "button: Checkout", nil)

@@ -344,6 +344,43 @@ func tokenWeight(token string, ef *ElementFrequency) float64 {
 	return w
 }
 
+// weightedJaccard computes set-based Jaccard similarity with optional
+// per-token weights (e.g., IDF). Missing or non-positive token weights default
+// to 1.0 so callers can pass partial maps safely.
+func weightedJaccard(qTokens, dTokens []string, idf map[string]float64) float64 {
+	qSet := tokenSet(qTokens)
+	dSet := tokenSet(dTokens)
+
+	all := make(map[string]bool, len(qSet)+len(dSet))
+	for t := range qSet {
+		all[t] = true
+	}
+	for t := range dSet {
+		all[t] = true
+	}
+
+	var intersectW float64
+	var unionW float64
+	for t := range all {
+		w := 1.0
+		if idf != nil {
+			if iw, ok := idf[t]; ok && iw > 0 {
+				w = iw
+			}
+		}
+
+		if qSet[t] && dSet[t] {
+			intersectW += w
+		}
+		unionW += w
+	}
+
+	if unionW == 0 {
+		return 0
+	}
+	return intersectW / unionW
+}
+
 func tokenPrefixScore(qTokens, dTokens []string) float64 {
 	if len(qTokens) == 0 {
 		return 0
