@@ -3,6 +3,7 @@ package recovery
 import (
 	"context"
 	"fmt"
+	"math"
 	"strings"
 	"testing"
 	"time"
@@ -529,6 +530,70 @@ func TestRecoveryEngine_RecordIntent(t *testing.T) {
 	}
 }
 
+func TestRecoveryEngine_Attempt_UsesAdaptiveThresholdWhenAvailable(t *testing.T) {
+	cache := NewIntentCache(100, 5*time.Minute)
+	cache.Store("tab1", "e1", IntentEntry{Query: "submit"})
+
+	tracker := NewConfidenceTracker(50, 1)
+	tracker.Record(0.9, true)
+	tracker.Record(0.3, false)
+	adaptiveThreshold := tracker.OptimalThresholdWithDefault(0.4)
+
+	var seenThreshold float64
+	matcher := &mockMatcher{
+		findFn: func(_ context.Context, _ string, _ []semantic.ElementDescriptor, opts semantic.FindOptions) (semantic.FindResult, error) {
+			seenThreshold = opts.Threshold
+			return semantic.FindResult{BestRef: "e2", BestScore: 0.7, Strategy: "combined"}, nil
+		},
+	}
+
+	re := NewRecoveryEngine(
+		DefaultRecoveryConfig(),
+		matcher,
+		cache,
+		func(_ context.Context, _ string) error { return nil },
+		func(_, _ string) (int64, bool) { return 10, true },
+		func(_ string) []semantic.ElementDescriptor {
+			return []semantic.ElementDescriptor{{Ref: "e2", Role: "button", Name: "Submit"}}
+		},
+	)
+	re.Confidence = tracker
+
+	_, _, err := re.Attempt(context.Background(), "tab1", "e1", "click",
+		func(_ context.Context, _ string, _ int64) (map[string]any, error) {
+			return map[string]any{"ok": true}, nil
+		},
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if math.Abs(seenThreshold-adaptiveThreshold) > 1e-9 {
+		t.Fatalf("expected adaptive threshold %.6f, got %.6f", adaptiveThreshold, seenThreshold)
+	}
+}
+
+func TestRecoveryEngine_ConfidenceStats_Exposed(t *testing.T) {
+	re := NewRecoveryEngine(
+		DefaultRecoveryConfig(),
+		&mockMatcher{},
+		NewIntentCache(10, time.Minute),
+		nil, nil, nil,
+	)
+	re.Confidence = NewConfidenceTracker(10, 1)
+	re.Confidence.Record(0.8, true)
+	re.Confidence.Record(0.2, false)
+
+	stats := re.ConfidenceStats()
+	if stats.SuccessCount != 1 {
+		t.Fatalf("expected success count 1, got %d", stats.SuccessCount)
+	}
+	if stats.FailureCount != 1 {
+		t.Fatalf("expected failure count 1, got %d", stats.FailureCount)
+	}
+	if !stats.Adaptive {
+		t.Fatalf("expected adaptive=true when min samples are met")
+	}
+}
 func TestRecoveryEngine_RecordIntent_NilCache(t *testing.T) {
 	re := &RecoveryEngine{Config: DefaultRecoveryConfig()}
 	// Should not panic with nil IntentCache.
