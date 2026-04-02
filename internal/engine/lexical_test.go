@@ -337,6 +337,54 @@ func TestLexicalMatcher_SectionContextDisambiguatesSubmitButtons(t *testing.T) {
 	}
 }
 
+func TestLexicalMatcher_LabelledByBoostPrefersAssociatedInput(t *testing.T) {
+	m := NewLexicalMatcher()
+	elements := []types.ElementDescriptor{
+		{Ref: "work-email", Role: "textbox", Name: "Email", Positional: types.PositionalHints{LabelledBy: "Work Email"}},
+		{Ref: "billing-email", Role: "textbox", Name: "Email", Positional: types.PositionalHints{LabelledBy: "Billing Email"}},
+	}
+
+	result, err := m.Find(context.Background(), "work email input", elements, types.FindOptions{Threshold: 0, TopK: 2})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if result.BestRef != "work-email" {
+		t.Fatalf("expected labelled input to win, got %s", result.BestRef)
+	}
+}
+
+func TestLexicalMatcher_SiblingUniquenessBoostPrefersSingleton(t *testing.T) {
+	m := NewLexicalMatcher()
+	elements := []types.ElementDescriptor{
+		{Ref: "single-search", Role: "searchbox", Name: "Search", Positional: types.PositionalHints{SiblingCount: 1}},
+		{Ref: "group-search", Role: "searchbox", Name: "Search", Positional: types.PositionalHints{SiblingCount: 3}},
+	}
+
+	result, err := m.Find(context.Background(), "search box", elements, types.FindOptions{Threshold: 0, TopK: 2})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if result.BestRef != "single-search" {
+		t.Fatalf("expected singleton sibling to rank first, got %s", result.BestRef)
+	}
+}
+
+func TestLexicalMatcher_DepthBreaksEqualScores(t *testing.T) {
+	m := NewLexicalMatcher()
+	elements := []types.ElementDescriptor{
+		{Ref: "shallow", Role: "button", Name: "Submit", Positional: types.PositionalHints{Depth: 1}},
+		{Ref: "deep", Role: "button", Name: "Submit", Positional: types.PositionalHints{Depth: 4}},
+	}
+
+	result, err := m.Find(context.Background(), "submit button", elements, types.FindOptions{Threshold: 0, TopK: 2})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if result.BestRef != "deep" {
+		t.Fatalf("expected deeper element to rank first on tied scores, got %s", result.BestRef)
+	}
+}
+
 func TestElementFrequency_IEF_RareTokenHigherThanCommon(t *testing.T) {
 	elements := []types.ElementDescriptor{
 		{Ref: "e1", Role: "button", Name: "Checkout"},

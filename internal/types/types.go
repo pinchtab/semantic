@@ -76,6 +76,14 @@ type MatchExplain struct {
 	Composite      string  `json:"composite"`
 }
 
+// PositionalHints captures optional AX-tree relationship and position metadata.
+type PositionalHints struct {
+	Depth        int
+	SiblingIndex int
+	SiblingCount int
+	LabelledBy   string
+}
+
 // ElementDescriptor describes a single accessibility tree node.
 type ElementDescriptor struct {
 	Ref         string
@@ -85,6 +93,7 @@ type ElementDescriptor struct {
 	Interactive bool
 	Parent      string
 	Section     string
+	Positional  PositionalHints
 }
 
 // Composite returns a single string combining role, name, and value

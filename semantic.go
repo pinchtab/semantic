@@ -23,6 +23,9 @@ type Embedder = types.Embedder
 // ElementDescriptor describes a single accessibility tree node.
 type ElementDescriptor = types.ElementDescriptor
 
+// PositionalHints captures optional AX-tree relationship metadata.
+type PositionalHints = types.PositionalHints
+
 // ElementMatch is a single scored match.
 type ElementMatch = types.ElementMatch
 

@@ -26,6 +26,10 @@ const (
 	interactiveActionBoost = 0.10
 	// interactiveBaseBoost lightly favors interactive elements for generic queries.
 	interactiveBaseBoost = 0.05
+	// positionalLabelBoost rewards label associations matching the query.
+	positionalLabelBoost = 0.15
+	// positionalUniqueSiblingBoost rewards singleton role elements in a group.
+	positionalUniqueSiblingBoost = 0.03
 )
 
 // LexicalMatcher scores elements using Jaccard similarity with synonym
@@ -55,13 +59,34 @@ func (m *LexicalMatcher) Find(_ context.Context, query string, elements []types.
 	for _, el := range elements {
 		composite := el.Composite()
 		score := lexicalScore(query, composite, el.Interactive, ef)
+		score += positionalBoost(query, el.Positional)
+		if score > 1.0 {
+			score = 1.0
+		}
 		if score >= opts.Threshold {
 			candidates = append(candidates, scored{desc: el, score: score})
 		}
 	}
 
 	sort.Slice(candidates, func(i, j int) bool {
-		return candidates[i].score > candidates[j].score
+		scoreDiff := candidates[i].score - candidates[j].score
+		if math.Abs(scoreDiff) > 1e-9 {
+			return scoreDiff > 0
+		}
+
+		depthI := candidates[i].desc.Positional.Depth
+		depthJ := candidates[j].desc.Positional.Depth
+		if depthI != depthJ {
+			return depthI > depthJ
+		}
+
+		idxI := candidates[i].desc.Positional.SiblingIndex
+		idxJ := candidates[j].desc.Positional.SiblingIndex
+		if idxI != idxJ {
+			return idxI < idxJ
+		}
+
+		return candidates[i].desc.Ref < candidates[j].desc.Ref
 	})
 
 	if len(candidates) > opts.TopK {
@@ -322,6 +347,42 @@ func interactiveBoost(qTokens []string, isInteractive bool) float64 {
 		return interactiveActionBoost
 	}
 	return interactiveBaseBoost
+}
+
+func positionalBoost(query string, hints types.PositionalHints) float64 {
+	boost := 0.0
+	if hints.SiblingCount == 1 {
+		boost += positionalUniqueSiblingBoost
+	}
+	if hints.LabelledBy != "" && labelMatchesQuery(query, hints.LabelledBy) {
+		boost += positionalLabelBoost
+	}
+	return boost
+}
+
+func labelMatchesQuery(query, labelledBy string) bool {
+	qTokens := tokenize(query)
+	lTokens := tokenize(labelledBy)
+
+	qTokens = removeStopwordsContextAware(qTokens, lTokens)
+	lTokens = removeStopwordsContextAware(lTokens, qTokens)
+	if len(qTokens) == 0 || len(lTokens) == 0 {
+		return false
+	}
+
+	qSet := tokenSet(qTokens)
+	lSet := tokenSet(lTokens)
+	matched := 0
+	for t := range qSet {
+		if lSet[t] {
+			matched++
+		}
+	}
+	if matched == 0 {
+		return false
+	}
+
+	return matched*2 >= len(qSet)
 }
 
 func containsActionVerb(tokens []string) bool {
