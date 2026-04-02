@@ -41,9 +41,7 @@ var uiSynonyms = map[string][]string{
 	"link":         {"anchor", "hyperlink", "href"},
 	"tab":          {"panel", "pane"},
 	"modal":        {"dialog", "dialogue", "popup", "pop up", "overlay"},
-	"notification": {"alert", "toast", "banner", "message"},
 	"tooltip":      {"hint", "info", "help text"},
-	"avatar":       {"profile picture", "profile pic", "user image", "photo"},
 
 	// Shopping & e-commerce
 	"cart":     {"basket", "bag", "shopping cart"},
@@ -71,6 +69,124 @@ var uiSynonyms = map[string][]string{
 	"like":    {"favorite", "favourite", "heart", "star", "upvote"},
 	"accept":  {"agree", "allow", "ok", "okay", "yes", "confirm"},
 	"reject":  {"deny", "decline", "refuse", "no"},
+        // Accessibility & ARIA
+        "skip":       {"skip link", "skip to content", "bypass"},
+        "focus":      {"focused", "active", "selection"},
+        "hidden":     {"invisible", "concealed", "obscured"},
+        "visible":    {"shown", "displayed", "appearing"},
+        "disabled":   {"unavailable", "inactive", "grayed out"},
+        "enabled":    {"available", "active", "clickable"},
+        "required":   {"mandatory", "compulsory", "needed"},
+        "optional":   {"not required", "choice"},
+        "invalid":    {"error", "wrong", "incorrect"},
+        "valid":      {"correct", "okay", "passed"},
+        "loading":    {"busy", "processing", "wait"},
+        "ready":      {"loaded", "complete", "done"},
+
+        // Data & tables
+        "table":      {"grid", "datagrid", "spreadsheet"},
+        "row":        {"record", "entry", "line"},
+        "column":     {"field", "attribute", "property"},
+        "header":     {"head", "top row", "column header"},
+        "footer":     {"bottom", "summary row"},
+        "sort":       {"order", "arrange", "rank"},
+        "filter":     {"narrow", "refine", "search within"},
+
+        // Media controls
+        "play":       {"start", "begin", "run"},
+        "pause":      {"stop", "halt", "freeze"},
+        "stop":       {"end", "terminate", "finish"},
+        "mute":       {"silence", "sound off", "audio off"},
+        "unmute":     {"sound on", "audio on", "enable sound"},
+        "volume":     {"sound", "audio level", "loudness"},
+        "fullscreen": {"full screen", "maximize", "expand"},
+
+        // File operations
+        "file":       {"document", "attachment"},
+        "folder":     {"directory", "catalog"},
+        "rename":     {"rename file", "change name"},
+        "move":       {"relocate", "transfer"},
+        "zip":        {"compress", "archive", "package"},
+        "unzip":      {"extract", "decompress", "open archive"},
+
+        // Communication
+        "message":    {"msg", "note", "communication"},
+        "reply":      {"respond", "answer", "react"},
+        "forward":    {"send on", "pass along"},
+        "compose":    {"write", "create message", "draft"},
+        "inbox":      {"messages", "mail inbox"},
+        "sent":       {"sent items", "outbox"},
+        "draft":      {"drafts", "unfinished"},
+
+        // User profile & settings
+        "profile":    {"account", "user profile", "my account"},
+        "avatar":     {"profile picture", "profile pic", "user image", "photo", "gravatar"},
+        "bio":        {"biography", "about me", "description"},
+        "timezone":   {"time zone", "local time"},
+        "language":   {"locale", "lang", "translation"},
+        "theme":      {"appearance", "look", "skin", "mode"},
+        "dark":       {"dark mode", "night mode"},
+        "light":      {"light mode", "day mode"},
+
+        // Notifications & alerts
+        "notification": {"alert", "toast", "banner", "message", "ping"},
+        "badge":        {"counter", "indicator", "dot", "mark"},
+        "unread":       {"new", "unseen", "fresh"},
+        "read":         {"seen", "opened", "viewed"},
+        "dismiss":      {"close", "clear", "remove notification"},
+
+        // Pagination & navigation
+        "first":        {"start", "beginning", "page one"},
+        "last":         {"end", "final", "latest page"},
+        "page":         {"screen", "view"},
+        "per_page":     {"items per page", "show", "display"},
+        "goto":         {"jump to", "go to page", "navigate to"},
+
+        // Selection & multi-select
+        "select_all":   {"check all", "choose all", "mark all"},
+        "deselect":     {"uncheck", "unmark", "clear selection"},
+        "selected":     {"checked", "marked", "chosen"},
+        "deselected":   {"unchecked", "unmarked"},
+
+        // Help & support
+        "help":         {"support", "assistance", "guide"},
+        "faq":          {"frequently asked questions", "common questions"},
+        "contact":      {"get in touch", "reach out", "support contact"},
+        "feedback":     {"review", "rating", "comment"},
+        "report":       {"flag", "notify", "submit issue"},
+
+        // Security & privacy
+        "privacy":      {"private", "confidentiality"},
+        "terms":        {"tos", "terms of service", "terms and conditions"},
+        "cookie":       {"cookies", "tracking"},
+        "gdpr":         {"data protection", "privacy regulation"},
+        "2fa":          {"two factor", "two-factor authentication", "mfa", "multi-factor"},
+        "verify":       {"verification", "confirm identity", "authenticate"},
+
+        // E-commerce extended
+        "wishlist":     {"favorites", "saved items", "wish list"},
+        "compare":      {"comparison", "vs", "versus"},
+        "review":       {"rating", "customer review", "feedback"},
+        "stock":        {"availability", "in stock", "inventory"},
+        "out_of_stock": {"unavailable", "sold out", "no stock"},
+        "discount":     {"sale", "offer", "deal", "promotion"},
+        "coupon":       {"promo code", "voucher", "discount code"},
+
+        // Date & time
+        "today":        {"current day", "this day"},
+        "yesterday":    {"previous day", "last day"},
+        "tomorrow":     {"next day", "following day"},
+        "now":          {"current time", "present"},
+        "calendar":     {"date picker", "scheduler", "agenda"},
+        "schedule":     {"plan", "book", "appointment"},
+
+        // Analytics & metrics
+        "analytics":    {"stats", "statistics", "metrics"},
+        "dashboard":    {"overview", "home base", "control panel"},
+        "chart":        {"graph", "plot", "visualization"},
+        "trend":        {"pattern", "direction", "movement"},
+        "export":       {"download data", "save report", "generate file"},
+        "import":       {"upload data", "load file", "bring in"},
 }
 
 var synonymIndex map[string]map[string]bool

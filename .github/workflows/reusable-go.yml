@@ -55,6 +55,38 @@ jobs:
           echo "$coverage" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Run benchmarks
+        run: go test ./... -bench=. -benchmem -run=^$ -count=3 -benchtime=1s | tee benchmark_results.txt
+
+      - name: Parse and display benchmark results
+        run: |
+          echo "### Benchmark Results" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat benchmark_results.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          
+          # Check for performance regressions (simple threshold check)
+          # Extract lexical matcher benchmark time (in ns/op)
+          if grep -q "BenchmarkLexicalMatcher" benchmark_results.txt; then
+            lexical_time=$(grep "BenchmarkLexicalMatcher" benchmark_results.txt | head -1 | awk '{print $2}' | sed 's/ns\/op//')
+            echo "Lexical matcher avg time: ${lexical_time}ns/op"
+            # Fail if lexical matcher exceeds 500ns/op (regression threshold)
+            if [ "$(echo "$lexical_time > 500" | bc -l)" = "1" ]; then
+              echo "::error::Performance regression detected: Lexical matcher exceeded 500ns/op (got ${lexical_time}ns/op)"
+              exit 1
+            fi
+          fi
+          
+          # Check embedding matcher threshold (2000ns/op)
+          if grep -q "BenchmarkEmbeddingMatcher" benchmark_results.txt; then
+            embedding_time=$(grep "BenchmarkEmbeddingMatcher" benchmark_results.txt | head -1 | awk '{print $2}' | sed 's/ns\/op//')
+            echo "Embedding matcher avg time: ${embedding_time}ns/op"
+            if [ "$(echo "$embedding_time > 2000" | bc -l)" = "1" ]; then
+              echo "::error::Performance regression detected: Embedding matcher exceeded 2000ns/op (got ${embedding_time}ns/op)"
+              exit 1
+            fi
+          fi
+
   lint:
     name: Lint
     runs-on: ubuntu-latest

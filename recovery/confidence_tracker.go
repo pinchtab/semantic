@@ -4,6 +4,16 @@ import "sync"
 
 const (
 	defaultAdaptiveFallback = 0.4
+	// confidenceThresholdHigh indicates high confidence matches (auto-accept)
+	confidenceThresholdHigh = 0.8
+	// confidenceThresholdMedium indicates medium confidence (may need verification)
+	confidenceThresholdMedium = 0.6
+	// confidenceThresholdLow indicates low confidence (likely needs recovery)
+	confidenceThresholdLow = 0.4
+	// decayFactor controls how quickly old samples lose influence (0.95 = 5% decay per update)
+	decayFactor = 0.95
+	// warmupPeriod is the minimum number of samples before adaptive threshold activates
+	warmupPeriod = 15
 )
 
 // ConfidenceStats exposes adaptive-threshold diagnostics.
