@@ -594,6 +594,152 @@ func TestRecoveryEngine_ConfidenceStats_Exposed(t *testing.T) {
 		t.Fatalf("expected adaptive=true when min samples are met")
 	}
 }
+
+func TestRecoveryEngine_Attempt_DiffFirstHit_UsesDiffAndBoostsConfidence(t *testing.T) {
+	cache := NewIntentCache(100, 5*time.Minute)
+	cache.Store("tab1", "e1", IntentEntry{Query: "submit button"})
+
+	prevDescs := []semantic.ElementDescriptor{
+		{Ref: "e1", Role: "button", Name: "Old Submit"},
+		{Ref: "e2", Role: "button", Name: "Cancel"},
+	}
+	newDescs := []semantic.ElementDescriptor{
+		{Ref: "e2", Role: "button", Name: "Cancel"},
+		{Ref: "e9", Role: "button", Name: "Submit"},
+	}
+
+	stage := 0
+	var findSizes []int
+	matcher := &mockMatcher{
+		findFn: func(_ context.Context, _ string, descs []semantic.ElementDescriptor, _ semantic.FindOptions) (semantic.FindResult, error) {
+			findSizes = append(findSizes, len(descs))
+			if len(descs) == 1 && descs[0].Ref == "e9" {
+				return semantic.FindResult{BestRef: "e9", BestScore: 0.59, Strategy: "combined"}, nil
+			}
+			return semantic.FindResult{}, fmt.Errorf("unexpected search scope")
+		},
+	}
+
+	re := NewRecoveryEngine(
+		DefaultRecoveryConfig(),
+		matcher,
+		cache,
+		func(_ context.Context, _ string) error {
+			stage = 1
+			return nil
+		},
+		func(_, ref string) (int64, bool) {
+			if ref == "e9" {
+				return 99, true
+			}
+			return 0, false
+		},
+		func(_ string) []semantic.ElementDescriptor {
+			if stage == 0 {
+				return prevDescs
+			}
+			return newDescs
+		},
+	)
+
+	rr, _, err := re.Attempt(context.Background(), "tab1", "e1", "click",
+		func(_ context.Context, _ string, _ int64) (map[string]any, error) {
+			return map[string]any{"ok": true}, nil
+		},
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !rr.Recovered {
+		t.Fatalf("expected recovery success")
+	}
+	if rr.NewRef != "e9" {
+		t.Fatalf("expected new ref e9, got %s", rr.NewRef)
+	}
+	if rr.Score <= 0.59 {
+		t.Fatalf("expected diff-hit confidence boost over 0.59, got %.4f", rr.Score)
+	}
+	if rr.Confidence != "medium" {
+		t.Fatalf("expected confidence upgraded to medium, got %s", rr.Confidence)
+	}
+	if len(findSizes) != 1 || findSizes[0] != 1 {
+		t.Fatalf("expected diff-only search (one call on one descriptor), got calls=%v", findSizes)
+	}
+
+	stats := re.SearchStats()
+	if stats.DiffAttempts != 1 || stats.DiffHits != 1 || stats.FullSearches != 0 {
+		t.Fatalf("unexpected search stats: %+v", stats)
+	}
+}
+
+func TestRecoveryEngine_Attempt_DiffFallbackToFullSearch(t *testing.T) {
+	cache := NewIntentCache(100, 5*time.Minute)
+	cache.Store("tab1", "e1", IntentEntry{Query: "submit button"})
+
+	prevDescs := []semantic.ElementDescriptor{
+		{Ref: "e1", Role: "button", Name: "Old Submit"},
+		{Ref: "e2", Role: "button", Name: "Cancel"},
+	}
+	newDescs := []semantic.ElementDescriptor{
+		{Ref: "e2", Role: "button", Name: "Cancel"},
+		{Ref: "e9", Role: "button", Name: "Submit"},
+	}
+
+	stage := 0
+	call := 0
+	matcher := &mockMatcher{
+		findFn: func(_ context.Context, _ string, descs []semantic.ElementDescriptor, _ semantic.FindOptions) (semantic.FindResult, error) {
+			call++
+			if call == 1 {
+				if len(descs) != 1 || descs[0].Ref != "e9" {
+					return semantic.FindResult{}, fmt.Errorf("expected first search on diff")
+				}
+				return semantic.FindResult{BestRef: "e9", BestScore: 0.2, Strategy: "combined"}, nil
+			}
+			if len(descs) != 2 {
+				return semantic.FindResult{}, fmt.Errorf("expected fallback on full snapshot")
+			}
+			return semantic.FindResult{BestRef: "e9", BestScore: 0.9, Strategy: "combined"}, nil
+		},
+	}
+
+	re := NewRecoveryEngine(
+		DefaultRecoveryConfig(),
+		matcher,
+		cache,
+		func(_ context.Context, _ string) error {
+			stage = 1
+			return nil
+		},
+		func(_, ref string) (int64, bool) {
+			if ref == "e9" {
+				return 99, true
+			}
+			return 0, false
+		},
+		func(_ string) []semantic.ElementDescriptor {
+			if stage == 0 {
+				return prevDescs
+			}
+			return newDescs
+		},
+	)
+
+	_, _, err := re.Attempt(context.Background(), "tab1", "e1", "click",
+		func(_ context.Context, _ string, _ int64) (map[string]any, error) {
+			return map[string]any{"ok": true}, nil
+		},
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	stats := re.SearchStats()
+	if stats.DiffAttempts != 1 || stats.DiffHits != 0 || stats.FullSearches != 1 {
+		t.Fatalf("unexpected search stats: %+v", stats)
+	}
+}
+
 func TestRecoveryEngine_RecordIntent_NilCache(t *testing.T) {
 	re := &RecoveryEngine{Config: DefaultRecoveryConfig()}
 	// Should not panic with nil IntentCache.

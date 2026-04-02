@@ -3,6 +3,7 @@ package recovery
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/pinchtab/semantic"
@@ -93,7 +94,10 @@ type RecoveryEngine struct {
 	ResolveNode NodeIDResolver
 	BuildDescs  DescriptorBuilder
 	Confidence  *ConfidenceTracker
+	Search      *RecoverySearchTracker
 }
+
+const diffMatchConfidenceBonus = 0.03
 
 func NewRecoveryEngine(
 	cfg RecoveryConfig,
@@ -111,6 +115,7 @@ func NewRecoveryEngine(
 		ResolveNode: resolve,
 		BuildDescs:  buildDescs,
 		Confidence:  NewConfidenceTracker(200, 20),
+		Search:      NewRecoverySearchTracker(),
 	}
 }
 
@@ -179,6 +184,11 @@ func (re *RecoveryEngine) attemptRecovery(
 		threshold = re.Confidence.OptimalThresholdWithDefault(re.Config.MinConfidence)
 	}
 
+	var prevDescs []semantic.ElementDescriptor
+	if re.BuildDescs != nil {
+		prevDescs = re.BuildDescs(tabID)
+	}
+
 	var lastErr error
 	for attempt := 1; attempt <= maxRetries; attempt++ {
 		rr.Attempts = attempt
@@ -190,16 +200,44 @@ func (re *RecoveryEngine) attemptRecovery(
 			}
 		}
 
+		if re.BuildDescs == nil {
+			lastErr = fmt.Errorf("descriptor builder not configured")
+			continue
+		}
+
 		descs := re.BuildDescs(tabID)
 		if len(descs) == 0 {
 			lastErr = fmt.Errorf("empty snapshot after refresh")
 			continue
 		}
 
-		result, err := re.Matcher.Find(ctx, query, descs, semantic.FindOptions{
-			Threshold: threshold,
-			TopK:      1,
-		})
+		diffDescs, _ := diffDescriptors(prevDescs, descs)
+		prevDescs = descs
+
+		findOpts := semantic.FindOptions{Threshold: threshold, TopK: 1}
+		usedDiff := false
+
+		result, err := semantic.FindResult{}, error(nil)
+		if len(diffDescs) > 0 {
+			if re.Search != nil {
+				re.Search.RecordDiffAttempt()
+			}
+			result, err = re.Matcher.Find(ctx, query, diffDescs, findOpts)
+			if err == nil && result.BestRef != "" && result.BestScore >= threshold {
+				usedDiff = true
+				if re.Search != nil {
+					re.Search.RecordDiffHit()
+				}
+			}
+		}
+
+		if !usedDiff {
+			if re.Search != nil {
+				re.Search.RecordFullSearch()
+			}
+			result, err = re.Matcher.Find(ctx, query, descs, findOpts)
+		}
+
 		if err != nil {
 			lastErr = fmt.Errorf("matcher: %w", err)
 			continue
@@ -213,18 +251,23 @@ func (re *RecoveryEngine) attemptRecovery(
 			continue
 		}
 
-		conf := semantic.CalibrateConfidence(result.BestScore)
+		effectiveScore := result.BestScore
+		if usedDiff {
+			effectiveScore = math.Min(1.0, effectiveScore+diffMatchConfidenceBonus)
+		}
+
+		conf := semantic.CalibrateConfidence(effectiveScore)
 		if re.Config.PreferHighConfidence && conf == "low" {
 			if re.Confidence != nil {
-				re.Confidence.Record(result.BestScore, false)
+				re.Confidence.Record(effectiveScore, false)
 			}
 			lastErr = fmt.Errorf("match confidence too low: %s (%.2f)",
-				conf, result.BestScore)
+				conf, effectiveScore)
 			continue
 		}
 
 		rr.NewRef = result.BestRef
-		rr.Score = result.BestScore
+		rr.Score = effectiveScore
 		rr.Confidence = conf
 		rr.Strategy = result.Strategy
 
@@ -241,14 +284,14 @@ func (re *RecoveryEngine) attemptRecovery(
 		rr.LatencyMs = time.Since(start).Milliseconds()
 		if execErr != nil {
 			if re.Confidence != nil {
-				re.Confidence.Record(result.BestScore, false)
+				re.Confidence.Record(effectiveScore, false)
 			}
 			lastErr = execErr
 			continue
 		}
 
 		if re.Confidence != nil {
-			re.Confidence.Record(result.BestScore, true)
+			re.Confidence.Record(effectiveScore, true)
 		}
 		rr.Recovered = true
 		return rr, actionResult, nil
@@ -287,4 +330,12 @@ func (re *RecoveryEngine) ConfidenceStats() ConfidenceStats {
 		return ConfidenceStats{CurrentThreshold: re.Config.MinConfidence}
 	}
 	return re.Confidence.Stats(re.Config.MinConfidence)
+}
+
+// SearchStats returns diff-first recovery search diagnostics.
+func (re *RecoveryEngine) SearchStats() RecoverySearchStats {
+	if re.Search == nil {
+		return RecoverySearchStats{}
+	}
+	return re.Search.Stats()
 }
