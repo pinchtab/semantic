@@ -47,6 +47,14 @@ func TestNewEmbeddingMatcher(t *testing.T) {
 	}
 }
 
+func TestNewEmbeddingMatcherWithNeighborWeight(t *testing.T) {
+	e := semantic.NewHashingEmbedder(64)
+	m := semantic.NewEmbeddingMatcherWithNeighborWeight(e, 0.2)
+	if m.Strategy() != "embedding:hashing" {
+		t.Errorf("expected strategy=embedding:hashing, got %s", m.Strategy())
+	}
+}
+
 func TestCalibrateConfidence(t *testing.T) {
 	if semantic.CalibrateConfidence(0.9) != "high" {
 		t.Error("0.9 should be high")

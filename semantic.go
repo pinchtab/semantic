@@ -69,6 +69,13 @@ func NewEmbeddingMatcher(e Embedder) ElementMatcher {
 	return engine.NewEmbeddingMatcher(e)
 }
 
+// NewEmbeddingMatcherWithNeighborWeight creates a standalone embedding matcher
+// and configures how much immediate neighbors influence each element embedding.
+// Weight is clamped to [0, 1].
+func NewEmbeddingMatcherWithNeighborWeight(e Embedder, weight float64) ElementMatcher {
+	return engine.NewEmbeddingMatcherWithNeighborWeight(e, weight)
+}
+
 // LexicalScore computes lexical similarity between a query and an
 // element description string. Returns [0, 1].
 func LexicalScore(query, desc string) float64 {

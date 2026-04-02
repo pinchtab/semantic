@@ -20,12 +20,27 @@ type Embedder interface {
 // EmbeddingMatcher scores elements using cosine similarity on dense
 // vectors produced by an Embedder.
 type EmbeddingMatcher struct {
-	embedder Embedder
+	embedder       Embedder
+	neighborWeight float32
 }
+
+const defaultNeighborWeight float32 = 0.10
 
 // NewEmbeddingMatcher creates an embedding-based matcher.
 func NewEmbeddingMatcher(e Embedder) *EmbeddingMatcher {
-	return &EmbeddingMatcher{embedder: e}
+	return NewEmbeddingMatcherWithNeighborWeight(e, float64(defaultNeighborWeight))
+}
+
+// NewEmbeddingMatcherWithNeighborWeight creates an embedding matcher and sets
+// how much immediate neighbors influence each element embedding.
+func NewEmbeddingMatcherWithNeighborWeight(e Embedder, weight float64) *EmbeddingMatcher {
+	if weight < 0 {
+		weight = 0
+	}
+	if weight > 1 {
+		weight = 1
+	}
+	return &EmbeddingMatcher{embedder: e, neighborWeight: float32(weight)}
 }
 
 func (m *EmbeddingMatcher) Strategy() string {
@@ -52,6 +67,10 @@ func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []type
 
 	queryVec := vectors[0]
 	elemVecs := vectors[1:]
+	contextVecs := elemVecs
+	if m.neighborWeight > 0 && len(elemVecs) > 1 {
+		contextVecs = m.withNeighborContext(elemVecs)
+	}
 
 	type scored struct {
 		desc  types.ElementDescriptor
@@ -60,7 +79,7 @@ func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []type
 
 	var candidates []scored
 	for i, el := range elements {
-		sim := CosineSimilarity(queryVec, elemVecs[i])
+		sim := CosineSimilarity(queryVec, contextVecs[i])
 		if sim >= opts.Threshold {
 			candidates = append(candidates, scored{desc: el, score: sim})
 		}
@@ -94,6 +113,43 @@ func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []type
 	}
 
 	return result, nil
+}
+
+func (m *EmbeddingMatcher) withNeighborContext(base [][]float32) [][]float32 {
+	contextual := make([][]float32, len(base))
+	for i := range base {
+		vec := make([]float32, len(base[i]))
+		copy(vec, base[i])
+
+		if i > 0 {
+			for d := range vec {
+				vec[d] += base[i-1][d] * m.neighborWeight
+			}
+		}
+		if i+1 < len(base) {
+			for d := range vec {
+				vec[d] += base[i+1][d] * m.neighborWeight
+			}
+		}
+
+		normalizeDenseVector(vec)
+		contextual[i] = vec
+	}
+	return contextual
+}
+
+func normalizeDenseVector(vec []float32) {
+	var norm float64
+	for _, v := range vec {
+		norm += float64(v) * float64(v)
+	}
+	if norm == 0 {
+		return
+	}
+	invNorm := float32(1.0 / math.Sqrt(norm))
+	for i := range vec {
+		vec[i] *= invNorm
+	}
 }
 
 // CosineSimilarity computes the cosine similarity between two float32 vectors.

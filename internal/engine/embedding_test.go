@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"fmt"
 	"github.com/pinchtab/semantic/internal/types"
 	"math"
 	"testing"
@@ -112,6 +113,25 @@ func TestEmbeddingMatcher_Strategy(t *testing.T) {
 	}
 }
 
+func TestNewEmbeddingMatcher_DefaultNeighborWeight(t *testing.T) {
+	m := NewEmbeddingMatcher(newDummyEmbedder(64))
+	if math.Abs(float64(m.neighborWeight-defaultNeighborWeight)) > 1e-6 {
+		t.Errorf("expected default neighborWeight=%f, got %f", defaultNeighborWeight, m.neighborWeight)
+	}
+}
+
+func TestNewEmbeddingMatcherWithNeighborWeight_ClampsRange(t *testing.T) {
+	below := NewEmbeddingMatcherWithNeighborWeight(newDummyEmbedder(64), -0.25)
+	if below.neighborWeight != 0 {
+		t.Errorf("expected neighborWeight to clamp to 0, got %f", below.neighborWeight)
+	}
+
+	above := NewEmbeddingMatcherWithNeighborWeight(newDummyEmbedder(64), 2)
+	if above.neighborWeight != 1 {
+		t.Errorf("expected neighborWeight to clamp to 1, got %f", above.neighborWeight)
+	}
+}
+
 func TestEmbeddingMatcher_Find(t *testing.T) {
 	m := NewEmbeddingMatcher(newDummyEmbedder(64))
 
@@ -165,6 +185,113 @@ func TestEmbeddingMatcher_ThresholdFiltering(t *testing.T) {
 			t.Errorf("match %s score %f below threshold 0.99", m.Ref, m.Score)
 		}
 	}
+}
+
+func TestEmbeddingMatcher_NeighborContextDisambiguatesRealWorldButtons(t *testing.T) {
+	e := newScriptedEmbedder(map[string][]float32{
+		"laptop add to cart":         {1, 1, 0},
+		"heading: Gaming Laptop Pro": {0, 1, 0},
+		"button: Add to cart":        {1, 0, 0},
+		"heading: Running Shoes":     {0, 0, 1},
+	})
+
+	elements := []types.ElementDescriptor{
+		{Ref: "title-laptop", Role: "heading", Name: "Gaming Laptop Pro"},
+		{Ref: "add-laptop", Role: "button", Name: "Add to cart"},
+		{Ref: "title-shoes", Role: "heading", Name: "Running Shoes"},
+		{Ref: "add-shoes", Role: "button", Name: "Add to cart"},
+	}
+
+	noCtx := NewEmbeddingMatcherWithNeighborWeight(e, 0)
+	baseRes, err := noCtx.Find(context.Background(), "laptop add to cart", elements, types.FindOptions{Threshold: 0, TopK: 4})
+	if err != nil {
+		t.Fatalf("Find with no context failed: %v", err)
+	}
+	baseLaptop, ok := findMatchScore(baseRes.Matches, "add-laptop")
+	if !ok {
+		t.Fatalf("expected add-laptop result in no-context run")
+	}
+	baseShoes, ok := findMatchScore(baseRes.Matches, "add-shoes")
+	if !ok {
+		t.Fatalf("expected add-shoes result in no-context run")
+	}
+	if math.Abs(baseLaptop-baseShoes) > 1e-9 {
+		t.Fatalf("expected identical button scores without context, got laptop=%.6f shoes=%.6f", baseLaptop, baseShoes)
+	}
+
+	withCtx := NewEmbeddingMatcherWithNeighborWeight(e, 0.2)
+	ctxRes, err := withCtx.Find(context.Background(), "laptop add to cart", elements, types.FindOptions{Threshold: 0, TopK: 4})
+	if err != nil {
+		t.Fatalf("Find with context failed: %v", err)
+	}
+	ctxLaptop, ok := findMatchScore(ctxRes.Matches, "add-laptop")
+	if !ok {
+		t.Fatalf("expected add-laptop result in contextual run")
+	}
+	ctxShoes, ok := findMatchScore(ctxRes.Matches, "add-shoes")
+	if !ok {
+		t.Fatalf("expected add-shoes result in contextual run")
+	}
+	if ctxLaptop <= ctxShoes {
+		t.Fatalf("expected laptop button to rank higher with context, got laptop=%.6f shoes=%.6f", ctxLaptop, ctxShoes)
+	}
+}
+
+func TestEmbeddingMatcher_SingleElement_WithNeighborWeight(t *testing.T) {
+	e := newScriptedEmbedder(map[string][]float32{
+		"open account settings":    {1, 1, 0},
+		"button: Account settings": {1, 1, 0},
+	})
+	m := NewEmbeddingMatcherWithNeighborWeight(e, 0.5)
+
+	res, err := m.Find(context.Background(), "open account settings", []types.ElementDescriptor{
+		{Ref: "settings", Role: "button", Name: "Account settings"},
+	}, types.FindOptions{Threshold: 0, TopK: 1})
+	if err != nil {
+		t.Fatalf("Find failed: %v", err)
+	}
+	if res.BestRef != "settings" {
+		t.Fatalf("expected BestRef=settings, got %s", res.BestRef)
+	}
+	if len(res.Matches) != 1 {
+		t.Fatalf("expected one match, got %d", len(res.Matches))
+	}
+}
+
+type scriptedEmbedder struct {
+	vectors map[string][]float32
+}
+
+func newScriptedEmbedder(vectors map[string][]float32) *scriptedEmbedder {
+	return &scriptedEmbedder{vectors: vectors}
+}
+
+func (s *scriptedEmbedder) Strategy() string {
+	return "scripted"
+}
+
+func (s *scriptedEmbedder) Embed(texts []string) ([][]float32, error) {
+	out := make([][]float32, len(texts))
+	for i, text := range texts {
+		base, ok := s.vectors[text]
+		if !ok {
+			return nil, fmt.Errorf("missing scripted embedding for %q", text)
+		}
+		vec := make([]float32, len(base))
+		copy(vec, base)
+		normalizeDenseVector(vec)
+		out[i] = vec
+	}
+	return out, nil
+}
+
+func findMatchScore(matches []types.ElementMatch, ref string) (float64, bool) {
+	for _, match := range matches {
+		if match.Ref == ref {
+			return match.Score, true
+		}
+	}
+	return 0, false
 }
 
 // FindResult.ConfidenceLabel tests
