@@ -198,7 +198,7 @@ The library uses only the Go standard library. No external dependencies, no mode
 
 ## Design Trade-offs
 
-See [docs/DESIGN.md](docs/DESIGN.md) for detailed discussion of architectural decisions: hashing vs real embeddings, fixed synonym table vs learned, Jaccard vs TF-IDF, and recovery callbacks vs direct integration.
+See [docs/architecture/design-decisions.md](docs/architecture/design-decisions.md) for detailed discussion of architectural decisions: hashing vs real embeddings, fixed synonym table vs learned, Jaccard vs TF-IDF, and recovery callbacks vs direct integration.
 
 ## Origin
 
