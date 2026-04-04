@@ -3,6 +3,7 @@ package recovery
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/pinchtab/semantic"
@@ -93,7 +94,10 @@ type RecoveryEngine struct {
 	ResolveNode NodeIDResolver
 	BuildDescs  DescriptorBuilder
 	Confidence  *ConfidenceTracker
+	Search      *RecoverySearchTracker
 }
+
+const diffMatchConfidenceBonus = 0.03
 
 func NewRecoveryEngine(
 	cfg RecoveryConfig,
@@ -111,6 +115,7 @@ func NewRecoveryEngine(
 		ResolveNode: resolve,
 		BuildDescs:  buildDescs,
 		Confidence:  NewConfidenceTracker(200, 20),
+		Search:      NewRecoverySearchTracker(),
 	}
 }
 
@@ -169,89 +174,21 @@ func (re *RecoveryEngine) attemptRecovery(
 		return rr, nil, fmt.Errorf("recovery: %s", rr.Error)
 	}
 
-	maxRetries := re.Config.MaxRetries
-	if maxRetries <= 0 {
-		maxRetries = 1
-	}
-
-	threshold := re.Config.MinConfidence
-	if re.Confidence != nil {
-		threshold = re.Confidence.OptimalThresholdWithDefault(re.Config.MinConfidence)
-	}
+	maxRetries := re.maxRetries()
+	threshold := re.recoveryThreshold()
+	prevDescs := re.initialSnapshot(tabID)
 
 	var lastErr error
 	for attempt := 1; attempt <= maxRetries; attempt++ {
 		rr.Attempts = attempt
 
-		if re.Refresh != nil {
-			if err := re.Refresh(ctx, tabID); err != nil {
-				lastErr = fmt.Errorf("refresh snapshot: %w", err)
-				continue
-			}
+		var actionResult map[string]any
+		prevDescs, actionResult, lastErr = re.attemptOnce(ctx, tabID, query, kind, threshold, prevDescs, exec, &rr)
+		if lastErr == nil {
+			rr.Recovered = true
+			rr.LatencyMs = time.Since(start).Milliseconds()
+			return rr, actionResult, nil
 		}
-
-		descs := re.BuildDescs(tabID)
-		if len(descs) == 0 {
-			lastErr = fmt.Errorf("empty snapshot after refresh")
-			continue
-		}
-
-		result, err := re.Matcher.Find(ctx, query, descs, semantic.FindOptions{
-			Threshold: threshold,
-			TopK:      1,
-		})
-		if err != nil {
-			lastErr = fmt.Errorf("matcher: %w", err)
-			continue
-		}
-		if result.BestRef == "" || result.BestScore < threshold {
-			if re.Confidence != nil && result.BestScore > 0 {
-				re.Confidence.Record(result.BestScore, false)
-			}
-			lastErr = fmt.Errorf("no match above threshold %.2f (best: %.2f)",
-				threshold, result.BestScore)
-			continue
-		}
-
-		conf := semantic.CalibrateConfidence(result.BestScore)
-		if re.Config.PreferHighConfidence && conf == "low" {
-			if re.Confidence != nil {
-				re.Confidence.Record(result.BestScore, false)
-			}
-			lastErr = fmt.Errorf("match confidence too low: %s (%.2f)",
-				conf, result.BestScore)
-			continue
-		}
-
-		rr.NewRef = result.BestRef
-		rr.Score = result.BestScore
-		rr.Confidence = conf
-		rr.Strategy = result.Strategy
-
-		nodeID, ok := re.ResolveNode(tabID, result.BestRef)
-		if !ok {
-			if re.Confidence != nil {
-				re.Confidence.Record(result.BestScore, false)
-			}
-			lastErr = fmt.Errorf("new ref %s not in cache after refresh", result.BestRef)
-			continue
-		}
-
-		actionResult, execErr := exec(ctx, kind, nodeID)
-		rr.LatencyMs = time.Since(start).Milliseconds()
-		if execErr != nil {
-			if re.Confidence != nil {
-				re.Confidence.Record(result.BestScore, false)
-			}
-			lastErr = execErr
-			continue
-		}
-
-		if re.Confidence != nil {
-			re.Confidence.Record(result.BestScore, true)
-		}
-		rr.Recovered = true
-		return rr, actionResult, nil
 	}
 
 	rr.LatencyMs = time.Since(start).Milliseconds()
@@ -259,6 +196,157 @@ func (re *RecoveryEngine) attemptRecovery(
 		rr.Error = lastErr.Error()
 	}
 	return rr, nil, lastErr
+}
+
+func (re *RecoveryEngine) attemptOnce(
+	ctx context.Context,
+	tabID string,
+	query string,
+	kind string,
+	threshold float64,
+	prevDescs []semantic.ElementDescriptor,
+	exec ActionExecutor,
+	rr *RecoveryResult,
+) ([]semantic.ElementDescriptor, map[string]any, error) {
+	descs, diffDescs, err := re.refreshAndBuild(tabID, ctx, prevDescs)
+	if err != nil {
+		return prevDescs, nil, err
+	}
+
+	result, usedDiff, err := re.findWithDiffFirst(ctx, query, threshold, diffDescs, descs)
+	if err != nil {
+		return descs, nil, fmt.Errorf("matcher: %w", err)
+	}
+	if result.BestRef == "" || result.BestScore < threshold {
+		re.recordConfidence(result.BestScore, false)
+		return descs, nil, fmt.Errorf("no match above threshold %.2f (best: %.2f)", threshold, result.BestScore)
+	}
+
+	effectiveScore := result.BestScore
+	if usedDiff {
+		effectiveScore = math.Min(1.0, effectiveScore+diffMatchConfidenceBonus)
+	}
+
+	conf := semantic.CalibrateConfidence(effectiveScore)
+	if re.Config.PreferHighConfidence && conf == "low" {
+		re.recordConfidence(effectiveScore, false)
+		return descs, nil, fmt.Errorf("match confidence too low: %s (%.2f)", conf, effectiveScore)
+	}
+
+	rr.NewRef = result.BestRef
+	rr.Score = effectiveScore
+	rr.Confidence = conf
+	rr.Strategy = result.Strategy
+
+	if re.ResolveNode == nil {
+		re.recordConfidence(effectiveScore, false)
+		return descs, nil, fmt.Errorf("node resolver not configured")
+	}
+	nodeID, ok := re.ResolveNode(tabID, result.BestRef)
+	if !ok {
+		re.recordConfidence(result.BestScore, false)
+		return descs, nil, fmt.Errorf("new ref %s not in cache after refresh", result.BestRef)
+	}
+	if exec == nil {
+		re.recordConfidence(effectiveScore, false)
+		return descs, nil, fmt.Errorf("action executor not configured")
+	}
+
+	actionResult, execErr := exec(ctx, kind, nodeID)
+	if execErr != nil {
+		re.recordConfidence(effectiveScore, false)
+		return descs, nil, execErr
+	}
+
+	re.recordConfidence(effectiveScore, true)
+	return descs, actionResult, nil
+}
+
+func (re *RecoveryEngine) refreshAndBuild(
+	tabID string,
+	ctx context.Context,
+	prevDescs []semantic.ElementDescriptor,
+) ([]semantic.ElementDescriptor, []semantic.ElementDescriptor, error) {
+	if re.Refresh != nil {
+		if err := re.Refresh(ctx, tabID); err != nil {
+			return prevDescs, nil, fmt.Errorf("refresh snapshot: %w", err)
+		}
+	}
+	if re.BuildDescs == nil {
+		return prevDescs, nil, fmt.Errorf("descriptor builder not configured")
+	}
+
+	descs := re.BuildDescs(tabID)
+	if len(descs) == 0 {
+		return prevDescs, nil, fmt.Errorf("empty snapshot after refresh")
+	}
+
+	diffDescs, _ := diffDescriptors(prevDescs, descs)
+	return descs, diffDescs, nil
+}
+
+func (re *RecoveryEngine) findWithDiffFirst(
+	ctx context.Context,
+	query string,
+	threshold float64,
+	diffDescs []semantic.ElementDescriptor,
+	descs []semantic.ElementDescriptor,
+) (semantic.FindResult, bool, error) {
+	findOpts := semantic.FindOptions{Threshold: threshold, TopK: 1}
+
+	if len(diffDescs) > 0 {
+		if re.Search != nil {
+			re.Search.RecordDiffAttempt()
+		}
+		result, err := re.Matcher.Find(ctx, query, diffDescs, findOpts)
+		if err != nil {
+			return semantic.FindResult{}, false, err
+		}
+		if result.BestRef != "" && result.BestScore >= threshold {
+			if re.Search != nil {
+				re.Search.RecordDiffHit()
+			}
+			return result, true, nil
+		}
+	}
+
+	if re.Search != nil {
+		re.Search.RecordFullSearch()
+	}
+	result, err := re.Matcher.Find(ctx, query, descs, findOpts)
+	return result, false, err
+}
+
+func (re *RecoveryEngine) maxRetries() int {
+	maxRetries := re.Config.MaxRetries
+	if maxRetries <= 0 {
+		maxRetries = 1
+	}
+	return maxRetries
+}
+
+func (re *RecoveryEngine) recoveryThreshold() float64 {
+	threshold := re.Config.MinConfidence
+	if re.Confidence != nil {
+		threshold = re.Confidence.OptimalThresholdWithDefault(re.Config.MinConfidence)
+	}
+	return threshold
+}
+
+func (re *RecoveryEngine) initialSnapshot(tabID string) []semantic.ElementDescriptor {
+	if re.BuildDescs == nil {
+		return nil
+	}
+	return re.BuildDescs(tabID)
+}
+
+func (re *RecoveryEngine) recordConfidence(score float64, succeeded bool) {
+	if re.Confidence == nil {
+		return
+	}
+	if score > 0 {
+		re.Confidence.Record(score, succeeded)
+	}
 }
 
 func (re *RecoveryEngine) reconstructQuery(tabID, ref string) string {
@@ -287,4 +375,12 @@ func (re *RecoveryEngine) ConfidenceStats() ConfidenceStats {
 		return ConfidenceStats{CurrentThreshold: re.Config.MinConfidence}
 	}
 	return re.Confidence.Stats(re.Config.MinConfidence)
+}
+
+// SearchStats returns diff-first recovery search diagnostics.
+func (re *RecoveryEngine) SearchStats() RecoverySearchStats {
+	if re.Search == nil {
+		return RecoverySearchStats{}
+	}
+	return re.Search.Stats()
 }
