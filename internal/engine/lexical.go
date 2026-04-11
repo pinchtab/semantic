@@ -30,6 +30,10 @@ const (
 	positionalLabelBoost = 0.15
 	// positionalUniqueSiblingBoost rewards singleton role elements in a group.
 	positionalUniqueSiblingBoost = 0.03
+	// typoBonusPerToken rewards one-edit typos on short tokens.
+	typoBonusPerToken = 0.08
+	// typoBonusCap prevents typo matching from dominating lexical score.
+	typoBonusCap = 0.15
 )
 
 // LexicalMatcher scores elements using Jaccard similarity with synonym
@@ -301,7 +305,10 @@ func lexicalScore(query, desc string, interactive bool, ef *ElementFrequency) fl
 	// --- 6. Interactive boost for action-oriented queries ---
 	interactiveScore := interactiveBoost(qTokens, interactive)
 
-	score := jaccard + synScore + prefixScore + roleBoost + phraseBoost + interactiveScore
+	// --- 7. Typo tolerance bonus (Levenshtein edit distance = 1) ---
+	typoScore := typoBonus(qTokens, dTokens)
+
+	score := jaccard + synScore + prefixScore + roleBoost + phraseBoost + interactiveScore + typoScore
 	if score > 1.0 {
 		score = 1.0
 	}
@@ -392,6 +399,85 @@ func containsActionVerb(tokens []string) bool {
 		}
 	}
 	return false
+}
+
+func typoBonus(qTokens, dTokens []string) float64 {
+	bonus := 0.0
+
+	qSeen := tokenSet(qTokens)
+	for qt := range qSeen {
+		ql := len([]rune(qt))
+		if ql < 3 || ql > 10 {
+			continue
+		}
+
+		for _, dt := range dTokens {
+			if qt == dt {
+				continue
+			}
+			dl := len([]rune(dt))
+			if dl < 3 || dl > 10 {
+				continue
+			}
+			if absInt(ql-dl) > 1 {
+				continue
+			}
+			if levenshtein(qt, dt) == 1 {
+				bonus += typoBonusPerToken
+				break
+			}
+		}
+
+		if bonus >= typoBonusCap {
+			return typoBonusCap
+		}
+	}
+
+	if bonus > typoBonusCap {
+		return typoBonusCap
+	}
+	return bonus
+}
+
+func levenshtein(a, b string) int {
+	ar := []rune(a)
+	br := []rune(b)
+	if len(ar) == 0 {
+		return len(br)
+	}
+	if len(br) == 0 {
+		return len(ar)
+	}
+
+	prev := make([]int, len(br)+1)
+	cur := make([]int, len(br)+1)
+	for j := 0; j <= len(br); j++ {
+		prev[j] = j
+	}
+
+	for i := 1; i <= len(ar); i++ {
+		cur[0] = i
+		for j := 1; j <= len(br); j++ {
+			cost := 0
+			if ar[i-1] != br[j-1] {
+				cost = 1
+			}
+			ins := cur[j-1] + 1
+			del := prev[j] + 1
+			sub := prev[j-1] + cost
+			cur[j] = minInt(ins, minInt(del, sub))
+		}
+		prev, cur = cur, prev
+	}
+
+	return prev[len(br)]
+}
+
+func absInt(v int) int {
+	if v < 0 {
+		return -v
+	}
+	return v
 }
 
 func tokenWeight(token string, ef *ElementFrequency) float64 {

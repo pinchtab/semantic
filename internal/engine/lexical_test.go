@@ -268,6 +268,49 @@ func TestLexicalScore_PhraseBonus_NoPhraseMatch(t *testing.T) {
 	}
 }
 
+func TestLevenshtein_BasicCases(t *testing.T) {
+	if got := levenshtein("settings", "setttings"); got != 1 {
+		t.Fatalf("expected distance 1, got %d", got)
+	}
+	if got := levenshtein("settings", "setting"); got != 1 {
+		t.Fatalf("expected distance 1, got %d", got)
+	}
+	if got := levenshtein("settings", "setup"); got <= 1 {
+		t.Fatalf("expected distance > 1, got %d", got)
+	}
+}
+
+func TestTypoBonus_EditDistanceOne_GetsBonus(t *testing.T) {
+	bonus := typoBonus(tokenize("setttings"), tokenize("settings"))
+	if bonus <= 0 {
+		t.Fatalf("expected positive typo bonus for edit-distance-1 token")
+	}
+}
+
+func TestTypoBonus_DistanceGreaterThanOne_NoBonus(t *testing.T) {
+	bonus := typoBonus(tokenize("sxyztings"), tokenize("settings"))
+	if bonus != 0 {
+		t.Fatalf("expected no bonus for distance > 1, got %f", bonus)
+	}
+}
+
+func TestTypoBonus_LengthGuards_NoBonus(t *testing.T) {
+	if bonus := typoBonus(tokenize("aa"), tokenize("ab")); bonus != 0 {
+		t.Fatalf("expected no bonus for short token, got %f", bonus)
+	}
+	if bonus := typoBonus(tokenize("extraordinarytoken"), tokenize("extraordimarytoken")); bonus != 0 {
+		t.Fatalf("expected no bonus for long token, got %f", bonus)
+	}
+}
+
+func TestLexicalScore_TypoTolerance_RealWorldSettings(t *testing.T) {
+	withTypo := LexicalScore("setttings", "link: Settings")
+	withoutTypo := LexicalScore("setttings", "link: Billing")
+	if withTypo <= withoutTypo {
+		t.Fatalf("expected typo-tolerant match to score higher, typo=%f control=%f", withTypo, withoutTypo)
+	}
+}
+
 func TestInteractiveBoost_ActionVerbDetection(t *testing.T) {
 	if !containsActionVerb(tokenize("click submit")) {
 		t.Fatalf("expected action verb detection for action-oriented query")

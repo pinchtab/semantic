@@ -23,6 +23,7 @@ func NewCombinedMatcher(embedder Embedder) ElementMatcher
 // Standalone matchers
 func NewLexicalMatcher() ElementMatcher
 func NewEmbeddingMatcher(e Embedder) ElementMatcher
+func NewEmbeddingMatcherWithNeighborWeight(e Embedder, weight float64) ElementMatcher
 
 // Built-in embedder (feature hashing, zero deps)
 func NewHashingEmbedder(dim int) Embedder
