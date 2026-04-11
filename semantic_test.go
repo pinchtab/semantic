@@ -86,3 +86,22 @@ func TestElementDescriptor_Composite_IncludesSection(t *testing.T) {
 		t.Errorf("unexpected composite with section: %q", d.Composite())
 	}
 }
+
+func TestElementDescriptor_PositionalHints(t *testing.T) {
+	d := semantic.ElementDescriptor{
+		Role: "textbox",
+		Name: "Email",
+		Positional: semantic.PositionalHints{
+			Depth:        3,
+			SiblingIndex: 1,
+			SiblingCount: 2,
+			LabelledBy:   "Work Email",
+		},
+	}
+	if d.Positional.Depth != 3 {
+		t.Errorf("unexpected depth: %d", d.Positional.Depth)
+	}
+	if d.Positional.LabelledBy != "Work Email" {
+		t.Errorf("unexpected labelled_by: %q", d.Positional.LabelledBy)
+	}
+}

@@ -12,8 +12,8 @@ func TestLoadSnapshot_PropagatesInteractiveFlag(t *testing.T) {
 	}
 
 	json := `[
-		{"ref":"e1","role":"button","name":"Submit","interactive":true,"parent":"Login form","section":"Authentication"},
-		{"ref":"e2","role":"text","name":"Submit","interactive":false,"parent":"Payment form","section":"Checkout"}
+		{"ref":"e1","role":"button","name":"Submit","interactive":true,"parent":"Login form","section":"Authentication","depth":3,"sibling_index":1,"sibling_count":2,"labelled_by":"Primary Action"},
+		{"ref":"e2","role":"text","name":"Submit","interactive":false,"parent":"Payment form","section":"Checkout","positional":{"depth":2,"sibling_index":0,"sibling_count":1,"labelled_by":"Secondary Action"}}
 	]`
 	if _, err := f.WriteString(json); err != nil {
 		t.Fatalf("WriteString failed: %v", err)
@@ -38,6 +38,18 @@ func TestLoadSnapshot_PropagatesInteractiveFlag(t *testing.T) {
 	if descs[0].Section != "Authentication" {
 		t.Fatalf("expected first descriptor section=Authentication, got %q", descs[0].Section)
 	}
+	if descs[0].Positional.Depth != 3 {
+		t.Fatalf("expected first descriptor depth=3, got %d", descs[0].Positional.Depth)
+	}
+	if descs[0].Positional.SiblingIndex != 1 {
+		t.Fatalf("expected first descriptor sibling index=1, got %d", descs[0].Positional.SiblingIndex)
+	}
+	if descs[0].Positional.SiblingCount != 2 {
+		t.Fatalf("expected first descriptor sibling count=2, got %d", descs[0].Positional.SiblingCount)
+	}
+	if descs[0].Positional.LabelledBy != "Primary Action" {
+		t.Fatalf("expected first descriptor labelled_by=Primary Action, got %q", descs[0].Positional.LabelledBy)
+	}
 	if descs[1].Interactive {
 		t.Fatalf("expected second descriptor interactive=false")
 	}
@@ -46,5 +58,17 @@ func TestLoadSnapshot_PropagatesInteractiveFlag(t *testing.T) {
 	}
 	if descs[1].Section != "Checkout" {
 		t.Fatalf("expected second descriptor section=Checkout, got %q", descs[1].Section)
+	}
+	if descs[1].Positional.Depth != 2 {
+		t.Fatalf("expected second descriptor depth=2, got %d", descs[1].Positional.Depth)
+	}
+	if descs[1].Positional.SiblingIndex != 0 {
+		t.Fatalf("expected second descriptor sibling index=0, got %d", descs[1].Positional.SiblingIndex)
+	}
+	if descs[1].Positional.SiblingCount != 1 {
+		t.Fatalf("expected second descriptor sibling count=1, got %d", descs[1].Positional.SiblingCount)
+	}
+	if descs[1].Positional.LabelledBy != "Secondary Action" {
+		t.Fatalf("expected second descriptor labelled_by=Secondary Action, got %q", descs[1].Positional.LabelledBy)
 	}
 }

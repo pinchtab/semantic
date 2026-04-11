@@ -61,14 +61,26 @@ Flags (find/match):
 }
 
 // snapshotElement is the JSON shape from pinchtab's /snapshot endpoint.
+type snapshotPositional struct {
+	Depth        int    `json:"depth"`
+	SiblingIndex int    `json:"sibling_index"`
+	SiblingCount int    `json:"sibling_count"`
+	LabelledBy   string `json:"labelled_by"`
+}
+
 type snapshotElement struct {
-	Ref         string `json:"ref"`
-	Role        string `json:"role"`
-	Name        string `json:"name"`
-	Value       string `json:"value"`
-	Interactive bool   `json:"interactive"`
-	Parent      string `json:"parent"`
-	Section     string `json:"section"`
+	Ref         string              `json:"ref"`
+	Role        string              `json:"role"`
+	Name        string              `json:"name"`
+	Value       string              `json:"value"`
+	Interactive bool                `json:"interactive"`
+	Parent      string              `json:"parent"`
+	Section     string              `json:"section"`
+	Depth       int                 `json:"depth"`
+	SiblingIdx  int                 `json:"sibling_index"`
+	SiblingCnt  int                 `json:"sibling_count"`
+	LabelledBy  string              `json:"labelled_by"`
+	Positional  *snapshotPositional `json:"positional"`
 }
 
 func loadSnapshot(path string) ([]semantic.ElementDescriptor, error) {
@@ -96,6 +108,25 @@ func loadSnapshot(path string) ([]semantic.ElementDescriptor, error) {
 
 	descs := make([]semantic.ElementDescriptor, len(elements))
 	for i, e := range elements {
+		labelledBy := e.LabelledBy
+		depth := e.Depth
+		siblingIdx := e.SiblingIdx
+		siblingCnt := e.SiblingCnt
+		if e.Positional != nil {
+			if e.Positional.Depth != 0 {
+				depth = e.Positional.Depth
+			}
+			if e.Positional.SiblingIndex != 0 {
+				siblingIdx = e.Positional.SiblingIndex
+			}
+			if e.Positional.SiblingCount != 0 {
+				siblingCnt = e.Positional.SiblingCount
+			}
+			if e.Positional.LabelledBy != "" {
+				labelledBy = e.Positional.LabelledBy
+			}
+		}
+
 		descs[i] = semantic.ElementDescriptor{
 			Ref:         e.Ref,
 			Role:        e.Role,
@@ -104,6 +135,12 @@ func loadSnapshot(path string) ([]semantic.ElementDescriptor, error) {
 			Interactive: e.Interactive,
 			Parent:      e.Parent,
 			Section:     e.Section,
+			Positional: semantic.PositionalHints{
+				Depth:        depth,
+				SiblingIndex: siblingIdx,
+				SiblingCount: siblingCnt,
+				LabelledBy:   labelledBy,
+			},
 		}
 	}
 	return descs, nil
