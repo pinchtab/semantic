@@ -66,7 +66,6 @@ type snapshotPositional struct {
 	SiblingIndex int    `json:"sibling_index"`
 	SiblingCount int    `json:"sibling_count"`
 	LabelledBy   string `json:"labelled_by"`
-	LabeledBy    string `json:"labeled_by"`
 }
 
 type snapshotElement struct {
@@ -81,7 +80,6 @@ type snapshotElement struct {
 	SiblingIdx  int                 `json:"sibling_index"`
 	SiblingCnt  int                 `json:"sibling_count"`
 	LabelledBy  string              `json:"labelled_by"`
-	LabeledBy   string              `json:"labeled_by"`
 	Positional  *snapshotPositional `json:"positional"`
 }
 
@@ -111,9 +109,6 @@ func loadSnapshot(path string) ([]semantic.ElementDescriptor, error) {
 	descs := make([]semantic.ElementDescriptor, len(elements))
 	for i, e := range elements {
 		labelledBy := e.LabelledBy
-		if labelledBy == "" {
-			labelledBy = e.LabeledBy
-		}
 		depth := e.Depth
 		siblingIdx := e.SiblingIdx
 		siblingCnt := e.SiblingCnt
@@ -129,8 +124,6 @@ func loadSnapshot(path string) ([]semantic.ElementDescriptor, error) {
 			}
 			if e.Positional.LabelledBy != "" {
 				labelledBy = e.Positional.LabelledBy
-			} else if e.Positional.LabeledBy != "" {
-				labelledBy = e.Positional.LabeledBy
 			}
 		}
 

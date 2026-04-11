@@ -13,7 +13,7 @@ func TestLoadSnapshot_PropagatesInteractiveFlag(t *testing.T) {
 
 	json := `[
 		{"ref":"e1","role":"button","name":"Submit","interactive":true,"parent":"Login form","section":"Authentication","depth":3,"sibling_index":1,"sibling_count":2,"labelled_by":"Primary Action"},
-		{"ref":"e2","role":"text","name":"Submit","interactive":false,"parent":"Payment form","section":"Checkout","positional":{"depth":2,"sibling_index":0,"sibling_count":1,"labeled_by":"Secondary Action"}}
+		{"ref":"e2","role":"text","name":"Submit","interactive":false,"parent":"Payment form","section":"Checkout","positional":{"depth":2,"sibling_index":0,"sibling_count":1,"labelled_by":"Secondary Action"}}
 	]`
 	if _, err := f.WriteString(json); err != nil {
 		t.Fatalf("WriteString failed: %v", err)
