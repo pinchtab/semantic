@@ -3,6 +3,7 @@ package recovery
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -342,6 +343,111 @@ func TestRecovery_Scenario_CMSNavigationLink(t *testing.T) {
 	}
 	if rr.NewRef != "e202" {
 		t.Errorf("NewRef = %q, want e202 (About Us link)", rr.NewRef)
+	}
+}
+
+func TestRecovery_Scenario_RenamedLogoutButton(t *testing.T) {
+	cache := NewIntentCache(100, 5*time.Minute)
+	cache.Store("tab-account", "e5", IntentEntry{
+		Query:      "log out",
+		Descriptor: semantic.ElementDescriptor{Ref: "e5", Role: "button", Name: "Log Out"},
+	})
+
+	freshDescs := []semantic.ElementDescriptor{
+		{Ref: "e5", Role: "button", Name: "Logout"},
+	}
+
+	matcher := semantic.NewCombinedMatcher(semantic.NewHashingEmbedder(128))
+
+	re := NewRecoveryEngine(
+		DefaultRecoveryConfig(),
+		matcher,
+		cache,
+		func(_ context.Context, _ string) error { return nil },
+		func(_, ref string) (int64, bool) {
+			if ref == "e5" {
+				return 500, true
+			}
+			return 0, false
+		},
+		func(_ string) []semantic.ElementDescriptor { return freshDescs },
+	)
+
+	rr, res, err := re.AttemptWithClassification(
+		context.Background(), "tab-account", "e5", "click",
+		FailureElementStale,
+		func(_ context.Context, _ string, nodeID int64) (map[string]any, error) {
+			if nodeID != 500 {
+				return nil, fmt.Errorf("wrong button, nodeID=%d want 500", nodeID)
+			}
+			return map[string]any{"clicked": true}, nil
+		},
+	)
+
+	if err != nil {
+		t.Fatalf("recovery failed: %v", err)
+	}
+	if !rr.Recovered {
+		t.Fatal("should recover for 'log out' -> 'Logout'")
+	}
+	if rr.NewRef != "e5" {
+		t.Errorf("NewRef = %q, want e5", rr.NewRef)
+	}
+	if rr.Score < defaultRecoveryMinConfidence {
+		t.Errorf("Score = %f, want >= %f", rr.Score, defaultRecoveryMinConfidence)
+	}
+	if res["clicked"] != true {
+		t.Error("action result should contain clicked=true")
+	}
+}
+
+func TestRecovery_Scenario_RemovedDeleteButton_NoFalsePositive(t *testing.T) {
+	cache := NewIntentCache(100, 5*time.Minute)
+	cache.Store("tab-items", "e3", IntentEntry{
+		Query:      "delete button",
+		Descriptor: semantic.ElementDescriptor{Ref: "e3", Role: "button", Name: "Delete"},
+	})
+
+	freshDescs := []semantic.ElementDescriptor{
+		{Ref: "e1", Role: "text", Name: "Item 1"},
+		{Ref: "e2", Role: "button", Name: "Edit"},
+		{Ref: "e3", Role: "button", Name: "Archive"},
+	}
+
+	matcher := semantic.NewCombinedMatcher(semantic.NewHashingEmbedder(128))
+
+	re := NewRecoveryEngine(
+		DefaultRecoveryConfig(),
+		matcher,
+		cache,
+		func(_ context.Context, _ string) error { return nil },
+		func(_, _ string) (int64, bool) {
+			t.Fatal("resolver should not be called when no candidate clears the recovery threshold")
+			return 0, false
+		},
+		func(_ string) []semantic.ElementDescriptor { return freshDescs },
+	)
+
+	rr, _, err := re.AttemptWithClassification(
+		context.Background(), "tab-items", "e3", "click",
+		FailureElementNotFound,
+		func(_ context.Context, _ string, _ int64) (map[string]any, error) {
+			t.Fatal("action executor should not run for a low-confidence recovery")
+			return nil, nil
+		},
+	)
+
+	if err == nil {
+		t.Fatal("expected recovery to reject low-confidence false positive")
+	}
+	if rr.Recovered {
+		t.Fatal("should not recover when only low-confidence alternatives remain")
+	}
+	if !strings.Contains(rr.Error, "no match above threshold") {
+		t.Fatalf("Error = %q, want threshold rejection", rr.Error)
+	}
+	if rr.NewRef != "" {
+		t.Errorf("NewRef = %q, want empty", rr.NewRef)
 	}
 }
 

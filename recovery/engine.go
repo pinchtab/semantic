@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"strings"
 	"time"
+	"unicode"
 
 	"github.com/pinchtab/semantic"
 )
@@ -18,7 +20,7 @@ type RecoveryConfig struct {
 	MaxRetries int
 
 	// MinConfidence is the minimum score the semantic re-match must
-	// achieve for the recovery attempt to proceed. Default 0.4.
+	// achieve for the recovery attempt to proceed. Default 0.52.
 	MinConfidence float64
 
 	// PreferHighConfidence when true will only auto-recover if the
@@ -27,11 +29,28 @@ type RecoveryConfig struct {
 	PreferHighConfidence bool
 }
 
+const defaultRecoveryMinConfidence = 0.52
+
+var recoveryRoleKeywords = map[string]bool{
+	"button":   true,
+	"input":    true,
+	"link":     true,
+	"textbox":  true,
+	"checkbox": true,
+	"radio":    true,
+	"select":   true,
+	"option":   true,
+	"tab":      true,
+	"menu":     true,
+	"form":     true,
+	"search":   true,
+}
+
 func DefaultRecoveryConfig() RecoveryConfig {
 	return RecoveryConfig{
 		Enabled:              true,
 		MaxRetries:           1,
-		MinConfidence:        0.4,
+		MinConfidence:        defaultRecoveryMinConfidence,
 		PreferHighConfidence: false,
 	}
 }
@@ -358,9 +377,34 @@ func (re *RecoveryEngine) reconstructQuery(tabID, ref string) string {
 		return ""
 	}
 	if entry.Query != "" {
-		return entry.Query
+		return enrichRecoveryQuery(entry)
 	}
 	return entry.Descriptor.Composite()
+}
+
+func enrichRecoveryQuery(entry IntentEntry) string {
+	query := strings.TrimSpace(entry.Query)
+	if query == "" {
+		return entry.Descriptor.Composite()
+	}
+
+	role := strings.TrimSpace(entry.Descriptor.Role)
+	if role == "" || queryHasRoleKeyword(query) {
+		return query
+	}
+
+	return query + " " + role
+}
+
+func queryHasRoleKeyword(query string) bool {
+	for _, token := range strings.FieldsFunc(strings.ToLower(query), func(r rune) bool {
+		return !unicode.IsLetter(r) && !unicode.IsDigit(r)
+	}) {
+		if recoveryRoleKeywords[token] {
+			return true
+		}
+	}
+	return false
 }
 
 func (re *RecoveryEngine) RecordIntent(tabID, ref string, entry IntentEntry) {

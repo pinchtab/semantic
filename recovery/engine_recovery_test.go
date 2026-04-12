@@ -182,7 +182,7 @@ func TestRecoveryEngine_Attempt_ScoreBelowThreshold(t *testing.T) {
 		findFn: func(_ context.Context, _ string, _ []semantic.ElementDescriptor, _ semantic.FindOptions) (semantic.FindResult, error) {
 			return semantic.FindResult{
 				BestRef:   "e2",
-				BestScore: 0.25, // Below default MinConfidence (0.4)
+				BestScore: 0.25, // Below the configured recovery threshold.
 			}, nil
 		},
 	}
@@ -433,6 +433,7 @@ func TestRecoveryEngine_PreferHighConfidence_RejectsLow(t *testing.T) {
 	}
 
 	cfg := DefaultRecoveryConfig()
+	cfg.MinConfidence = 0.4
 	cfg.PreferHighConfidence = true
 
 	re := NewRecoveryEngine(
@@ -504,6 +505,52 @@ func TestRecoveryEngine_ReconstructQuery_FallbackToComposite(t *testing.T) {
 	expected := desc.Composite()
 	if querySeen != expected {
 		t.Errorf("reconstructed query = %q, want %q", querySeen, expected)
+	}
+}
+
+func TestRecoveryEngine_ReconstructQuery_AppendsRoleWhenQueryOmitsIt(t *testing.T) {
+	cache := NewIntentCache(100, 5*time.Minute)
+	cache.Store("tab1", "e1", IntentEntry{
+		Query:      "log out",
+		Descriptor: semantic.ElementDescriptor{Ref: "e1", Role: "button", Name: "Log Out"},
+	})
+
+	querySeen := ""
+	matcher := &mockMatcher{
+		findFn: func(_ context.Context, query string, _ []semantic.ElementDescriptor, _ semantic.FindOptions) (semantic.FindResult, error) {
+			querySeen = query
+			return semantic.FindResult{
+				BestRef:   "e2",
+				BestScore: 0.9,
+				Strategy:  "combined",
+			}, nil
+		},
+	}
+
+	re := NewRecoveryEngine(
+		DefaultRecoveryConfig(),
+		matcher,
+		cache,
+		func(_ context.Context, _ string) error { return nil },
+		func(_, ref string) (int64, bool) {
+			if ref == "e2" {
+				return 22, true
+			}
+			return 0, false
+		},
+		func(_ string) []semantic.ElementDescriptor {
+			return []semantic.ElementDescriptor{{Ref: "e2", Role: "button", Name: "Logout"}}
+		},
+	)
+
+	_, _, _ = re.Attempt(context.Background(), "tab1", "e1", "click",
+		func(_ context.Context, _ string, _ int64) (map[string]any, error) {
+			return map[string]any{"ok": true}, nil
+		},
+	)
+
+	if querySeen != "log out button" {
+		t.Errorf("reconstructed query = %q, want %q", querySeen, "log out button")
 	}
 }
 
