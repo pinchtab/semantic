@@ -1,0 +1,66 @@
+[
+  {
+    "id": "google-001",
+    "query": "search box",
+    "relevant_refs": ["e13"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["input", "combobox", "search"]
+  },
+  {
+    "id": "google-002",
+    "query": "voice search",
+    "relevant_refs": ["e14"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["action", "button"]
+  },
+  {
+    "id": "google-003",
+    "query": "sign in",
+    "relevant_refs": ["e9"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link", "auth"]
+  },
+  {
+    "id": "google-004",
+    "query": "open gmail",
+    "relevant_refs": ["e10"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "google-005",
+    "query": "image search",
+    "relevant_refs": ["e11"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "google-006",
+    "query": "open settings",
+    "relevant_refs": ["e8"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["action", "button"]
+  },
+  {
+    "id": "google-007",
+    "query": "google apps menu",
+    "relevant_refs": ["e12"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["action", "button"]
+  },
+  {
+    "id": "google-008",
+    "query": "privacy link",
+    "relevant_refs": ["e6"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link", "legal"]
+  }
+]

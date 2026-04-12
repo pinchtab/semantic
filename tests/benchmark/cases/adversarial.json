@@ -1,0 +1,62 @@
+[
+  {
+    "id": "adv-001",
+    "query": "the the the the",
+    "snapshot": "login-page.json",
+    "expect_no_crash": true,
+    "tags": ["adversarial", "all-stopwords"]
+  },
+  {
+    "id": "adv-002",
+    "query": "xyzzy foobar baz",
+    "snapshot": "login-page.json",
+    "expect_no_match": true,
+    "threshold": 0.5,
+    "tags": ["adversarial", "nonsense"]
+  },
+  {
+    "id": "adv-003",
+    "query": "click the big blue sign in button on the top right of the login page please",
+    "snapshot": "login-page.json",
+    "expect_ref": "e4",
+    "expect_no_crash": true,
+    "tags": ["adversarial", "long-query"]
+  },
+  {
+    "id": "adv-004",
+    "query": "sign in",
+    "snapshot": "empty.json",
+    "expect_no_crash": true,
+    "expect_no_match": true,
+    "tags": ["adversarial", "empty-snapshot"]
+  },
+  {
+    "id": "adv-005",
+    "query": "sign in (click here)",
+    "snapshot": "login-page.json",
+    "expect_no_crash": true,
+    "tags": ["adversarial", "special-chars"]
+  },
+  {
+    "id": "adv-006",
+    "query": "",
+    "snapshot": "login-page.json",
+    "expect_no_crash": true,
+    "tags": ["adversarial", "empty-query"]
+  },
+  {
+    "id": "adv-007",
+    "query": "a",
+    "snapshot": "login-page.json",
+    "expect_no_crash": true,
+    "tags": ["adversarial", "single-char"]
+  },
+  {
+    "id": "adv-008",
+    "query": "button button button button button",
+    "snapshot": "ecommerce-product.json",
+    "expect_has_matches": true,
+    "expect_no_crash": true,
+    "tags": ["adversarial", "repeated-word"]
+  }
+]

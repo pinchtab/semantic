@@ -1,0 +1,18 @@
+[
+  {"ref": "e0", "role": "navigation", "name": "Main menu", "interactive": false, "section": "Sidebar"},
+  {"ref": "e1", "role": "link", "name": "Dashboard", "interactive": true, "parent": "Main menu", "section": "Sidebar"},
+  {"ref": "e2", "role": "link", "name": "Analytics", "interactive": true, "parent": "Main menu", "section": "Sidebar"},
+  {"ref": "e3", "role": "link", "name": "Settings", "interactive": true, "parent": "Main menu", "section": "Sidebar"},
+  {"ref": "e4", "role": "link", "name": "Users", "interactive": true, "parent": "Main menu", "section": "Sidebar"},
+  {"ref": "e5", "role": "button", "name": "Create New Project", "interactive": true, "section": "Actions"},
+  {"ref": "e6", "role": "searchbox", "name": "Search projects", "interactive": true, "section": "Toolbar"},
+  {"ref": "e7", "role": "combobox", "name": "Filter by status", "interactive": true, "section": "Toolbar"},
+  {"ref": "e8", "role": "button", "name": "Export Data", "interactive": true, "section": "Toolbar"},
+  {"ref": "e9", "role": "button", "name": "Refresh", "interactive": true, "section": "Toolbar"},
+  {"ref": "e10", "role": "button", "name": "Notifications", "interactive": true, "section": "Header"},
+  {"ref": "e11", "role": "button", "name": "Profile", "interactive": true, "section": "Header"},
+  {"ref": "e12", "role": "link", "name": "View All Projects", "interactive": true, "section": "Content"},
+  {"ref": "e13", "role": "button", "name": "Edit", "interactive": true, "parent": "Project row", "section": "Content"},
+  {"ref": "e14", "role": "button", "name": "Delete", "interactive": true, "parent": "Project row", "section": "Content"},
+  {"ref": "e15", "role": "button", "name": "Log Out", "interactive": true, "section": "Header"}
+]

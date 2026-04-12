@@ -1,0 +1,94 @@
+[
+  {
+    "id": "typo-001",
+    "query": "sigin button",
+    "snapshot": "login-page.json",
+    "expect_ref": "e4",
+    "min_score": 0.3,
+    "tags": ["typo", "transposition"]
+  },
+  {
+    "id": "typo-002",
+    "query": "pasword field",
+    "snapshot": "login-page.json",
+    "expect_ref": "e2",
+    "min_score": 0.3,
+    "tags": ["typo", "missing-letter"]
+  },
+  {
+    "id": "typo-003",
+    "query": "emial input",
+    "snapshot": "login-page.json",
+    "expect_ref": "e1",
+    "min_score": 0.3,
+    "tags": ["typo", "transposition"]
+  },
+  {
+    "id": "typo-004",
+    "query": "forgt password",
+    "snapshot": "login-page.json",
+    "expect_ref": "e5",
+    "min_score": 0.3,
+    "tags": ["typo", "missing-letter"]
+  },
+  {
+    "id": "typo-005",
+    "query": "crate account",
+    "snapshot": "login-page.json",
+    "expect_ref": "e6",
+    "min_score": 0.2,
+    "threshold": 0.2,
+    "tags": ["typo", "missing-letter"]
+  },
+  {
+    "id": "typo-006",
+    "query": "ad to cart",
+    "snapshot": "ecommerce-product.json",
+    "expect_ref": "e10",
+    "min_score": 0.3,
+    "tags": ["typo", "missing-letter"]
+  },
+  {
+    "id": "typo-007",
+    "query": "quantiy",
+    "snapshot": "ecommerce-product.json",
+    "expect_ref": "e8",
+    "min_score": 0.1,
+    "threshold": 0.1,
+    "tags": ["typo", "transposition"]
+  },
+  {
+    "id": "typo-008",
+    "query": "buton",
+    "snapshot": "ecommerce-product.json",
+    "expect_has_matches": true,
+    "min_score": 0.1,
+    "threshold": 0.1,
+    "tags": ["typo", "missing-letter", "partial"]
+  },
+  {
+    "id": "typo-009",
+    "query": "serch projects",
+    "snapshot": "dashboard.json",
+    "expect_ref": "e6",
+    "min_score": 0.3,
+    "tags": ["typo", "missing-letter"]
+  },
+  {
+    "id": "typo-010",
+    "query": "exprot data",
+    "snapshot": "dashboard.json",
+    "expect_ref": "e8",
+    "min_score": 0.3,
+    "tags": ["typo", "transposition"]
+  },
+  {
+    "id": "typo-011",
+    "query": "lgo out",
+    "snapshot": "dashboard.json",
+    "expect_ref": "e15",
+    "min_score": 0.2,
+    "threshold": 0.2,
+    "tags": ["typo", "transposition"]
+  }
+]

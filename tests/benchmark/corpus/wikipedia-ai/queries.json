@@ -1,0 +1,66 @@
+[
+  {
+    "id": "wiki-ai-001",
+    "query": "search wikipedia",
+    "relevant_refs": ["e3"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["action", "button", "search"]
+  },
+  {
+    "id": "wiki-ai-002",
+    "query": "open main menu",
+    "relevant_refs": ["e2"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["action", "button", "navigation"]
+  },
+  {
+    "id": "wiki-ai-003",
+    "query": "change language",
+    "relevant_refs": ["e4"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["action", "button", "implicit"]
+  },
+  {
+    "id": "wiki-ai-004",
+    "query": "skip to content",
+    "relevant_refs": ["e0"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link", "accessibility"]
+  },
+  {
+    "id": "wiki-ai-005",
+    "query": "view privacy policy",
+    "relevant_refs": ["e7", "e9"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link", "legal"]
+  },
+  {
+    "id": "wiki-ai-006",
+    "query": "go to wikipedia homepage",
+    "relevant_refs": ["e1"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "wiki-ai-007",
+    "query": "contact wikipedia",
+    "relevant_refs": ["e12"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "wiki-ai-008",
+    "query": "read terms of use",
+    "relevant_refs": ["e6"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link", "legal"]
+  }
+]

@@ -1,0 +1,422 @@
+[
+  {
+    "ref": "e0",
+    "role": "link",
+    "name": "Skip to main content",
+    "interactive": true
+  },
+  {
+    "ref": "e1",
+    "role": "link",
+    "name": "Stack Overflow",
+    "interactive": true
+  },
+  {
+    "ref": "e2",
+    "role": "link",
+    "name": "About",
+    "interactive": true
+  },
+  {
+    "ref": "e3",
+    "role": "button",
+    "name": "Products",
+    "interactive": true
+  },
+  {
+    "ref": "e4",
+    "role": "link",
+    "name": "For Teams",
+    "interactive": true
+  },
+  {
+    "ref": "e5",
+    "role": "button",
+    "name": "Try new site BETA",
+    "interactive": true
+  },
+  {
+    "ref": "e6",
+    "role": "link",
+    "name": "Stack Overflow",
+    "interactive": true
+  },
+  {
+    "ref": "e7",
+    "role": "link",
+    "name": "CC BY-SA",
+    "interactive": true
+  },
+  {
+    "ref": "e8",
+    "role": "combobox",
+    "name": "Search",
+    "interactive": true
+  },
+  {
+    "ref": "e9",
+    "role": "link",
+    "name": "Newest",
+    "interactive": true
+  },
+  {
+    "ref": "e10",
+    "role": "link",
+    "name": "Active",
+    "interactive": true
+  },
+  {
+    "ref": "e11",
+    "role": "link",
+    "name": "Bountied 3",
+    "interactive": true
+  },
+  {
+    "ref": "e12",
+    "role": "link",
+    "name": "Unanswered",
+    "interactive": true
+  },
+  {
+    "ref": "e13",
+    "role": "button",
+    "name": "More",
+    "interactive": true
+  },
+  {
+    "ref": "e14",
+    "role": "link",
+    "name": "15",
+    "interactive": true
+  },
+  {
+    "ref": "e15",
+    "role": "link",
+    "name": "30",
+    "interactive": true
+  },
+  {
+    "ref": "e16",
+    "role": "link",
+    "name": "50",
+    "interactive": true
+  },
+  {
+    "ref": "e17",
+    "role": "link",
+    "name": "2",
+    "interactive": true
+  },
+  {
+    "ref": "e18",
+    "role": "link",
+    "name": "3",
+    "interactive": true
+  },
+  {
+    "ref": "e19",
+    "role": "link",
+    "name": "4",
+    "interactive": true
+  },
+  {
+    "ref": "e20",
+    "role": "link",
+    "name": "5",
+    "interactive": true
+  },
+  {
+    "ref": "e21",
+    "role": "link",
+    "name": "1610761",
+    "interactive": true
+  },
+  {
+    "ref": "e22",
+    "role": "link",
+    "name": "Next",
+    "interactive": true
+  },
+  {
+    "ref": "e23",
+    "role": "link",
+    "name": "see all",
+    "interactive": true
+  },
+  {
+    "ref": "e24",
+    "role": "link",
+    "name": "STACK OVERFLOW",
+    "interactive": true
+  },
+  {
+    "ref": "e25",
+    "role": "link",
+    "name": "BUSINESS",
+    "interactive": true
+  },
+  {
+    "ref": "e26",
+    "role": "link",
+    "name": "COMPANY",
+    "interactive": true
+  },
+  {
+    "ref": "e27",
+    "role": "link",
+    "name": "STACK EXCHANGE NETWORK",
+    "interactive": true
+  },
+  {
+    "ref": "e28",
+    "role": "link",
+    "name": "Blog",
+    "interactive": true
+  },
+  {
+    "ref": "e29",
+    "role": "link",
+    "name": "Facebook",
+    "interactive": true
+  },
+  {
+    "ref": "e30",
+    "role": "link",
+    "name": "Twitter",
+    "interactive": true
+  },
+  {
+    "ref": "e31",
+    "role": "link",
+    "name": "LinkedIn",
+    "interactive": true
+  },
+  {
+    "ref": "e32",
+    "role": "link",
+    "name": "Instagram",
+    "interactive": true
+  },
+  {
+    "ref": "e33",
+    "role": "link",
+    "name": "Log in",
+    "interactive": true
+  },
+  {
+    "ref": "e34",
+    "role": "link",
+    "name": "Sign up",
+    "interactive": true
+  },
+  {
+    "ref": "e35",
+    "role": "link",
+    "name": "Ask Question",
+    "interactive": true
+  },
+  {
+    "ref": "e36",
+    "role": "button",
+    "name": " Filter",
+    "interactive": true
+  },
+  {
+    "ref": "e37",
+    "role": "link",
+    "name": "more hot questions",
+    "interactive": true
+  },
+  {
+    "ref": "e38",
+    "role": "link",
+    "name": "Questions",
+    "interactive": true
+  },
+  {
+    "ref": "e39",
+    "role": "link",
+    "name": "Help",
+    "interactive": true
+  },
+  {
+    "ref": "e40",
+    "role": "link",
+    "name": "Chat",
+    "interactive": true
+  },
+  {
+    "ref": "e41",
+    "role": "link",
+    "name": "Stack Internal",
+    "interactive": true
+  },
+  {
+    "ref": "e42",
+    "role": "link",
+    "name": "Stack Data Licensing",
+    "interactive": true
+  },
+  {
+    "ref": "e43",
+    "role": "link",
+    "name": "Stack Ads",
+    "interactive": true
+  },
+  {
+    "ref": "e44",
+    "role": "link",
+    "name": "About",
+    "interactive": true
+  },
+  {
+    "ref": "e45",
+    "role": "link",
+    "name": "Press",
+    "interactive": true
+  },
+  {
+    "ref": "e46",
+    "role": "link",
+    "name": "Work Here",
+    "interactive": true
+  },
+  {
+    "ref": "e47",
+    "role": "link",
+    "name": "Legal",
+    "interactive": true
+  },
+  {
+    "ref": "e48",
+    "role": "link",
+    "name": "Privacy Policy",
+    "interactive": true
+  },
+  {
+    "ref": "e49",
+    "role": "link",
+    "name": "Terms of Service",
+    "interactive": true
+  },
+  {
+    "ref": "e50",
+    "role": "link",
+    "name": "Contact Us",
+    "interactive": true
+  },
+  {
+    "ref": "e51",
+    "role": "button",
+    "name": "Cookie Settings",
+    "interactive": true
+  },
+  {
+    "ref": "e52",
+    "role": "link",
+    "name": "Cookie Policy",
+    "interactive": true
+  },
+  {
+    "ref": "e53",
+    "role": "link",
+    "name": "Technology",
+    "interactive": true
+  },
+  {
+    "ref": "e54",
+    "role": "link",
+    "name": "Culture & recreation",
+    "interactive": true
+  },
+  {
+    "ref": "e55",
+    "role": "link",
+    "name": "Life & arts",
+    "interactive": true
+  },
+  {
+    "ref": "e56",
+    "role": "link",
+    "name": "Science",
+    "interactive": true
+  },
+  {
+    "ref": "e57",
+    "role": "link",
+    "name": "Professional",
+    "interactive": true
+  },
+  {
+    "ref": "e58",
+    "role": "link",
+    "name": "Business",
+    "interactive": true
+  },
+  {
+    "ref": "e59",
+    "role": "link",
+    "name": "API",
+    "interactive": true
+  },
+  {
+    "ref": "e60",
+    "role": "link",
+    "name": "Data",
+    "interactive": true
+  },
+  {
+    "ref": "e61",
+    "role": "link",
+    "name": "PHP",
+    "interactive": true
+  },
+  {
+    "ref": "e62",
+    "role": "button",
+    "name": "Join",
+    "interactive": true
+  },
+  {
+    "ref": "e63",
+    "role": "link",
+    "name": "R Language",
+    "interactive": true
+  },
+  {
+    "ref": "e64",
+    "role": "button",
+    "name": "Join",
+    "interactive": true
+  },
+  {
+    "ref": "e65",
+    "role": "link",
+    "name": "OpenAI",
+    "interactive": true
+  },
+  {
+    "ref": "e66",
+    "role": "button",
+    "name": "Join",
+    "interactive": true
+  },
+  {
+    "ref": "e67",
+    "role": "link",
+    "name": "Hot Network Questions",
+    "interactive": true
+  },
+  {
+    "ref": "e68",
+    "role": "link",
+    "name": "Try for free",
+    "interactive": true
+  },
+  {
+    "ref": "e69",
+    "role": "link",
+    "name": "Learn more",
+    "interactive": true
+  }
+]

@@ -1,0 +1,16 @@
+[
+  {"ref": "e0", "role": "heading", "name": "Account Settings", "interactive": false, "section": "Header"},
+  {"ref": "e1", "role": "textbox", "name": "Email", "interactive": true, "parent": "Login form", "section": "Login"},
+  {"ref": "e2", "role": "textbox", "name": "Password", "interactive": true, "parent": "Login form", "section": "Login"},
+  {"ref": "e3", "role": "button", "name": "Submit", "interactive": true, "parent": "Login form", "section": "Login"},
+  {"ref": "e4", "role": "textbox", "name": "Card number", "interactive": true, "parent": "Payment form", "section": "Payment"},
+  {"ref": "e5", "role": "textbox", "name": "Expiry date", "interactive": true, "parent": "Payment form", "section": "Payment"},
+  {"ref": "e6", "role": "textbox", "name": "CVV", "interactive": true, "parent": "Payment form", "section": "Payment"},
+  {"ref": "e7", "role": "button", "name": "Submit", "interactive": true, "parent": "Payment form", "section": "Payment"},
+  {"ref": "e8", "role": "textbox", "name": "Street address", "interactive": true, "parent": "Shipping form", "section": "Shipping"},
+  {"ref": "e9", "role": "textbox", "name": "City", "interactive": true, "parent": "Shipping form", "section": "Shipping"},
+  {"ref": "e10", "role": "textbox", "name": "Zip code", "interactive": true, "parent": "Shipping form", "section": "Shipping"},
+  {"ref": "e11", "role": "button", "name": "Submit", "interactive": true, "parent": "Shipping form", "section": "Shipping"},
+  {"ref": "e12", "role": "button", "name": "Cancel", "interactive": true, "section": "Footer"},
+  {"ref": "e13", "role": "link", "name": "Back to home", "interactive": true, "section": "Footer"}
+]

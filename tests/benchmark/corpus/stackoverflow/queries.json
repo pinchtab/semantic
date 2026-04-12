@@ -1,0 +1,66 @@
+[
+  {
+    "id": "so-001",
+    "query": "search questions",
+    "relevant_refs": ["e8"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["input", "combobox", "search"]
+  },
+  {
+    "id": "so-002",
+    "query": "newest questions",
+    "relevant_refs": ["e9"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link", "filter"]
+  },
+  {
+    "id": "so-003",
+    "query": "active questions",
+    "relevant_refs": ["e10"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link", "filter"]
+  },
+  {
+    "id": "so-004",
+    "query": "questions with bounty",
+    "relevant_refs": ["e11"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["navigation", "link", "filter"]
+  },
+  {
+    "id": "so-005",
+    "query": "unanswered questions",
+    "relevant_refs": ["e12"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link", "filter"]
+  },
+  {
+    "id": "so-006",
+    "query": "skip to main content",
+    "relevant_refs": ["e0"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link", "accessibility"]
+  },
+  {
+    "id": "so-007",
+    "query": "go to stack overflow home",
+    "relevant_refs": ["e1", "e6"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "so-008",
+    "query": "view products",
+    "relevant_refs": ["e3"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["action", "button"]
+  }
+]

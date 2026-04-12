@@ -80,7 +80,8 @@
   {
     "query": "table of contents",
     "snapshot": "wikipedia-article.json",
-    "expect_ref": "e3",
+    "expect_ref": "e11",
+    "note": "Link in Table of Contents section (section context boost)",
     "min_score": 0.3
   },
   {

@@ -12,7 +12,7 @@ linters:
     - prealloc
   exclusions:
     paths:
-      - testdata
+      - tests/e2e/assets
     rules:
       - linters: [gocyclo]
         path: _test\.go
@@ -20,4 +20,4 @@ linters:
 formatters:
   exclusions:
     paths:
-      - testdata
+      - tests/e2e/assets

@@ -1,0 +1,82 @@
+[
+  {
+    "id": "reddit-001",
+    "query": "search reddit",
+    "relevant_refs": ["e1"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["input", "textbox", "search"]
+  },
+  {
+    "id": "reddit-002",
+    "query": "log in",
+    "relevant_refs": ["e8"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link", "auth"]
+  },
+  {
+    "id": "reddit-003",
+    "query": "sign up",
+    "relevant_refs": ["e9"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link", "auth"]
+  },
+  {
+    "id": "reddit-004",
+    "query": "submit new link",
+    "relevant_refs": ["e3"],
+    "partially_relevant_refs": ["e4"],
+    "difficulty": "easy",
+    "tags": ["action", "link"]
+  },
+  {
+    "id": "reddit-005",
+    "query": "submit text post",
+    "relevant_refs": ["e4"],
+    "partially_relevant_refs": ["e3"],
+    "difficulty": "easy",
+    "tags": ["action", "link"]
+  },
+  {
+    "id": "reddit-006",
+    "query": "view site rules",
+    "relevant_refs": ["e16"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "reddit-007",
+    "query": "read user agreement",
+    "relevant_refs": ["e5"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link", "legal"]
+  },
+  {
+    "id": "reddit-008",
+    "query": "privacy policy",
+    "relevant_refs": ["e6"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link", "legal"]
+  },
+  {
+    "id": "reddit-009",
+    "query": "reddit help",
+    "relevant_refs": ["e17"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "reddit-010",
+    "query": "jump to content",
+    "relevant_refs": ["e0"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link", "accessibility"]
+  }
+]

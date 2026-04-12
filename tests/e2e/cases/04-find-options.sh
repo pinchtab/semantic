@@ -1,9 +1,10 @@
 #!/bin/bash
-source /e2e/lib.sh
+CASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${CASE_DIR}/../lib.sh"
 
 echo "  ── Find: Options (threshold, top-k, strategy) ──"
 
-SNAPSHOT="/testdata/snapshots/login-page.json"
+SNAPSHOT="${ASSETS_DIR}/snapshots/login-page.json"
 
 # Top-K limiting
 result=$(semantic find "button" --snapshot "$SNAPSHOT" --format json --top-k 1)

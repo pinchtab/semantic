@@ -1,9 +1,10 @@
 #!/bin/bash
-source /e2e/lib.sh
+CASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${CASE_DIR}/../lib.sh"
 
 echo "  ── Find: GitHub Repo Page ──"
 
-SNAPSHOT="/testdata/snapshots/github-repo.json"
+SNAPSHOT="${ASSETS_DIR}/snapshots/github-repo.json"
 
 # Direct matches
 result=$(semantic find "star button" --snapshot "$SNAPSHOT" --format json)

@@ -1,0 +1,422 @@
+[
+  {
+    "ref": "e0",
+    "role": "link",
+    "name": "jump to content",
+    "interactive": true
+  },
+  {
+    "ref": "e1",
+    "role": "textbox",
+    "name": "search",
+    "interactive": true
+  },
+  {
+    "ref": "e2",
+    "role": "button",
+    "name": "",
+    "interactive": true
+  },
+  {
+    "ref": "e3",
+    "role": "link",
+    "name": "Submit a new link",
+    "interactive": true
+  },
+  {
+    "ref": "e4",
+    "role": "link",
+    "name": "Submit a new text post",
+    "interactive": true
+  },
+  {
+    "ref": "e5",
+    "role": "link",
+    "name": "User Agreement",
+    "interactive": true
+  },
+  {
+    "ref": "e6",
+    "role": "link",
+    "name": "Privacy Policy",
+    "interactive": true
+  },
+  {
+    "ref": "e7",
+    "role": "link",
+    "name": "reddit.com",
+    "interactive": true
+  },
+  {
+    "ref": "e8",
+    "role": "link",
+    "name": "Log in",
+    "interactive": true
+  },
+  {
+    "ref": "e9",
+    "role": "link",
+    "name": "sign up",
+    "interactive": true
+  },
+  {
+    "ref": "e10",
+    "role": "link",
+    "name": "Welcome to Reddit, the front page of the internet. BECOME A REDDITOR and join one of thousands of communities.",
+    "interactive": true
+  },
+  {
+    "ref": "e11",
+    "role": "link",
+    "name": "×",
+    "interactive": true
+  },
+  {
+    "ref": "e12",
+    "role": "link",
+    "name": "blog",
+    "interactive": true
+  },
+  {
+    "ref": "e13",
+    "role": "link",
+    "name": "about",
+    "interactive": true
+  },
+  {
+    "ref": "e14",
+    "role": "link",
+    "name": "advertising",
+    "interactive": true
+  },
+  {
+    "ref": "e15",
+    "role": "link",
+    "name": "careers",
+    "interactive": true
+  },
+  {
+    "ref": "e16",
+    "role": "link",
+    "name": "site rules",
+    "interactive": true
+  },
+  {
+    "ref": "e17",
+    "role": "link",
+    "name": "Reddit help center",
+    "interactive": true
+  },
+  {
+    "ref": "e18",
+    "role": "link",
+    "name": "reddiquette",
+    "interactive": true
+  },
+  {
+    "ref": "e19",
+    "role": "link",
+    "name": "mod guidelines",
+    "interactive": true
+  },
+  {
+    "ref": "e20",
+    "role": "link",
+    "name": "contact us",
+    "interactive": true
+  },
+  {
+    "ref": "e21",
+    "role": "link",
+    "name": "Reddit for iPhone",
+    "interactive": true
+  },
+  {
+    "ref": "e22",
+    "role": "link",
+    "name": "Reddit for Android",
+    "interactive": true
+  },
+  {
+    "ref": "e23",
+    "role": "link",
+    "name": "mobile website",
+    "interactive": true
+  },
+  {
+    "ref": "e24",
+    "role": "link",
+    "name": "reddit premium",
+    "interactive": true
+  },
+  {
+    "ref": "e25",
+    "role": "link",
+    "name": "MORE »",
+    "interactive": true
+  },
+  {
+    "ref": "e26",
+    "role": "button",
+    "name": "upvote",
+    "interactive": true
+  },
+  {
+    "ref": "e27",
+    "role": "button",
+    "name": "downvote",
+    "interactive": true
+  },
+  {
+    "ref": "e28",
+    "role": "link",
+    "name": "",
+    "interactive": true
+  },
+  {
+    "ref": "e29",
+    "role": "button",
+    "name": "upvote",
+    "interactive": true
+  },
+  {
+    "ref": "e30",
+    "role": "button",
+    "name": "downvote",
+    "interactive": true
+  },
+  {
+    "ref": "e31",
+    "role": "link",
+    "name": "",
+    "interactive": true
+  },
+  {
+    "ref": "e32",
+    "role": "button",
+    "name": "upvote",
+    "interactive": true
+  },
+  {
+    "ref": "e33",
+    "role": "button",
+    "name": "downvote",
+    "interactive": true
+  },
+  {
+    "ref": "e34",
+    "role": "link",
+    "name": "",
+    "interactive": true
+  },
+  {
+    "ref": "e35",
+    "role": "button",
+    "name": "upvote",
+    "interactive": true
+  },
+  {
+    "ref": "e36",
+    "role": "button",
+    "name": "downvote",
+    "interactive": true
+  },
+  {
+    "ref": "e37",
+    "role": "link",
+    "name": "",
+    "interactive": true
+  },
+  {
+    "ref": "e38",
+    "role": "button",
+    "name": "upvote",
+    "interactive": true
+  },
+  {
+    "ref": "e39",
+    "role": "button",
+    "name": "downvote",
+    "interactive": true
+  },
+  {
+    "ref": "e40",
+    "role": "link",
+    "name": "",
+    "interactive": true
+  },
+  {
+    "ref": "e41",
+    "role": "button",
+    "name": "upvote",
+    "interactive": true
+  },
+  {
+    "ref": "e42",
+    "role": "button",
+    "name": "downvote",
+    "interactive": true
+  },
+  {
+    "ref": "e43",
+    "role": "link",
+    "name": "",
+    "interactive": true
+  },
+  {
+    "ref": "e44",
+    "role": "button",
+    "name": "upvote",
+    "interactive": true
+  },
+  {
+    "ref": "e45",
+    "role": "button",
+    "name": "downvote",
+    "interactive": true
+  },
+  {
+    "ref": "e46",
+    "role": "link",
+    "name": "",
+    "interactive": true
+  },
+  {
+    "ref": "e47",
+    "role": "button",
+    "name": "upvote",
+    "interactive": true
+  },
+  {
+    "ref": "e48",
+    "role": "button",
+    "name": "downvote",
+    "interactive": true
+  },
+  {
+    "ref": "e49",
+    "role": "link",
+    "name": "0:25",
+    "interactive": true
+  },
+  {
+    "ref": "e50",
+    "role": "button",
+    "name": "upvote",
+    "interactive": true
+  },
+  {
+    "ref": "e51",
+    "role": "button",
+    "name": "downvote",
+    "interactive": true
+  },
+  {
+    "ref": "e52",
+    "role": "link",
+    "name": "",
+    "interactive": true
+  },
+  {
+    "ref": "e53",
+    "role": "button",
+    "name": "upvote",
+    "interactive": true
+  },
+  {
+    "ref": "e54",
+    "role": "button",
+    "name": "downvote",
+    "interactive": true
+  },
+  {
+    "ref": "e55",
+    "role": "link",
+    "name": "0:08",
+    "interactive": true
+  },
+  {
+    "ref": "e56",
+    "role": "button",
+    "name": "upvote",
+    "interactive": true
+  },
+  {
+    "ref": "e57",
+    "role": "button",
+    "name": "downvote",
+    "interactive": true
+  },
+  {
+    "ref": "e58",
+    "role": "link",
+    "name": "",
+    "interactive": true
+  },
+  {
+    "ref": "e59",
+    "role": "button",
+    "name": "upvote",
+    "interactive": true
+  },
+  {
+    "ref": "e60",
+    "role": "button",
+    "name": "downvote",
+    "interactive": true
+  },
+  {
+    "ref": "e61",
+    "role": "link",
+    "name": "",
+    "interactive": true
+  },
+  {
+    "ref": "e62",
+    "role": "button",
+    "name": "upvote",
+    "interactive": true
+  },
+  {
+    "ref": "e63",
+    "role": "button",
+    "name": "downvote",
+    "interactive": true
+  },
+  {
+    "ref": "e64",
+    "role": "link",
+    "name": "",
+    "interactive": true
+  },
+  {
+    "ref": "e65",
+    "role": "button",
+    "name": "upvote",
+    "interactive": true
+  },
+  {
+    "ref": "e66",
+    "role": "button",
+    "name": "downvote",
+    "interactive": true
+  },
+  {
+    "ref": "e67",
+    "role": "link",
+    "name": "",
+    "interactive": true
+  },
+  {
+    "ref": "e68",
+    "role": "button",
+    "name": "upvote",
+    "interactive": true
+  },
+  {
+    "ref": "e69",
+    "role": "button",
+    "name": "downvote",
+    "interactive": true
+  }
+]
