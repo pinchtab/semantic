@@ -103,19 +103,22 @@ func TestBuildPhrases(t *testing.T) {
 
 // Context-Aware Stopword Tests
 
-func TestSynonymScore_PhraseCountsAllTokens(t *testing.T) {
+func TestSynonymScore_NoDuplicateCounting(t *testing.T) {
 	// "sign in" should match the phrase "sign in" in synonymIndex.
-	// All tokens in the phrase should count as matched (not just 1 for the phrase).
+	// The score should NOT double-count "sign" and "in" individually
 	// on top of the phrase match.
 	score := synonymScore(
 		[]string{"sign", "in"},
 		[]string{"login", "button"},
 	)
-	// Phrase "sign in" → synonym "login" → present in desc.
-	// Both query tokens ("sign", "in") are consumed by the phrase match.
-	// Score = 2/2 = 1.0 (all query tokens explained by synonym match).
-	if score < 0.95 {
-		t.Errorf("synonymScore should count all phrase tokens as matched, got %.3f", score)
+	// Phrase "sign in" → synonym "login" → present in desc → 1 match.
+	// len(queryTokens) = 2, but only 1 phrase matched (both indices consumed).
+	// Score = 1/2 = 0.5.
+	if score > 0.55 {
+		t.Errorf("synonymScore should not double-count phrase components, got %.3f", score)
+	}
+	if score < 0.45 {
+		t.Errorf("synonymScore should recognise 'sign in' vs 'login', got %.3f", score)
 	}
 }
 

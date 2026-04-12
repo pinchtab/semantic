@@ -21,6 +21,26 @@ SEMANTIC="${BENCHMARK_DIR}/semantic"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 REPORT_FILE="${RESULTS_DIR}/full_benchmark_${TIMESTAMP}.json"
 
+has_role_keyword() {
+    local query="$1"
+    echo "$query" | grep -Eiq '(^|[^[:alnum:]])(button|input|link|textbox|checkbox|radio|select|option|tab|menu|form|search)([^[:alnum:]]|$)'
+}
+
+enrich_recovery_query() {
+    local query="$1"
+    local role="$2"
+
+    if [[ -z "$query" || -z "$role" ]]; then
+        printf '%s' "$query"
+        return
+    fi
+    if has_role_keyword "$query"; then
+        printf '%s' "$query"
+        return
+    fi
+    printf '%s %s' "$query" "$role"
+}
+
 # Initialize report
 jq -n \
     --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -65,7 +85,10 @@ if [[ -f "$SCENARIOS_FILE" ]]; then
     for i in $(seq 0 $((SCENARIO_COUNT - 1))); do
         ID=$(jq -r ".[$i].id" "$SCENARIOS_FILE")
         NAME=$(jq -r ".[$i].name" "$SCENARIOS_FILE")
-        QUERY=$(jq -r ".[$i].original_query" "$SCENARIOS_FILE")
+        RAW_QUERY=$(jq -r ".[$i].original_query" "$SCENARIOS_FILE")
+        ORIGINAL_REF=$(jq -r ".[$i].original_ref // empty" "$SCENARIOS_FILE")
+        ORIGINAL_ROLE=$(jq -r ".[$i].before[]? | select(.ref == \"$ORIGINAL_REF\") | .role // empty" "$SCENARIOS_FILE")
+        QUERY=$(enrich_recovery_query "$RAW_QUERY" "$ORIGINAL_ROLE")
         EXPECTED=$(jq -r ".[$i].expected_ref // empty" "$SCENARIOS_FILE")
         EXPECTED_ALT=$(jq -r ".[$i].expected_alt // [] | join(\",\")" "$SCENARIOS_FILE")
         EXPECT_NO_MATCH=$(jq -r ".[$i].expect_no_match // false" "$SCENARIOS_FILE")
