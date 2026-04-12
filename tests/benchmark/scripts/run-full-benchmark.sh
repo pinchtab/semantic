@@ -74,26 +74,15 @@ if [[ -f "$SCENARIOS_FILE" ]]; then
         AFTER_FILE=$(mktemp)
         jq ".[$i].after" "$SCENARIOS_FILE" > "$AFTER_FILE"
 
-        # Run semantic find on after snapshot with recovery threshold
-        # Recovery requires higher confidence than regular find
-        RESULT=$("${SEMANTIC}" find "$QUERY" --snapshot "$AFTER_FILE" --format json --threshold 0.5 2>/dev/null || echo '{"matches":[]}')
+        # Run semantic find on after snapshot with the same minimum score
+        # enforced by DefaultRecoveryConfig in the recovery engine.
+        RESULT=$("${SEMANTIC}" find "$QUERY" --snapshot "$AFTER_FILE" --format json --threshold 0.52 2>/dev/null || echo '{"matches":[]}')
         BEST_REF=$(echo "$RESULT" | jq -r '.best_ref // ""')
-        BEST_SCORE=$(echo "$RESULT" | jq -r '.best_score // 0')
-        CONFIDENCE=$(echo "$RESULT" | jq -r '.confidence // "low"')
 
         rm -f "$AFTER_FILE"
 
         RECOVERY_TOTAL=$((RECOVERY_TOTAL + 1))
         STATUS="FAIL"
-
-        # For recovery, reject low-confidence matches below 0.52 threshold
-        # This filters false positives while accepting strong synonym matches
-        if [[ "$CONFIDENCE" == "low" ]]; then
-            IS_BELOW=$(echo "$BEST_SCORE < 0.52" | bc -l)
-            if [[ "$IS_BELOW" == "1" ]]; then
-                BEST_REF=""
-            fi
-        fi
 
         if [[ "$EXPECT_NO_MATCH" == "true" ]]; then
             if [[ -z "$BEST_REF" ]] || [[ "$BEST_REF" == "null" ]]; then

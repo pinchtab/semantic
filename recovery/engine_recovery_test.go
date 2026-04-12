@@ -182,7 +182,7 @@ func TestRecoveryEngine_Attempt_ScoreBelowThreshold(t *testing.T) {
 		findFn: func(_ context.Context, _ string, _ []semantic.ElementDescriptor, _ semantic.FindOptions) (semantic.FindResult, error) {
 			return semantic.FindResult{
 				BestRef:   "e2",
-				BestScore: 0.25, // Below default MinConfidence (0.4)
+				BestScore: 0.25, // Below the configured recovery threshold.
 			}, nil
 		},
 	}
@@ -433,6 +433,7 @@ func TestRecoveryEngine_PreferHighConfidence_RejectsLow(t *testing.T) {
 	}
 
 	cfg := DefaultRecoveryConfig()
+	cfg.MinConfidence = 0.4
 	cfg.PreferHighConfidence = true
 
 	re := NewRecoveryEngine(

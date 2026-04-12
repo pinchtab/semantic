@@ -18,7 +18,7 @@ type RecoveryConfig struct {
 	MaxRetries int
 
 	// MinConfidence is the minimum score the semantic re-match must
-	// achieve for the recovery attempt to proceed. Default 0.4.
+	// achieve for the recovery attempt to proceed. Default 0.52.
 	MinConfidence float64
 
 	// PreferHighConfidence when true will only auto-recover if the
@@ -27,11 +27,13 @@ type RecoveryConfig struct {
 	PreferHighConfidence bool
 }
 
+const defaultRecoveryMinConfidence = 0.52
+
 func DefaultRecoveryConfig() RecoveryConfig {
 	return RecoveryConfig{
 		Enabled:              true,
 		MaxRetries:           1,
-		MinConfidence:        0.4,
+		MinConfidence:        defaultRecoveryMinConfidence,
 		PreferHighConfidence: false,
 	}
 }
