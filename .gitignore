@@ -18,3 +18,5 @@ cover.out
 
 .claude
 tests/e2e/results/*.txt
+tests/benchmark/results/*.json
+tests/benchmark/results/*.md

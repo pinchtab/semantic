@@ -1,0 +1,85 @@
+[
+  {
+    "id": "github-001",
+    "query": "star this repository",
+    "relevant_refs": ["e10"],
+    "partially_relevant_refs": ["e8", "e9"],
+    "difficulty": "easy",
+    "tags": ["action", "button", "exact"]
+  },
+  {
+    "id": "github-002",
+    "query": "fork the repo",
+    "relevant_refs": ["e9"],
+    "partially_relevant_refs": ["e10", "e8"],
+    "difficulty": "easy",
+    "tags": ["action", "button"]
+  },
+  {
+    "id": "github-003",
+    "query": "view pull requests",
+    "relevant_refs": ["e4"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "tab"]
+  },
+  {
+    "id": "github-004",
+    "query": "go to issues",
+    "relevant_refs": ["e3"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "tab"]
+  },
+  {
+    "id": "github-005",
+    "query": "clone this project",
+    "relevant_refs": ["e13"],
+    "partially_relevant_refs": ["e12"],
+    "difficulty": "medium",
+    "tags": ["action", "synonym"],
+    "notes": "Code button has clone dropdown"
+  },
+  {
+    "id": "github-006",
+    "query": "download the code",
+    "relevant_refs": ["e13"],
+    "partially_relevant_refs": ["e12"],
+    "difficulty": "medium",
+    "tags": ["action", "synonym"]
+  },
+  {
+    "id": "github-007",
+    "query": "check the license",
+    "relevant_refs": ["e17"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "github-008",
+    "query": "switch branch",
+    "relevant_refs": ["e11"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["action", "implicit"],
+    "notes": "main link is branch selector"
+  },
+  {
+    "id": "github-009",
+    "query": "find file",
+    "relevant_refs": ["e12", "e23"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["action", "search"]
+  },
+  {
+    "id": "github-010",
+    "query": "CI status",
+    "relevant_refs": ["e5"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["navigation", "implicit"],
+    "notes": "Actions tab shows CI"
+  }
+]

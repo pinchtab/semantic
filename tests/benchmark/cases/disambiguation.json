@@ -1,0 +1,90 @@
+[
+  {
+    "id": "disamb-001",
+    "query": "submit in login",
+    "snapshot": "multi-form.json",
+    "expect_ref": "e3",
+    "min_score": 0.6,
+    "tags": ["disambiguation", "section-context"]
+  },
+  {
+    "id": "disamb-002",
+    "query": "submit in payment",
+    "snapshot": "multi-form.json",
+    "expect_ref": "e7",
+    "min_score": 0.6,
+    "tags": ["disambiguation", "section-context"]
+  },
+  {
+    "id": "disamb-003",
+    "query": "submit in shipping",
+    "snapshot": "multi-form.json",
+    "expect_ref": "e11",
+    "min_score": 0.6,
+    "tags": ["disambiguation", "section-context"]
+  },
+  {
+    "id": "disamb-004",
+    "query": "login form email",
+    "snapshot": "multi-form.json",
+    "expect_ref": "e1",
+    "min_score": 0.5,
+    "tags": ["disambiguation", "parent-context"]
+  },
+  {
+    "id": "disamb-005",
+    "query": "payment card",
+    "snapshot": "multi-form.json",
+    "expect_ref": "e4",
+    "min_score": 0.5,
+    "tags": ["disambiguation", "section-context"]
+  },
+  {
+    "id": "disamb-006",
+    "query": "click sign in",
+    "snapshot": "login-page.json",
+    "expect_ref": "e4",
+    "min_score": 0.4,
+    "tags": ["disambiguation", "interactive-boost", "action-verb"]
+  },
+  {
+    "id": "disamb-007",
+    "query": "settings in sidebar",
+    "snapshot": "dashboard.json",
+    "expect_ref": "e3",
+    "min_score": 0.5,
+    "tags": ["disambiguation", "section-context"]
+  },
+  {
+    "id": "disamb-008",
+    "query": "toolbar export",
+    "snapshot": "dashboard.json",
+    "expect_ref": "e8",
+    "min_score": 0.5,
+    "tags": ["disambiguation", "section-context"]
+  },
+  {
+    "id": "disamb-009",
+    "query": "header notifications",
+    "snapshot": "dashboard.json",
+    "expect_ref": "e10",
+    "min_score": 0.5,
+    "tags": ["disambiguation", "section-context"]
+  },
+  {
+    "id": "disamb-010",
+    "query": "product actions add to cart",
+    "snapshot": "ecommerce-product.json",
+    "expect_ref": "e10",
+    "min_score": 0.5,
+    "tags": ["disambiguation", "section-context"]
+  },
+  {
+    "id": "disamb-011",
+    "query": "product details reviews tab",
+    "snapshot": "ecommerce-product.json",
+    "expect_ref": "e15",
+    "min_score": 0.4,
+    "tags": ["disambiguation", "section-context"]
+  }
+]

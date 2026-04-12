@@ -1,0 +1,110 @@
+[
+  {
+    "ref": "e0",
+    "role": "link",
+    "name": "About",
+    "interactive": true
+  },
+  {
+    "ref": "e1",
+    "role": "link",
+    "name": "Store",
+    "interactive": true
+  },
+  {
+    "ref": "e2",
+    "role": "link",
+    "name": "Advertising",
+    "interactive": true
+  },
+  {
+    "ref": "e3",
+    "role": "link",
+    "name": "Business",
+    "interactive": true
+  },
+  {
+    "ref": "e4",
+    "role": "link",
+    "name": "How Search works",
+    "interactive": true
+  },
+  {
+    "ref": "e5",
+    "role": "link",
+    "name": "Applying AI towards science and the environment",
+    "interactive": true
+  },
+  {
+    "ref": "e6",
+    "role": "link",
+    "name": "Privacy",
+    "interactive": true
+  },
+  {
+    "ref": "e7",
+    "role": "link",
+    "name": "Terms",
+    "interactive": true
+  },
+  {
+    "ref": "e8",
+    "role": "button",
+    "name": "Settings",
+    "interactive": true
+  },
+  {
+    "ref": "e9",
+    "role": "link",
+    "name": "Sign in",
+    "interactive": true
+  },
+  {
+    "ref": "e10",
+    "role": "link",
+    "name": "Gmail ",
+    "interactive": true
+  },
+  {
+    "ref": "e11",
+    "role": "link",
+    "name": "Search for Images ",
+    "interactive": true
+  },
+  {
+    "ref": "e12",
+    "role": "button",
+    "name": "Google apps",
+    "interactive": true
+  },
+  {
+    "ref": "e13",
+    "role": "combobox",
+    "name": "Search",
+    "interactive": true
+  },
+  {
+    "ref": "e14",
+    "role": "button",
+    "name": "Search by voice",
+    "interactive": true
+  },
+  {
+    "ref": "e15",
+    "role": "button",
+    "name": "Search by image",
+    "interactive": true
+  },
+  {
+    "ref": "e16",
+    "role": "button",
+    "name": "Google Search",
+    "interactive": true
+  },
+  {
+    "ref": "e17",
+    "role": "button",
+    "name": "I'm Feeling Lucky",
+    "interactive": true
+  }
+]

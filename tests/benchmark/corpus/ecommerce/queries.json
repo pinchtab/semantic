@@ -1,0 +1,84 @@
+[
+  {
+    "id": "ecom-001",
+    "query": "add to cart",
+    "relevant_refs": ["e10"],
+    "partially_relevant_refs": ["e11"],
+    "difficulty": "easy",
+    "tags": ["action", "button", "exact"]
+  },
+  {
+    "id": "ecom-002",
+    "query": "buy now",
+    "relevant_refs": ["e11"],
+    "partially_relevant_refs": ["e10"],
+    "difficulty": "easy",
+    "tags": ["action", "button", "exact"]
+  },
+  {
+    "id": "ecom-003",
+    "query": "purchase this item",
+    "relevant_refs": ["e11", "e10"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["action", "synonym"]
+  },
+  {
+    "id": "ecom-004",
+    "query": "change quantity",
+    "relevant_refs": ["e8"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["input", "spinbutton"]
+  },
+  {
+    "id": "ecom-005",
+    "query": "select color",
+    "relevant_refs": ["e9"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["input", "combobox"]
+  },
+  {
+    "id": "ecom-006",
+    "query": "save for later",
+    "relevant_refs": ["e12"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["action", "synonym"],
+    "notes": "wishlist button"
+  },
+  {
+    "id": "ecom-007",
+    "query": "read reviews",
+    "relevant_refs": ["e15"],
+    "partially_relevant_refs": ["e13"],
+    "difficulty": "easy",
+    "tags": ["navigation", "tab"]
+  },
+  {
+    "id": "ecom-008",
+    "query": "check shipping",
+    "relevant_refs": ["e16"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "tab"]
+  },
+  {
+    "id": "ecom-009",
+    "query": "view my basket",
+    "relevant_refs": ["e17"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["navigation", "synonym"],
+    "notes": "view cart link"
+  },
+  {
+    "id": "ecom-010",
+    "query": "next image",
+    "relevant_refs": ["e5"],
+    "partially_relevant_refs": ["e4"],
+    "difficulty": "easy",
+    "tags": ["action", "button", "exact"]
+  }
+]

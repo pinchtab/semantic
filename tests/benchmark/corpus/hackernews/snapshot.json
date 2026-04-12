@@ -1,0 +1,362 @@
+[
+  {
+    "ref": "e0",
+    "role": "link",
+    "name": "Guidelines",
+    "interactive": true
+  },
+  {
+    "ref": "e1",
+    "role": "link",
+    "name": "FAQ",
+    "interactive": true
+  },
+  {
+    "ref": "e2",
+    "role": "link",
+    "name": "Lists",
+    "interactive": true
+  },
+  {
+    "ref": "e3",
+    "role": "link",
+    "name": "API",
+    "interactive": true
+  },
+  {
+    "ref": "e4",
+    "role": "link",
+    "name": "Security",
+    "interactive": true
+  },
+  {
+    "ref": "e5",
+    "role": "link",
+    "name": "Legal",
+    "interactive": true
+  },
+  {
+    "ref": "e6",
+    "role": "link",
+    "name": "Apply to YC",
+    "interactive": true
+  },
+  {
+    "ref": "e7",
+    "role": "link",
+    "name": "Contact",
+    "interactive": true
+  },
+  {
+    "ref": "e8",
+    "role": "textbox",
+    "name": "",
+    "interactive": true
+  },
+  {
+    "ref": "e9",
+    "role": "link",
+    "name": "",
+    "interactive": true
+  },
+  {
+    "ref": "e10",
+    "role": "link",
+    "name": "Hacker News",
+    "interactive": true
+  },
+  {
+    "ref": "e11",
+    "role": "link",
+    "name": "new",
+    "interactive": true
+  },
+  {
+    "ref": "e12",
+    "role": "link",
+    "name": "past",
+    "interactive": true
+  },
+  {
+    "ref": "e13",
+    "role": "link",
+    "name": "comments",
+    "interactive": true
+  },
+  {
+    "ref": "e14",
+    "role": "link",
+    "name": "ask",
+    "interactive": true
+  },
+  {
+    "ref": "e15",
+    "role": "link",
+    "name": "show",
+    "interactive": true
+  },
+  {
+    "ref": "e16",
+    "role": "link",
+    "name": "jobs",
+    "interactive": true
+  },
+  {
+    "ref": "e17",
+    "role": "link",
+    "name": "submit",
+    "interactive": true
+  },
+  {
+    "ref": "e18",
+    "role": "link",
+    "name": "login",
+    "interactive": true
+  },
+  {
+    "ref": "e19",
+    "role": "link",
+    "name": "Pro Max 5x Quota Exhausted in 1.5 Hours Despite Moderate Usage",
+    "interactive": true
+  },
+  {
+    "ref": "e20",
+    "role": "link",
+    "name": "github.com/anthropics",
+    "interactive": true
+  },
+  {
+    "ref": "e21",
+    "role": "link",
+    "name": "cmaster11",
+    "interactive": true
+  },
+  {
+    "ref": "e22",
+    "role": "link",
+    "name": "hide",
+    "interactive": true
+  },
+  {
+    "ref": "e23",
+    "role": "link",
+    "name": "120 comments",
+    "interactive": true
+  },
+  {
+    "ref": "e24",
+    "role": "link",
+    "name": "We have a 99% email reputation. Gmail disagrees",
+    "interactive": true
+  },
+  {
+    "ref": "e25",
+    "role": "link",
+    "name": "blogfontawesome.wpcomstaging.com",
+    "interactive": true
+  },
+  {
+    "ref": "e26",
+    "role": "link",
+    "name": "em-bee",
+    "interactive": true
+  },
+  {
+    "ref": "e27",
+    "role": "link",
+    "name": "hide",
+    "interactive": true
+  },
+  {
+    "ref": "e28",
+    "role": "link",
+    "name": "27 comments",
+    "interactive": true
+  },
+  {
+    "ref": "e29",
+    "role": "link",
+    "name": "Why AI Sucks at Front End",
+    "interactive": true
+  },
+  {
+    "ref": "e30",
+    "role": "link",
+    "name": "nerdy.dev",
+    "interactive": true
+  },
+  {
+    "ref": "e31",
+    "role": "link",
+    "name": "tobr",
+    "interactive": true
+  },
+  {
+    "ref": "e32",
+    "role": "link",
+    "name": "hide",
+    "interactive": true
+  },
+  {
+    "ref": "e33",
+    "role": "link",
+    "name": "28 comments",
+    "interactive": true
+  },
+  {
+    "ref": "e34",
+    "role": "link",
+    "name": "JVM Options Explorer",
+    "interactive": true
+  },
+  {
+    "ref": "e35",
+    "role": "link",
+    "name": "chriswhocodes.com",
+    "interactive": true
+  },
+  {
+    "ref": "e36",
+    "role": "link",
+    "name": "0x54MUR41",
+    "interactive": true
+  },
+  {
+    "ref": "e37",
+    "role": "link",
+    "name": "hide",
+    "interactive": true
+  },
+  {
+    "ref": "e38",
+    "role": "link",
+    "name": "39 comments",
+    "interactive": true
+  },
+  {
+    "ref": "e39",
+    "role": "link",
+    "name": "Tell HN: OpenAI silently removed Study Mode from ChatGPT",
+    "interactive": true
+  },
+  {
+    "ref": "e40",
+    "role": "link",
+    "name": "smokel",
+    "interactive": true
+  },
+  {
+    "ref": "e41",
+    "role": "link",
+    "name": "hide",
+    "interactive": true
+  },
+  {
+    "ref": "e42",
+    "role": "link",
+    "name": "11 comments",
+    "interactive": true
+  },
+  {
+    "ref": "e43",
+    "role": "link",
+    "name": "Bring Back Idiomatic Design",
+    "interactive": true
+  },
+  {
+    "ref": "e44",
+    "role": "link",
+    "name": "johnloeber.com",
+    "interactive": true
+  },
+  {
+    "ref": "e45",
+    "role": "link",
+    "name": "phil294",
+    "interactive": true
+  },
+  {
+    "ref": "e46",
+    "role": "link",
+    "name": "hide",
+    "interactive": true
+  },
+  {
+    "ref": "e47",
+    "role": "link",
+    "name": "10 comments",
+    "interactive": true
+  },
+  {
+    "ref": "e48",
+    "role": "link",
+    "name": "AI Will Be Met with Violence, and Nothing Good Will Come of It",
+    "interactive": true
+  },
+  {
+    "ref": "e49",
+    "role": "link",
+    "name": "thealgorithmicbridge.com",
+    "interactive": true
+  },
+  {
+    "ref": "e50",
+    "role": "link",
+    "name": "gHeadphone",
+    "interactive": true
+  },
+  {
+    "ref": "e51",
+    "role": "link",
+    "name": "hide",
+    "interactive": true
+  },
+  {
+    "ref": "e52",
+    "role": "link",
+    "name": "250 comments",
+    "interactive": true
+  },
+  {
+    "ref": "e53",
+    "role": "link",
+    "name": "Show HN: Oberon System 3 runs natively on Raspberry Pi 3 (with ready SD card)",
+    "interactive": true
+  },
+  {
+    "ref": "e54",
+    "role": "link",
+    "name": "github.com/rochus-keller",
+    "interactive": true
+  },
+  {
+    "ref": "e55",
+    "role": "link",
+    "name": "Rochus",
+    "interactive": true
+  },
+  {
+    "ref": "e56",
+    "role": "link",
+    "name": "hide",
+    "interactive": true
+  },
+  {
+    "ref": "e57",
+    "role": "link",
+    "name": "1 comment",
+    "interactive": true
+  },
+  {
+    "ref": "e58",
+    "role": "link",
+    "name": "Tell HN: docker pull fails in spain due to football cloudflare block",
+    "interactive": true
+  },
+  {
+    "ref": "e59",
+    "role": "link",
+    "name": "littlecranky67",
+    "interactive": true
+  }
+]
