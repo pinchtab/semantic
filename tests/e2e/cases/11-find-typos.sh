@@ -1,9 +1,10 @@
 #!/bin/bash
-source /e2e/lib.sh
+CASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${CASE_DIR}/../lib.sh"
 
 echo "  -- Find: Typo Tolerance --"
 
-SNAPSHOT="/testdata/snapshots/login-page.json"
+SNAPSHOT="${ASSETS_DIR}/snapshots/login-page.json"
 
 # sigin → sign in (transposition)
 result=$(semantic find "sigin button" --snapshot "$SNAPSHOT" --format json)
@@ -26,7 +27,7 @@ result=$(semantic find "crate account" --snapshot "$SNAPSHOT" --format json --th
 assert_json_field "$result" ".best_ref" "e6" "typo: crate → create (e6)"
 
 # Ecommerce typos
-ECOM="/testdata/snapshots/ecommerce-product.json"
+ECOM="${ASSETS_DIR}/snapshots/ecommerce-product.json"
 
 # ad to cart → add to cart (missing letter)
 result=$(semantic find "ad to cart" --snapshot "$ECOM" --format json)
@@ -42,7 +43,7 @@ count=$(echo "$result" | jq '.matches | length')
 assert_gte "$count" "1" "typo: buton matches at least one button"
 
 # Dashboard typos
-DASH="/testdata/snapshots/dashboard.json"
+DASH="${ASSETS_DIR}/snapshots/dashboard.json"
 
 # serch → search (missing letter)
 result=$(semantic find "serch projects" --snapshot "$DASH" --format json)

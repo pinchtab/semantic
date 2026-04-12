@@ -1,9 +1,10 @@
 #!/bin/bash
-source /e2e/lib.sh
+CASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${CASE_DIR}/../lib.sh"
 
 echo "  -- Find: Context Disambiguation --"
 
-MULTI="/testdata/snapshots/multi-form.json"
+MULTI="${ASSETS_DIR}/snapshots/multi-form.json"
 
 # Section disambiguation: multiple Submit buttons
 result=$(semantic find "submit in login" --snapshot "$MULTI" --format json)
@@ -23,7 +24,7 @@ result=$(semantic find "payment card" --snapshot "$MULTI" --format json)
 assert_json_field "$result" ".best_ref" "e4" "context: payment card → e4"
 
 # Interactive element boosting for action queries
-LOGIN="/testdata/snapshots/login-page.json"
+LOGIN="${ASSETS_DIR}/snapshots/login-page.json"
 
 # "click sign in" should prefer interactive button over non-interactive elements
 result=$(semantic find "click sign in" --snapshot "$LOGIN" --format json)
@@ -31,7 +32,7 @@ assert_json_field "$result" ".best_ref" "e4" "interactive: click sign in → e4 
 assert_json_gte "$result" ".best_score" "0.4" "interactive: action query has good score"
 
 # Dashboard context
-DASH="/testdata/snapshots/dashboard.json"
+DASH="${ASSETS_DIR}/snapshots/dashboard.json"
 
 # Sidebar vs Toolbar elements
 result=$(semantic find "settings in sidebar" --snapshot "$DASH" --format json)
@@ -45,7 +46,7 @@ result=$(semantic find "header notifications" --snapshot "$DASH" --format json)
 assert_json_field "$result" ".best_ref" "e10" "context: header notifications → e10"
 
 # Ecommerce context
-ECOM="/testdata/snapshots/ecommerce-product.json"
+ECOM="${ASSETS_DIR}/snapshots/ecommerce-product.json"
 
 # Product Actions section
 result=$(semantic find "product actions add to cart" --snapshot "$ECOM" --format json)

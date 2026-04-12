@@ -1,9 +1,10 @@
 #!/bin/bash
-source /e2e/lib.sh
+CASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${CASE_DIR}/../lib.sh"
 
 echo "  ── Find: Adversarial / Edge Cases ──"
 
-SNAPSHOT="/testdata/snapshots/login-page.json"
+SNAPSHOT="${ASSETS_DIR}/snapshots/login-page.json"
 
 # All-stopword query (should not crash)
 set +e

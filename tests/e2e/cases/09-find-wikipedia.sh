@@ -1,9 +1,10 @@
 #!/bin/bash
-source /e2e/lib.sh
+CASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${CASE_DIR}/../lib.sh"
 
 echo "  ── Find: Wikipedia Article Page ──"
 
-SNAPSHOT="/testdata/snapshots/wikipedia-article.json"
+SNAPSHOT="${ASSETS_DIR}/snapshots/wikipedia-article.json"
 
 # Direct matches
 result=$(semantic find "edit" --snapshot "$SNAPSHOT" --format json)

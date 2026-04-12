@@ -1,6 +1,16 @@
 #!/bin/bash
 # E2E test helper library
 
+# Compute paths - support both container (/e2e, /testdata) and local development
+if [ -d "/e2e" ]; then
+  E2E_DIR="/e2e"
+  ASSETS_DIR="/testdata"
+else
+  # Find lib.sh location and compute paths from there
+  E2E_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  ASSETS_DIR="${E2E_DIR}/assets"
+fi
+
 PASSED=0
 FAILED=0
 ERRORS=""
