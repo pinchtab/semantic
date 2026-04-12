@@ -24,7 +24,8 @@ run_suite() {
 }
 
 # Run all test suites
-for suite in /e2e/cases/*.sh; do
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+for suite in "${SCRIPT_DIR}"/cases/*.sh; do
   [ -f "$suite" ] || continue
   echo ""
   run_suite "$suite"

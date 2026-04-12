@@ -1,0 +1,122 @@
+[
+  {
+    "id": "basic-001",
+    "query": "sign in button",
+    "snapshot": "login-page.json",
+    "expect_ref": "e4",
+    "min_score": 0.5,
+    "tags": ["login", "button", "exact-match"]
+  },
+  {
+    "id": "basic-002",
+    "query": "email input",
+    "snapshot": "login-page.json",
+    "expect_ref": "e1",
+    "min_score": 0.4,
+    "tags": ["login", "input", "exact-match"]
+  },
+  {
+    "id": "basic-003",
+    "query": "password field",
+    "snapshot": "login-page.json",
+    "expect_ref": "e2",
+    "min_score": 0.4,
+    "tags": ["login", "input"]
+  },
+  {
+    "id": "basic-004",
+    "query": "add to cart",
+    "snapshot": "ecommerce-product.json",
+    "expect_ref": "e10",
+    "min_score": 0.5,
+    "tags": ["ecommerce", "button", "exact-match"]
+  },
+  {
+    "id": "basic-005",
+    "query": "quantity",
+    "snapshot": "ecommerce-product.json",
+    "expect_ref": "e8",
+    "min_score": 0.4,
+    "tags": ["ecommerce", "input"]
+  },
+  {
+    "id": "basic-006",
+    "query": "search box",
+    "snapshot": "dashboard.json",
+    "expect_ref": "e6",
+    "min_score": 0.4,
+    "tags": ["dashboard", "input"]
+  },
+  {
+    "id": "basic-007",
+    "query": "log out",
+    "snapshot": "dashboard.json",
+    "expect_ref": "e15",
+    "min_score": 0.5,
+    "tags": ["dashboard", "button"]
+  },
+  {
+    "id": "basic-008",
+    "query": "next page",
+    "snapshot": "google-search.json",
+    "expect_ref": "e9",
+    "min_score": 0.5,
+    "tags": ["search", "pagination"]
+  },
+  {
+    "id": "basic-009",
+    "query": "star button",
+    "snapshot": "github-repo.json",
+    "expect_ref": "e10",
+    "min_score": 0.5,
+    "tags": ["github", "button"]
+  },
+  {
+    "id": "basic-010",
+    "query": "fork",
+    "snapshot": "github-repo.json",
+    "expect_ref": "e9",
+    "min_score": 0.5,
+    "tags": ["github", "button"]
+  },
+  {
+    "id": "basic-011",
+    "query": "pull requests tab",
+    "snapshot": "github-repo.json",
+    "expect_ref": "e4",
+    "min_score": 0.4,
+    "tags": ["github", "tab"]
+  },
+  {
+    "id": "basic-012",
+    "query": "edit",
+    "snapshot": "wikipedia-article.json",
+    "expect_ref": "e6",
+    "min_score": 0.4,
+    "tags": ["wikipedia", "link"]
+  },
+  {
+    "id": "basic-013",
+    "query": "search wikipedia",
+    "snapshot": "wikipedia-article.json",
+    "expect_ref": "e0",
+    "min_score": 0.4,
+    "tags": ["wikipedia", "input"]
+  },
+  {
+    "id": "basic-014",
+    "query": "buy now",
+    "snapshot": "ecommerce-product.json",
+    "expect_ref": "e11",
+    "min_score": 0.5,
+    "tags": ["ecommerce", "button", "exact-match"]
+  },
+  {
+    "id": "basic-015",
+    "query": "images tab",
+    "snapshot": "google-search.json",
+    "expect_ref": "e4",
+    "min_score": 0.4,
+    "tags": ["search", "tab"]
+  }
+]

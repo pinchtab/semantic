@@ -1,5 +1,6 @@
 #!/bin/bash
-source /e2e/lib.sh
+CASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${CASE_DIR}/../lib.sh"
 
 echo "  ── Fixtures: Query Fixture Files ──"
 
@@ -24,7 +25,7 @@ run_fixture_file() {
     local label="${name}[${i}]"
     [ -n "$note" ] && label="${name}: ${note}"
 
-    local args=("--snapshot" "/testdata/snapshots/${snapshot}" "--format" "json")
+    local args=("--snapshot" "${ASSETS_DIR}/snapshots/${snapshot}" "--format" "json")
     [ -n "$threshold" ] && args+=("--threshold" "$threshold")
 
     set +e
@@ -86,7 +87,7 @@ run_fixture_file() {
   done
 }
 
-for fixture in /testdata/queries/*.json; do
+for fixture in ${ASSETS_DIR}/queries/*.json; do
   [ -f "$fixture" ] || continue
   run_fixture_file "$fixture"
 done

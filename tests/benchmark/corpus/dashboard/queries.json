@@ -1,0 +1,82 @@
+[
+  {
+    "id": "dash-001",
+    "query": "log out",
+    "relevant_refs": ["e15"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["action", "button", "exact"]
+  },
+  {
+    "id": "dash-002",
+    "query": "sign out",
+    "relevant_refs": ["e15"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["action", "button", "synonym"]
+  },
+  {
+    "id": "dash-003",
+    "query": "search for project",
+    "relevant_refs": ["e6"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["input", "searchbox"]
+  },
+  {
+    "id": "dash-004",
+    "query": "create new project",
+    "relevant_refs": ["e5"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["action", "button", "exact"]
+  },
+  {
+    "id": "dash-005",
+    "query": "export data",
+    "relevant_refs": ["e8"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["action", "button", "exact"]
+  },
+  {
+    "id": "dash-006",
+    "query": "download report",
+    "relevant_refs": ["e8"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["action", "synonym"]
+  },
+  {
+    "id": "dash-007",
+    "query": "go to settings",
+    "relevant_refs": ["e3"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "dash-008",
+    "query": "open preferences",
+    "relevant_refs": ["e3"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["navigation", "synonym"]
+  },
+  {
+    "id": "dash-009",
+    "query": "view analytics",
+    "relevant_refs": ["e2"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "dash-010",
+    "query": "delete this item",
+    "relevant_refs": ["e14"],
+    "partially_relevant_refs": ["e13"],
+    "difficulty": "easy",
+    "tags": ["action", "button"]
+  }
+]

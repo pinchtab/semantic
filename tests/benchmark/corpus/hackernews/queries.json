@@ -1,0 +1,82 @@
+[
+  {
+    "id": "hn-001",
+    "query": "login",
+    "relevant_refs": ["e18"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link", "auth"]
+  },
+  {
+    "id": "hn-002",
+    "query": "submit story",
+    "relevant_refs": ["e17"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["action", "link"]
+  },
+  {
+    "id": "hn-003",
+    "query": "view new posts",
+    "relevant_refs": ["e11"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "hn-004",
+    "query": "read comments",
+    "relevant_refs": ["e13"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "hn-005",
+    "query": "ask hn",
+    "relevant_refs": ["e14"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "hn-006",
+    "query": "show hn",
+    "relevant_refs": ["e15"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "hn-007",
+    "query": "job listings",
+    "relevant_refs": ["e16"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "hn-008",
+    "query": "site guidelines",
+    "relevant_refs": ["e0"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "hn-009",
+    "query": "read faq",
+    "relevant_refs": ["e1"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["navigation", "link"]
+  },
+  {
+    "id": "hn-010",
+    "query": "apply to yc",
+    "relevant_refs": ["e6"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["navigation", "link"]
+  }
+]

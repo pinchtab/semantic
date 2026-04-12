@@ -1,0 +1,84 @@
+[
+  {
+    "id": "login-001",
+    "query": "sign in",
+    "relevant_refs": ["e4"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["action", "button", "exact"]
+  },
+  {
+    "id": "login-002",
+    "query": "log in",
+    "relevant_refs": ["e4"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["action", "button", "synonym"]
+  },
+  {
+    "id": "login-003",
+    "query": "enter email",
+    "relevant_refs": ["e1"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["input", "textbox"]
+  },
+  {
+    "id": "login-004",
+    "query": "type password",
+    "relevant_refs": ["e2"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["input", "textbox"]
+  },
+  {
+    "id": "login-005",
+    "query": "reset my password",
+    "relevant_refs": ["e5"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["link", "synonym"],
+    "notes": "forgot password link"
+  },
+  {
+    "id": "login-006",
+    "query": "create new account",
+    "relevant_refs": ["e6"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["link", "exact"]
+  },
+  {
+    "id": "login-007",
+    "query": "register",
+    "relevant_refs": ["e6"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["link", "synonym"]
+  },
+  {
+    "id": "login-008",
+    "query": "use Google",
+    "relevant_refs": ["e7"],
+    "partially_relevant_refs": ["e8"],
+    "difficulty": "easy",
+    "tags": ["button", "social"]
+  },
+  {
+    "id": "login-009",
+    "query": "sigin button",
+    "relevant_refs": ["e4"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["typo", "button"]
+  },
+  {
+    "id": "login-010",
+    "query": "keep me logged in",
+    "relevant_refs": ["e3"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["checkbox", "implicit"],
+    "notes": "remember me checkbox"
+  }
+]

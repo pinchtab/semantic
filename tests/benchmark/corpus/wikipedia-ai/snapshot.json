@@ -1,0 +1,562 @@
+[
+  {
+    "ref": "e0",
+    "role": "link",
+    "name": "Jump to content",
+    "interactive": true,
+    "section": "Header"
+  },
+  {
+    "ref": "e1",
+    "role": "link",
+    "name": "Wikipedia The Free Encyclopedia",
+    "interactive": true,
+    "section": "Header"
+  },
+  {
+    "ref": "e2",
+    "role": "button",
+    "name": "Main menu",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e3",
+    "role": "button",
+    "name": "Search",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e4",
+    "role": "button",
+    "name": "Go to an article in another language. Available in 175 languages",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e5",
+    "role": "link",
+    "name": "Creative Commons Attribution-ShareAlike 4.0 License",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e6",
+    "role": "link",
+    "name": "Terms of Use",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e7",
+    "role": "link",
+    "name": "Privacy Policy",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e8",
+    "role": "link",
+    "name": "Wikimedia Foundation, Inc.",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e9",
+    "role": "link",
+    "name": "Privacy policy",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e10",
+    "role": "link",
+    "name": "About Wikipedia",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e11",
+    "role": "link",
+    "name": "Disclaimers",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e12",
+    "role": "link",
+    "name": "Contact Wikipedia",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e13",
+    "role": "link",
+    "name": "Legal & safety contacts",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e14",
+    "role": "link",
+    "name": "Code of Conduct",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e15",
+    "role": "link",
+    "name": "Developers",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e16",
+    "role": "link",
+    "name": "Statistics",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e17",
+    "role": "link",
+    "name": "Cookie statement",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e18",
+    "role": "link",
+    "name": "Mobile view",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e19",
+    "role": "link",
+    "name": "Wikimedia Foundation",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e20",
+    "role": "link",
+    "name": "Powered by MediaWiki",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e21",
+    "role": "searchbox",
+    "name": "Search Wikipedia",
+    "interactive": true,
+    "section": "Content"
+  },
+  {
+    "ref": "e22",
+    "role": "link",
+    "name": "Donate",
+    "interactive": true,
+    "section": "Content"
+  },
+  {
+    "ref": "e23",
+    "role": "link",
+    "name": "Create account",
+    "interactive": true,
+    "section": "Content"
+  },
+  {
+    "ref": "e24",
+    "role": "link",
+    "name": "Log in",
+    "interactive": true,
+    "section": "Content"
+  },
+  {
+    "ref": "e25",
+    "role": "button",
+    "name": "Tools",
+    "interactive": true,
+    "section": "Content"
+  },
+  {
+    "ref": "e26",
+    "role": "link",
+    "name": "AI (disambiguation)",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e27",
+    "role": "link",
+    "name": "Artificial intelligence (disambiguation)",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e28",
+    "role": "button",
+    "name": "[show]",
+    "interactive": true,
+    "section": "Content"
+  },
+  {
+    "ref": "e29",
+    "role": "button",
+    "name": "[show]",
+    "interactive": true,
+    "section": "Content"
+  },
+  {
+    "ref": "e30",
+    "role": "button",
+    "name": "[show]",
+    "interactive": true,
+    "section": "Content"
+  },
+  {
+    "ref": "e31",
+    "role": "button",
+    "name": "[show]",
+    "interactive": true,
+    "section": "Content"
+  },
+  {
+    "ref": "e32",
+    "role": "button",
+    "name": "[show]",
+    "interactive": true,
+    "section": "Content"
+  },
+  {
+    "ref": "e33",
+    "role": "button",
+    "name": "[show]",
+    "interactive": true,
+    "section": "Content"
+  },
+  {
+    "ref": "e34",
+    "role": "button",
+    "name": "[show]",
+    "interactive": true,
+    "section": "Content"
+  },
+  {
+    "ref": "e35",
+    "role": "link",
+    "name": "computational systems",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e36",
+    "role": "link",
+    "name": "human intelligence",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e37",
+    "role": "link",
+    "name": "learning",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e38",
+    "role": "link",
+    "name": "reasoning",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e39",
+    "role": "link",
+    "name": "problem-solving",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e40",
+    "role": "link",
+    "name": "perception",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e41",
+    "role": "link",
+    "name": "decision-making",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e42",
+    "role": "link",
+    "name": "field of research",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e43",
+    "role": "link",
+    "name": "engineering",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e44",
+    "role": "link",
+    "name": "mathematics",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e45",
+    "role": "link",
+    "name": "computer science",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e46",
+    "role": "link",
+    "name": "software",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e47",
+    "role": "link",
+    "name": "learning",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e48",
+    "role": "link",
+    "name": "intelligence",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e49",
+    "role": "link",
+    "name": "applications of AI",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e50",
+    "role": "link",
+    "name": "web search engines",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e51",
+    "role": "link",
+    "name": "chatbots",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e52",
+    "role": "link",
+    "name": "virtual assistants",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e53",
+    "role": "link",
+    "name": "autonomous vehicles",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e54",
+    "role": "link",
+    "name": "strategy games",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e55",
+    "role": "link",
+    "name": "chess",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e56",
+    "role": "link",
+    "name": "Go",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e57",
+    "role": "link",
+    "name": "generative AI",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e58",
+    "role": "link",
+    "name": "reasoning",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e59",
+    "role": "link",
+    "name": "knowledge representation",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e60",
+    "role": "link",
+    "name": "planning",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e61",
+    "role": "link",
+    "name": "natural language processing",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e62",
+    "role": "link",
+    "name": "perception",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e63",
+    "role": "link",
+    "name": "robotics",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e64",
+    "role": "link",
+    "name": "state space search",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e65",
+    "role": "link",
+    "name": "mathematical optimization",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e66",
+    "role": "link",
+    "name": "formal logic",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e67",
+    "role": "link",
+    "name": "artificial neural networks",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e68",
+    "role": "link",
+    "name": "statistics",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e69",
+    "role": "link",
+    "name": "operations research",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e70",
+    "role": "link",
+    "name": "economics",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e71",
+    "role": "link",
+    "name": "psychology",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e72",
+    "role": "link",
+    "name": "linguistics",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e73",
+    "role": "link",
+    "name": "philosophy",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e74",
+    "role": "link",
+    "name": "neuroscience",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e75",
+    "role": "link",
+    "name": "OpenAI",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e76",
+    "role": "link",
+    "name": "Google DeepMind",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e77",
+    "role": "link",
+    "name": "Meta",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e78",
+    "role": "link",
+    "name": "artificial general intelligence",
+    "interactive": true,
+    "section": "Navigation"
+  },
+  {
+    "ref": "e79",
+    "role": "link",
+    "name": "its history",
+    "interactive": true,
+    "section": "Navigation"
+  }
+]

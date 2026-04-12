@@ -1,0 +1,86 @@
+[
+  {
+    "id": "class-001",
+    "error": "Could not find node with given id",
+    "expected_type": "element_not_found",
+    "recoverable": true,
+    "comment": "Matches 'node with given id' pattern"
+  },
+  {
+    "id": "class-002",
+    "error": "node is detached from document",
+    "expected_type": "element_stale",
+    "recoverable": true,
+    "comment": "Matches 'detached' pattern for stale elements"
+  },
+  {
+    "id": "class-003",
+    "error": "Execution context was destroyed",
+    "expected_type": "element_stale",
+    "recoverable": true,
+    "comment": "Matches 'execution context was destroyed' pattern"
+  },
+  {
+    "id": "class-004",
+    "error": "net::ERR_CONNECTION_REFUSED",
+    "expected_type": "network",
+    "recoverable": false,
+    "comment": "Matches 'net::' pattern"
+  },
+  {
+    "id": "class-005",
+    "error": "net::ERR_NAME_NOT_RESOLVED",
+    "expected_type": "network",
+    "recoverable": false,
+    "comment": "Matches 'net::' pattern"
+  },
+  {
+    "id": "class-006",
+    "error": "Navigating frame was detached",
+    "expected_type": "navigation",
+    "recoverable": true,
+    "comment": "Matches 'frame detached' pattern"
+  },
+  {
+    "id": "class-007",
+    "error": "Page was destroyed while navigating",
+    "expected_type": "navigation",
+    "recoverable": true,
+    "comment": "Matches 'page was destroyed' pattern"
+  },
+  {
+    "id": "class-008",
+    "error": "Element is not visible in viewport",
+    "expected_type": "element_not_interactable",
+    "recoverable": true,
+    "comment": "Matches 'not visible' pattern"
+  },
+  {
+    "id": "class-009",
+    "error": "Element is obscured by another element",
+    "expected_type": "element_not_interactable",
+    "recoverable": true,
+    "comment": "Matches 'obscured' pattern"
+  },
+  {
+    "id": "class-010",
+    "error": "random unknown error occurred",
+    "expected_type": "unknown",
+    "recoverable": false,
+    "comment": "No pattern match, falls through to unknown"
+  },
+  {
+    "id": "class-011",
+    "error": "timeout while waiting for selector",
+    "expected_type": "network",
+    "recoverable": false,
+    "comment": "Matches 'timeout' pattern (network category)"
+  },
+  {
+    "id": "class-012",
+    "error": "stale element reference",
+    "expected_type": "element_stale",
+    "recoverable": true,
+    "comment": "Matches 'stale' pattern"
+  }
+]

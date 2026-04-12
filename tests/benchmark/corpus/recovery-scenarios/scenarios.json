@@ -1,0 +1,162 @@
+[
+  {
+    "id": "recovery-001",
+    "name": "Element renamed",
+    "description": "Button text changed from 'Submit' to 'Send'",
+    "original_query": "submit button",
+    "original_ref": "e3",
+    "before": [
+      {"ref": "e1", "role": "textbox", "name": "Email"},
+      {"ref": "e2", "role": "textbox", "name": "Message"},
+      {"ref": "e3", "role": "button", "name": "Submit"}
+    ],
+    "after": [
+      {"ref": "e1", "role": "textbox", "name": "Email"},
+      {"ref": "e2", "role": "textbox", "name": "Message"},
+      {"ref": "e3", "role": "button", "name": "Send"}
+    ],
+    "expected_ref": "e3",
+    "difficulty": "easy"
+  },
+  {
+    "id": "recovery-002",
+    "name": "Element shifted",
+    "description": "New element inserted, refs shifted",
+    "original_query": "sign in button",
+    "original_ref": "e2",
+    "before": [
+      {"ref": "e1", "role": "textbox", "name": "Username"},
+      {"ref": "e2", "role": "button", "name": "Sign In"}
+    ],
+    "after": [
+      {"ref": "e1", "role": "textbox", "name": "Username"},
+      {"ref": "e2", "role": "textbox", "name": "Password"},
+      {"ref": "e3", "role": "button", "name": "Sign In"}
+    ],
+    "expected_ref": "e3",
+    "difficulty": "medium"
+  },
+  {
+    "id": "recovery-003",
+    "name": "Element moved in DOM",
+    "description": "Same element, different position and ref",
+    "original_query": "add to cart",
+    "original_ref": "e5",
+    "before": [
+      {"ref": "e1", "role": "heading", "name": "Product"},
+      {"ref": "e2", "role": "text", "name": "$99"},
+      {"ref": "e3", "role": "button", "name": "Wishlist"},
+      {"ref": "e4", "role": "button", "name": "Compare"},
+      {"ref": "e5", "role": "button", "name": "Add to Cart"}
+    ],
+    "after": [
+      {"ref": "e1", "role": "heading", "name": "Product"},
+      {"ref": "e2", "role": "button", "name": "Add to Cart"},
+      {"ref": "e3", "role": "text", "name": "$99"},
+      {"ref": "e4", "role": "button", "name": "Wishlist"}
+    ],
+    "expected_ref": "e2",
+    "difficulty": "medium"
+  },
+  {
+    "id": "recovery-004",
+    "name": "Similar elements added",
+    "description": "Multiple similar buttons added, must find original",
+    "original_query": "checkout button",
+    "original_ref": "e3",
+    "before": [
+      {"ref": "e1", "role": "text", "name": "Cart (2 items)"},
+      {"ref": "e2", "role": "button", "name": "Continue Shopping"},
+      {"ref": "e3", "role": "button", "name": "Checkout"}
+    ],
+    "after": [
+      {"ref": "e1", "role": "text", "name": "Cart (2 items)"},
+      {"ref": "e2", "role": "button", "name": "Continue Shopping"},
+      {"ref": "e3", "role": "button", "name": "Express Checkout"},
+      {"ref": "e4", "role": "button", "name": "Checkout"},
+      {"ref": "e5", "role": "button", "name": "PayPal Checkout"}
+    ],
+    "expected_ref": "e4",
+    "expected_alt": ["e3"],
+    "difficulty": "hard"
+  },
+  {
+    "id": "recovery-005",
+    "name": "Section context preserved",
+    "description": "Element in same section survives re-render",
+    "original_query": "submit in login form",
+    "original_ref": "e4",
+    "before": [
+      {"ref": "e1", "role": "textbox", "name": "Email", "section": "Login"},
+      {"ref": "e2", "role": "textbox", "name": "Password", "section": "Login"},
+      {"ref": "e3", "role": "checkbox", "name": "Remember", "section": "Login"},
+      {"ref": "e4", "role": "button", "name": "Submit", "section": "Login"}
+    ],
+    "after": [
+      {"ref": "e1", "role": "heading", "name": "Welcome", "section": "Header"},
+      {"ref": "e2", "role": "textbox", "name": "Email", "section": "Login"},
+      {"ref": "e3", "role": "textbox", "name": "Password", "section": "Login"},
+      {"ref": "e4", "role": "link", "name": "Forgot Password", "section": "Login"},
+      {"ref": "e5", "role": "button", "name": "Submit", "section": "Login"}
+    ],
+    "expected_ref": "e5",
+    "difficulty": "medium"
+  },
+  {
+    "id": "recovery-006",
+    "name": "Element removed",
+    "description": "Original element no longer exists, fallback needed",
+    "original_query": "delete button",
+    "original_ref": "e3",
+    "before": [
+      {"ref": "e1", "role": "text", "name": "Item 1"},
+      {"ref": "e2", "role": "button", "name": "Edit"},
+      {"ref": "e3", "role": "button", "name": "Delete"}
+    ],
+    "after": [
+      {"ref": "e1", "role": "text", "name": "Item 1"},
+      {"ref": "e2", "role": "button", "name": "Edit"},
+      {"ref": "e3", "role": "button", "name": "Archive"}
+    ],
+    "expected_ref": null,
+    "expect_no_match": true,
+    "difficulty": "hard"
+  },
+  {
+    "id": "recovery-007",
+    "name": "Text slightly changed",
+    "description": "Minor text variation (capitalization, spacing)",
+    "original_query": "log out",
+    "original_ref": "e5",
+    "before": [
+      {"ref": "e5", "role": "button", "name": "Log Out"}
+    ],
+    "after": [
+      {"ref": "e5", "role": "button", "name": "Logout"}
+    ],
+    "expected_ref": "e5",
+    "difficulty": "easy"
+  },
+  {
+    "id": "recovery-008",
+    "name": "Dynamic list reorder",
+    "description": "List items reordered, find by content not position",
+    "original_query": "settings link",
+    "original_ref": "e3",
+    "before": [
+      {"ref": "e1", "role": "link", "name": "Dashboard"},
+      {"ref": "e2", "role": "link", "name": "Profile"},
+      {"ref": "e3", "role": "link", "name": "Settings"},
+      {"ref": "e4", "role": "link", "name": "Logout"}
+    ],
+    "after": [
+      {"ref": "e1", "role": "link", "name": "Dashboard"},
+      {"ref": "e2", "role": "link", "name": "Settings"},
+      {"ref": "e3", "role": "link", "name": "Profile"},
+      {"ref": "e4", "role": "link", "name": "Help"},
+      {"ref": "e5", "role": "link", "name": "Logout"}
+    ],
+    "expected_ref": "e2",
+    "difficulty": "medium"
+  }
+]

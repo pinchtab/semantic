@@ -7,14 +7,14 @@ on:
       - '**.md'
       - 'LICENSE'
       - '.gitignore'
-      - 'testdata/**'
+      - 'tests/e2e/assets/**'
   pull_request:
     branches: [main]
     paths-ignore:
       - '**.md'
       - 'LICENSE'
       - '.gitignore'
-      - 'testdata/**'
+      - 'tests/e2e/assets/**'
   workflow_dispatch:
 
 permissions:

@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "strategies": ["lexical", "embedding", "combined"],
+  "default_strategy": "combined",
+  "default_threshold": 0.3,
+  "default_top_k": 3,
+  "metrics": {
+    "min_accuracy": 0.85,
+    "min_avg_score": 0.5,
+    "max_latency_ms": 100
+  },
+  "snapshots_dir": "../e2e/assets/snapshots"
+}

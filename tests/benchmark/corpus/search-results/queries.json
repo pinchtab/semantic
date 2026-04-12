@@ -1,0 +1,82 @@
+[
+  {
+    "id": "search-001",
+    "query": "click search",
+    "relevant_refs": ["e1"],
+    "partially_relevant_refs": ["e0"],
+    "difficulty": "easy",
+    "tags": ["action", "button"]
+  },
+  {
+    "id": "search-002",
+    "query": "next page",
+    "relevant_refs": ["e9"],
+    "partially_relevant_refs": ["e10"],
+    "difficulty": "easy",
+    "tags": ["navigation", "pagination"]
+  },
+  {
+    "id": "search-003",
+    "query": "previous results",
+    "relevant_refs": ["e10"],
+    "partially_relevant_refs": ["e9"],
+    "difficulty": "easy",
+    "tags": ["navigation", "pagination"]
+  },
+  {
+    "id": "search-004",
+    "query": "filter by images",
+    "relevant_refs": ["e4"],
+    "partially_relevant_refs": ["e5", "e6"],
+    "difficulty": "easy",
+    "tags": ["navigation", "filter"]
+  },
+  {
+    "id": "search-005",
+    "query": "show videos only",
+    "relevant_refs": ["e5"],
+    "partially_relevant_refs": ["e4", "e6"],
+    "difficulty": "medium",
+    "tags": ["navigation", "filter", "implicit"]
+  },
+  {
+    "id": "search-006",
+    "query": "clear search",
+    "relevant_refs": ["e2"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["action", "button"]
+  },
+  {
+    "id": "search-007",
+    "query": "type new query",
+    "relevant_refs": ["e0"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["input", "searchbox"]
+  },
+  {
+    "id": "search-008",
+    "query": "open settings",
+    "relevant_refs": ["e11"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["action", "button"]
+  },
+  {
+    "id": "search-009",
+    "query": "login",
+    "relevant_refs": ["e12"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["action", "button", "synonym"]
+  },
+  {
+    "id": "search-010",
+    "query": "first result link",
+    "relevant_refs": ["e8"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["navigation", "link"]
+  }
+]
