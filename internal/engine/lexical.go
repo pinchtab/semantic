@@ -15,7 +15,7 @@ const (
 	// roleBoostCap prevents role boost from dominating the score.
 	roleBoostCap = 0.25
 	// synonymBoostWeight controls how much synonym matches contribute.
-	synonymBoostWeight = 0.30
+	synonymBoostWeight = 0.45
 	// prefixMatchWeight controls how much prefix matches contribute.
 	prefixMatchWeight = 0.20
 	// phraseExactBonus rewards full multi-word phrase containment.

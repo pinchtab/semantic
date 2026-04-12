@@ -216,7 +216,8 @@ func synonymScore(queryTokens, descTokens []string) float64 {
 					}
 				}
 				if allPresent {
-					matched++
+					// Count all tokens in the phrase as matched
+					matched += p.endIdx - p.startIdx + 1
 					for idx := p.startIdx; idx <= p.endIdx; idx++ {
 						consumedIdx[idx] = true
 					}
