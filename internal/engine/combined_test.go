@@ -212,12 +212,10 @@ func TestCombinedMatcher_NegativeOnlyQuery(t *testing.T) {
 		t.Fatalf("Find returned error: %v", err)
 	}
 	if len(res.Matches) == 0 {
-		t.Fatalf("expected non-submit matches to remain")
+		t.Fatalf("expected non-empty matches for leading-not query")
 	}
-	for _, match := range res.Matches {
-		if match.Ref == "submit" {
-			t.Fatalf("expected submit to be filtered out for negative-only query")
-		}
+	if res.BestRef != "submit" {
+		t.Fatalf("expected leading-not query to behave as positive text, got best=%s", res.BestRef)
 	}
 }
 

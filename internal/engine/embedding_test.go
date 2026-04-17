@@ -215,6 +215,7 @@ func TestEmbeddingMatcher_NegativePenalty(t *testing.T) {
 
 func TestEmbeddingMatcher_NegativeOnlyQuery(t *testing.T) {
 	e := newScriptedEmbedder(map[string][]float32{
+		"not submit":     {1, 0},
 		"submit":         {1, 0},
 		"button: Submit": {1, 0},
 		"button: Cancel": {0, 1},
@@ -230,11 +231,11 @@ func TestEmbeddingMatcher_NegativeOnlyQuery(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Find returned error: %v", err)
 	}
-	if len(res.Matches) != 1 {
-		t.Fatalf("expected only non-submit element to remain, got %d matches", len(res.Matches))
+	if len(res.Matches) == 0 {
+		t.Fatalf("expected non-empty matches for leading-not query")
 	}
-	if res.BestRef != "cancel" {
-		t.Fatalf("expected cancel to remain after negative-only query, got %s", res.BestRef)
+	if res.BestRef != "submit" {
+		t.Fatalf("expected leading-not query to behave as positive text, got %s", res.BestRef)
 	}
 }
 

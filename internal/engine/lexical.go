@@ -615,6 +615,9 @@ func hasStrongNegativeHit(negativeTokens, descTokens []string) bool {
 
 	dSet := tokenSet(descTokens)
 	for _, nt := range negativeTokens {
+		if isStopword(nt) || isSemanticStopword(nt) {
+			continue
+		}
 		if dSet[nt] {
 			return true
 		}
@@ -625,13 +628,18 @@ func hasStrongNegativeHit(negativeTokens, descTokens []string) bool {
 					continue
 				}
 				allPresent := true
+				hasMeaningfulToken := false
 				for _, st := range synTokens {
+					if isStopword(st) || isSemanticStopword(st) {
+						continue
+					}
+					hasMeaningfulToken = true
 					if !dSet[st] {
 						allPresent = false
 						break
 					}
 				}
-				if allPresent {
+				if hasMeaningfulToken && allPresent {
 					return true
 				}
 			}
