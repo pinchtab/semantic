@@ -187,6 +187,70 @@ func TestEmbeddingMatcher_ThresholdFiltering(t *testing.T) {
 	}
 }
 
+func TestEmbeddingMatcher_NegativePenalty(t *testing.T) {
+	e := newScriptedEmbedder(map[string][]float32{
+		"button":         {1, 0},
+		"cancel":         {0, 1},
+		"button: Submit": {1, 0},
+		"button: Cancel": {1, 1},
+	})
+	m := NewEmbeddingMatcherWithNeighborWeight(e, 0)
+
+	elements := []types.ElementDescriptor{
+		{Ref: "submit", Role: "button", Name: "Submit"},
+		{Ref: "cancel", Role: "button", Name: "Cancel"},
+	}
+
+	res, err := m.Find(context.Background(), "button not cancel", elements, types.FindOptions{Threshold: 0, TopK: 2})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if len(res.Matches) < 2 {
+		t.Fatalf("expected two matches, got %d", len(res.Matches))
+	}
+	if res.BestRef != "submit" {
+		t.Fatalf("expected negative term to demote cancel, got %s", res.BestRef)
+	}
+}
+
+func TestEmbeddingMatcher_NegativeOnlyQuery(t *testing.T) {
+	e := newScriptedEmbedder(map[string][]float32{
+		"submit":         {1, 0},
+		"button: Submit": {1, 0},
+		"button: Cancel": {0, 1},
+	})
+	m := NewEmbeddingMatcherWithNeighborWeight(e, 0)
+
+	elements := []types.ElementDescriptor{
+		{Ref: "submit", Role: "button", Name: "Submit"},
+		{Ref: "cancel", Role: "button", Name: "Cancel"},
+	}
+
+	res, err := m.Find(context.Background(), "not submit", elements, types.FindOptions{Threshold: 0.3, TopK: 2})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if len(res.Matches) != 1 {
+		t.Fatalf("expected only non-submit element to remain, got %d matches", len(res.Matches))
+	}
+	if res.BestRef != "cancel" {
+		t.Fatalf("expected cancel to remain after negative-only query, got %s", res.BestRef)
+	}
+}
+
+func TestEmbeddingMatcher_EmptyQueryReturnsNoResults(t *testing.T) {
+	m := NewEmbeddingMatcher(newDummyEmbedder(64))
+	res, err := m.Find(context.Background(), "   ", []types.ElementDescriptor{
+		{Ref: "e1", Role: "button", Name: "Submit"},
+	}, types.FindOptions{Threshold: 0, TopK: 3})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if len(res.Matches) != 0 {
+		t.Fatalf("expected no matches for empty query, got %d", len(res.Matches))
+	}
+}
+
 func TestEmbeddingMatcher_NeighborContextDisambiguatesRealWorldButtons(t *testing.T) {
 	e := newScriptedEmbedder(map[string][]float32{
 		"laptop add to cart":         {1, 1, 0},

@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"github.com/pinchtab/semantic/internal/types"
+	"strconv"
 	"testing"
 )
 
@@ -169,8 +170,9 @@ func BenchmarkCombinedFind_100Elements(b *testing.B) {
 	elements := make([]types.ElementDescriptor, 0, 100)
 	for len(elements) < 100 {
 		for _, e := range base {
-			e.Ref = "e" + string(rune('0'+len(elements)))
-			elements = append(elements, e)
+			clone := e
+			clone.Ref = "e" + strconv.Itoa(len(elements))
+			elements = append(elements, clone)
 			if len(elements) >= 100 {
 				break
 			}
@@ -201,5 +203,44 @@ func BenchmarkCalibrateConfidence(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		types.CalibrateConfidence(0.75)
+	}
+}
+
+func benchElementsSized(n int) []types.ElementDescriptor {
+	base := benchElements()
+	out := make([]types.ElementDescriptor, 0, n)
+	for len(out) < n {
+		for _, e := range base {
+			clone := e
+			clone.Ref = "e" + strconv.Itoa(len(out))
+			out = append(out, clone)
+			if len(out) >= n {
+				break
+			}
+		}
+	}
+	return out
+}
+
+func BenchmarkCombinedFind_Issue24_100Elements(b *testing.B) {
+	m := NewCombinedMatcher(NewHashingEmbedder(128))
+	elements := benchElementsSized(100)
+	ctx := context.Background()
+	opts := types.FindOptions{Threshold: 0.3, TopK: 3}
+
+	queries := []string{
+		"sign in button",
+		"button not submit",
+		"textbox not email",
+	}
+
+	for _, q := range queries {
+		b.Run(q, func(b *testing.B) {
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				_, _ = m.Find(ctx, q, elements, opts)
+			}
+		})
 	}
 }
