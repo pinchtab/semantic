@@ -47,10 +47,15 @@ func NewLexicalMatcher() *LexicalMatcher {
 
 func (m *LexicalMatcher) Strategy() string { return "lexical" }
 
-func (m *LexicalMatcher) Find(_ context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
-	if opts.TopK <= 0 {
-		opts.TopK = 3
+func (m *LexicalMatcher) Find(ctx context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
+	if ctx == nil {
+		ctx = context.Background()
 	}
+	if err := ctx.Err(); err != nil {
+		return types.FindResult{}, err
+	}
+
+	opts = sanitizeFindOptions(opts, len(elements), 3)
 
 	ef := BuildElementFrequency(elements)
 
@@ -60,7 +65,13 @@ func (m *LexicalMatcher) Find(_ context.Context, query string, elements []types.
 	}
 
 	var candidates []scored
-	for _, el := range elements {
+	for i, el := range elements {
+		if i%64 == 0 {
+			if err := ctx.Err(); err != nil {
+				return types.FindResult{}, err
+			}
+		}
+
 		composite := el.Composite()
 		score := lexicalScore(query, composite, el.Interactive, ef)
 		score += positionalBoost(query, el.Positional)

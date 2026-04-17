@@ -2,11 +2,24 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"github.com/pinchtab/semantic/internal/types"
 	"math"
 	"strconv"
 	"testing"
 )
+
+func TestLexicalMatcher_Find_ContextCanceled(t *testing.T) {
+	m := NewLexicalMatcher()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := m.Find(ctx, "submit button", []types.ElementDescriptor{{Ref: "e1", Role: "button", Name: "Submit"}}, types.FindOptions{Threshold: 0, TopK: 1})
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context canceled error, got %v", err)
+	}
+}
 
 func TestTokenPrefixScore_BtnButton(t *testing.T) {
 	// "btn" is NOT a string prefix of "button" (b-t-n vs b-u-t-t-o-n),

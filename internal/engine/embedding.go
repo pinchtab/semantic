@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"fmt"
 	"github.com/pinchtab/semantic/internal/types"
 	"math"
 	"sort"
@@ -47,10 +48,19 @@ func (m *EmbeddingMatcher) Strategy() string {
 	return "embedding:" + m.embedder.Strategy()
 }
 
-func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
-	if opts.TopK <= 0 {
-		opts.TopK = 3
+type contextAwareEmbedder interface {
+	EmbedContext(ctx context.Context, texts []string) ([][]float32, error)
+}
+
+func (m *EmbeddingMatcher) Find(ctx context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
+	if ctx == nil {
+		ctx = context.Background()
 	}
+	if err := ctx.Err(); err != nil {
+		return types.FindResult{}, err
+	}
+
+	opts = sanitizeFindOptions(opts, len(elements), 3)
 
 	// Build composite descriptions.
 	descs := make([]string, len(elements))
@@ -60,8 +70,15 @@ func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []type
 
 	// Embed query + all descriptions in a single batch.
 	texts := append([]string{query}, descs...)
-	vectors, err := m.embedder.Embed(texts)
+	vectors, err := embedWithContext(ctx, m.embedder, texts)
 	if err != nil {
+		return types.FindResult{}, err
+	}
+	if err := validateEmbeddedVectors(vectors, len(texts)); err != nil {
+		return types.FindResult{}, err
+	}
+
+	if err := ctx.Err(); err != nil {
 		return types.FindResult{}, err
 	}
 
@@ -80,6 +97,12 @@ func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []type
 
 	var candidates []scored
 	for i, el := range elements {
+		if i%64 == 0 {
+			if err := ctx.Err(); err != nil {
+				return types.FindResult{}, err
+			}
+		}
+
 		sim := CosineSimilarity(queryVec, contextVecs[i])
 		if sim >= opts.Threshold {
 			candidates = append(candidates, scored{desc: el, score: sim, order: i})
@@ -121,6 +144,35 @@ func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []type
 	}
 
 	return result, nil
+}
+
+func embedWithContext(ctx context.Context, embedder Embedder, texts []string) ([][]float32, error) {
+	if ce, ok := embedder.(contextAwareEmbedder); ok {
+		return ce.EmbedContext(ctx, texts)
+	}
+
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	return embedder.Embed(texts)
+}
+
+func validateEmbeddedVectors(vectors [][]float32, expected int) error {
+	if len(vectors) != expected {
+		return fmt.Errorf("embedder returned %d vectors, expected %d", len(vectors), expected)
+	}
+	if len(vectors) == 0 {
+		return nil
+	}
+
+	dim := len(vectors[0])
+	for i := 1; i < len(vectors); i++ {
+		if len(vectors[i]) != dim {
+			return fmt.Errorf("embedder returned inconsistent vector dimensions at index %d: %d vs %d", i, len(vectors[i]), dim)
+		}
+	}
+
+	return nil
 }
 
 func (m *EmbeddingMatcher) withNeighborContext(base [][]float32) [][]float32 {
