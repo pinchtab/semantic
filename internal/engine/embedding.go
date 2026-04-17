@@ -75,18 +75,26 @@ func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []type
 	type scored struct {
 		desc  types.ElementDescriptor
 		score float64
+		order int
 	}
 
 	var candidates []scored
 	for i, el := range elements {
 		sim := CosineSimilarity(queryVec, contextVecs[i])
 		if sim >= opts.Threshold {
-			candidates = append(candidates, scored{desc: el, score: sim})
+			candidates = append(candidates, scored{desc: el, score: sim, order: i})
 		}
 	}
 
 	sort.Slice(candidates, func(i, j int) bool {
-		return candidates[i].score > candidates[j].score
+		return rankedMatchLess(
+			candidates[i].score,
+			candidates[i].desc,
+			candidates[i].order,
+			candidates[j].score,
+			candidates[j].desc,
+			candidates[j].order,
+		)
 	})
 
 	if len(candidates) > opts.TopK {

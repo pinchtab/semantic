@@ -86,8 +86,34 @@ The CLI expects a JSON array of element descriptors:
 
 ```json
 [
-  {"ref": "e0", "role": "button", "name": "Sign In"},
-  {"ref": "e1", "role": "textbox", "name": "Email"},
-  {"ref": "e2", "role": "link", "name": "Forgot Password"}
+  {
+    "ref": "e0",
+    "role": "button",
+    "name": "Sign In",
+    "interactive": true,
+    "parent": "Auth card",
+    "section": "Header",
+    "x": 920,
+    "y": 16,
+    "width": 96,
+    "height": 32
+  },
+  {
+    "ref": "e1",
+    "role": "textbox",
+    "name": "Email",
+    "positional": {
+      "depth": 3,
+      "sibling_index": 1,
+      "sibling_count": 2,
+      "labelled_by": "Email",
+      "left": 120,
+      "top": 240,
+      "width": 320,
+      "height": 36
+    }
+  }
 ]
 ```
+
+Top-level geometry (`x`, `y`, `top`, `left`, `width`, `height`) and nested `positional` fields are both supported. Supplying coordinates improves results for visual hints such as `top right`, `below`, and `left`.

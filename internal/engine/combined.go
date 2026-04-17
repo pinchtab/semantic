@@ -122,6 +122,7 @@ type scored struct {
 	ref      string
 	score    float64
 	el       types.ElementDescriptor
+	order    int
 	lexScore float64
 	embScore float64
 }
@@ -145,20 +146,48 @@ func (c *CombinedMatcher) mergeResults(lexResult, embResult types.FindResult, el
 	}
 
 	candidates := make([]scored, 0, len(allRefs))
-	for ref := range allRefs {
+	appendCandidate := func(ref string, el types.ElementDescriptor, order int) {
 		combined := lexW*lexScores[ref] + embW*embScores[ref]
-		if combined >= opts.Threshold {
-			s := scored{ref: ref, score: combined, el: refToElem[ref]}
-			if opts.Explain {
-				s.lexScore = lexW * lexScores[ref]
-				s.embScore = embW * embScores[ref]
-			}
-			candidates = append(candidates, s)
+		if combined < opts.Threshold {
+			return
+		}
+
+		s := scored{ref: ref, score: combined, el: el, order: order}
+		if opts.Explain {
+			s.lexScore = lexW * lexScores[ref]
+			s.embScore = embW * embScores[ref]
+		}
+		candidates = append(candidates, s)
+	}
+
+	for i, el := range elements {
+		if !allRefs[el.Ref] {
+			continue
+		}
+		appendCandidate(el.Ref, el, i)
+		delete(allRefs, el.Ref)
+	}
+
+	if len(allRefs) > 0 {
+		extraRefs := make([]string, 0, len(allRefs))
+		for ref := range allRefs {
+			extraRefs = append(extraRefs, ref)
+		}
+		sort.Strings(extraRefs)
+		for i, ref := range extraRefs {
+			appendCandidate(ref, refToElem[ref], len(elements)+i)
 		}
 	}
 
 	sort.Slice(candidates, func(i, j int) bool {
-		return candidates[i].score > candidates[j].score
+		return rankedMatchLess(
+			candidates[i].score,
+			candidates[i].el,
+			candidates[i].order,
+			candidates[j].score,
+			candidates[j].el,
+			candidates[j].order,
+		)
 	})
 	if len(candidates) > opts.TopK {
 		candidates = candidates[:opts.TopK]
