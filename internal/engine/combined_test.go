@@ -161,6 +161,95 @@ func TestCombinedMatcher_FusesBothStrategies(t *testing.T) {
 	}
 }
 
+func TestCombinedMatcher_NegativePenalization(t *testing.T) {
+	m := NewCombinedMatcher(NewHashingEmbedder(128))
+	elements := []types.ElementDescriptor{
+		{Ref: "submit", Role: "button", Name: "Submit"},
+		{Ref: "cancel", Role: "button", Name: "Cancel"},
+	}
+
+	res, err := m.Find(context.Background(), "button not cancel", elements, types.FindOptions{Threshold: 0, TopK: 2})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if len(res.Matches) < 2 {
+		t.Fatalf("expected two matches, got %d", len(res.Matches))
+	}
+	if res.BestRef != "submit" {
+		t.Fatalf("expected cancel to be penalized, got best=%s", res.BestRef)
+	}
+}
+
+func TestCombinedMatcher_NegativeSynonymExpansion(t *testing.T) {
+	m := NewCombinedMatcher(NewHashingEmbedder(128))
+	elements := []types.ElementDescriptor{
+		{Ref: "password", Role: "textbox", Name: "Password"},
+		{Ref: "email", Role: "textbox", Name: "Email"},
+	}
+
+	res, err := m.Find(context.Background(), "input no pwd", elements, types.FindOptions{Threshold: 0, TopK: 2})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if len(res.Matches) < 2 {
+		t.Fatalf("expected two matches, got %d", len(res.Matches))
+	}
+	if res.BestRef != "email" {
+		t.Fatalf("expected password to be demoted by negative synonym, got best=%s", res.BestRef)
+	}
+}
+
+func TestCombinedMatcher_NegativeOnlyQuery(t *testing.T) {
+	m := NewCombinedMatcher(NewHashingEmbedder(128))
+	elements := []types.ElementDescriptor{
+		{Ref: "submit", Role: "button", Name: "Submit"},
+		{Ref: "cancel", Role: "button", Name: "Cancel"},
+		{Ref: "email", Role: "textbox", Name: "Email"},
+	}
+
+	res, err := m.Find(context.Background(), "not submit", elements, types.FindOptions{Threshold: 0.3, TopK: 3})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if len(res.Matches) == 0 {
+		t.Fatalf("expected non-submit matches to remain")
+	}
+	for _, match := range res.Matches {
+		if match.Ref == "submit" {
+			t.Fatalf("expected submit to be filtered out for negative-only query")
+		}
+	}
+}
+
+func TestCombinedMatcher_PositiveQueryRegression(t *testing.T) {
+	m := NewCombinedMatcher(NewHashingEmbedder(128))
+	elements := []types.ElementDescriptor{
+		{Ref: "submit", Role: "button", Name: "Submit"},
+		{Ref: "cancel", Role: "button", Name: "Cancel"},
+	}
+
+	res, err := m.Find(context.Background(), "submit button", elements, types.FindOptions{Threshold: 0.05, TopK: 2})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if res.BestRef != "submit" {
+		t.Fatalf("expected positive query behavior unchanged, got best=%s", res.BestRef)
+	}
+}
+
+func TestCombinedMatcher_EmptyQueryReturnsNoResults(t *testing.T) {
+	m := NewCombinedMatcher(NewHashingEmbedder(128))
+	elements := []types.ElementDescriptor{{Ref: "submit", Role: "button", Name: "Submit"}}
+
+	res, err := m.Find(context.Background(), "   ", elements, types.FindOptions{Threshold: 0, TopK: 3})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if len(res.Matches) != 0 {
+		t.Fatalf("expected no matches for empty query, got %d", len(res.Matches))
+	}
+}
+
 func TestCombinedMatcher_NoElements(t *testing.T) {
 	m := NewCombinedMatcher(NewHashingEmbedder(128))
 
@@ -464,5 +553,29 @@ func TestCombinedMatcher_WeightsApplied(t *testing.T) {
 	}
 	if result.BestRef != "e0" {
 		t.Errorf("expected BestRef=e0, got %s", result.BestRef)
+	}
+}
+
+func TestCombinedMatcher_ClampsScoreWithCustomWeights(t *testing.T) {
+	m := NewCombinedMatcher(NewHashingEmbedder(128))
+	elements := []types.ElementDescriptor{
+		{Ref: "e0", Role: "button", Name: "Sign In"},
+		{Ref: "e1", Role: "link", Name: "Help"},
+	}
+
+	result, err := m.Find(context.Background(), "sign in button", elements, types.FindOptions{
+		Threshold:       0,
+		TopK:            2,
+		LexicalWeight:   2.0,
+		EmbeddingWeight: 2.0,
+	})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+
+	for _, match := range result.Matches {
+		if match.Score < 0 || match.Score > 1 {
+			t.Fatalf("expected clamped score in [0,1], got %f for ref=%s", match.Score, match.Ref)
+		}
 	}
 }

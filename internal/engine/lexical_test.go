@@ -586,4 +586,61 @@ func TestLexicalMatcher_ThresholdFiltering(t *testing.T) {
 	}
 }
 
+func TestLexicalMatcher_NegativePenalization(t *testing.T) {
+	m := NewLexicalMatcher()
+	elements := []types.ElementDescriptor{
+		{Ref: "submit", Role: "button", Name: "Submit"},
+		{Ref: "cancel", Role: "button", Name: "Cancel"},
+	}
+
+	result, err := m.Find(context.Background(), "button not cancel", elements, types.FindOptions{
+		Threshold: 0,
+		TopK:      2,
+	})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if len(result.Matches) < 2 {
+		t.Fatalf("expected two matches, got %d", len(result.Matches))
+	}
+	if result.BestRef != "submit" {
+		t.Fatalf("expected submit to rank above canceled element, got %s", result.BestRef)
+	}
+}
+
+func TestLexicalMatcher_NegativeSynonymExpansion(t *testing.T) {
+	m := NewLexicalMatcher()
+	elements := []types.ElementDescriptor{
+		{Ref: "password", Role: "textbox", Name: "Password"},
+		{Ref: "email", Role: "textbox", Name: "Email"},
+	}
+
+	result, err := m.Find(context.Background(), "input no pwd", elements, types.FindOptions{
+		Threshold: 0,
+		TopK:      2,
+	})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if len(result.Matches) < 2 {
+		t.Fatalf("expected two matches, got %d", len(result.Matches))
+	}
+	if result.BestRef != "email" {
+		t.Fatalf("expected password synonym to be penalized, got best=%s", result.BestRef)
+	}
+}
+
+func TestLexicalMatcher_EmptyQueryReturnsNoResults(t *testing.T) {
+	m := NewLexicalMatcher()
+	elements := []types.ElementDescriptor{{Ref: "e1", Role: "button", Name: "Submit"}}
+
+	result, err := m.Find(context.Background(), "   ", elements, types.FindOptions{Threshold: 0, TopK: 3})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if len(result.Matches) != 0 {
+		t.Fatalf("expected no matches for empty query, got %d", len(result.Matches))
+	}
+}
+
 // dummyEmbedder tests
