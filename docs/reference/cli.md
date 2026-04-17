@@ -33,6 +33,11 @@ semantic find "login" --snapshot page.json --format json
 
 # Just refs (for piping)
 semantic find "submit" --snapshot page.json --format refs
+
+# Ordinal selection for repeated element types
+semantic find "second button" --snapshot page.json
+semantic find "third menu item" --snapshot page.json
+semantic find "last input field" --snapshot page.json
 ```
 
 ### `semantic match`

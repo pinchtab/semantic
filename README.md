@@ -103,6 +103,7 @@ Implementations are internal — consumers use the `ElementMatcher` interface an
 ## Features
 
 - **Synonym expansion** — 54 UI synonym groups ("sign in" ↔ "log in", "cart" ↔ "basket", "preferences" ↔ "settings", etc.)
+- **Ordinal selection** — Positional intent like `first`, `second`, `3rd`, and `last` for duplicate element sets
 - **Confidence calibration** — Scores mapped to high (≥ 0.8) / medium (≥ 0.6) / low labels
 - **Error classification** — Classify browser errors (CDP, chromedp) as recoverable or not
 - **Self-healing recovery** — Re-locate stale elements after DOM changes via callback interfaces
@@ -183,6 +184,10 @@ curl -s localhost:9999/snapshot | semantic find "search box"
 semantic find "login" --snapshot page.json --format json    # machine-readable
 semantic find "login" --snapshot page.json --format table   # human-readable
 semantic find "login" --snapshot page.json --format refs    # just refs
+
+# Select by order among duplicate matches
+semantic find "second button" --snapshot page.json
+semantic find "last input field" --snapshot page.json
 
 # Score a specific element
 semantic match "login" e4 --snapshot page.json

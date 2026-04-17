@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pinchtab/semantic/internal/types"
+	"math"
 	"sort"
 )
 
@@ -44,14 +45,26 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []typ
 		opts.TopK = 3
 	}
 
+	ordinal := parseOrdinalConstraint(query)
+	effectiveQuery := query
+	if ordinal.baseQuery != "" {
+		effectiveQuery = ordinal.baseQuery
+	}
+
+	mergeOpts := opts
+	if ordinal.hasOrdinal {
+		mergeOpts.TopK = len(elements)
+	}
+
 	lexW, embW := c.weights(opts)
 
-	lexResult, embResult, err := c.runBoth(ctx, query, elements, opts)
+	lexResult, embResult, err := c.runBoth(ctx, effectiveQuery, elements, opts)
 	if err != nil {
 		return types.FindResult{}, err
 	}
 
-	return c.mergeResults(lexResult, embResult, elements, opts, lexW, embW), nil
+	merged := c.mergeResults(lexResult, embResult, elements, mergeOpts, lexW, embW)
+	return selectOrdinalMatchInOrder(merged, ordinal, elements), nil
 }
 
 func (c *CombinedMatcher) weights(opts types.FindOptions) (float64, float64) {
@@ -146,7 +159,18 @@ func (c *CombinedMatcher) mergeResults(lexResult, embResult types.FindResult, el
 	}
 
 	sort.Slice(candidates, func(i, j int) bool {
-		return candidates[i].score > candidates[j].score
+		scoreDiff := candidates[i].score - candidates[j].score
+		if math.Abs(scoreDiff) > 1e-9 {
+			return scoreDiff > 0
+		}
+
+		idxI := candidates[i].el.Positional.SiblingIndex
+		idxJ := candidates[j].el.Positional.SiblingIndex
+		if idxI != idxJ {
+			return idxI < idxJ
+		}
+
+		return candidates[i].ref < candidates[j].ref
 	})
 	if len(candidates) > opts.TopK {
 		candidates = candidates[:opts.TopK]
