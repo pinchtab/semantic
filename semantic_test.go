@@ -214,12 +214,10 @@ func TestLexicalMatcher_NegativeOnlyQuery(t *testing.T) {
 	}
 
 	if len(result.Matches) == 0 {
-		t.Fatalf("expected non-empty matches for negative-only query")
+		t.Fatalf("expected non-empty matches for leading-not query")
 	}
-	for _, m := range result.Matches {
-		if m.Ref == "e0" {
-			t.Fatalf("expected submit element to be excluded for negative-only query")
-		}
+	if result.BestRef != "e0" {
+		t.Fatalf("expected leading-not query to behave as positive text, got best=%s", result.BestRef)
 	}
 }
 

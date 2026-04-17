@@ -51,8 +51,8 @@ func TestParseQuery_TableDriven(t *testing.T) {
 		{
 			name:     "not button",
 			raw:      "not button",
-			positive: nil,
-			negative: []string{"button"},
+			positive: []string{"not", "button"},
+			negative: nil,
 		},
 		{
 			name:     "input no password no username",

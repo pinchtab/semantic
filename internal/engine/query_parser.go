@@ -32,7 +32,7 @@ func ParseQuery(raw string) ParsedQuery {
 
 	inNegative := false
 	for _, tok := range tokens {
-		if negativeTriggers[tok] {
+		if negativeTriggers[tok] && len(parsed.Positive) > 0 {
 			inNegative = true
 			continue
 		}
