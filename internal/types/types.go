@@ -36,7 +36,9 @@ type FindOptions struct {
 	TopK int
 
 	// Per-request weight overrides (optional). If both are zero the
-	// matcher's default weights are used.
+	// matcher's default weights are used. If only one weight is set,
+	// the other receives the remaining proportion. Weights are clamped
+	// to non-negative values and normalized to sum to 1.
 	LexicalWeight   float64
 	EmbeddingWeight float64
 

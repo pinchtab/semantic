@@ -4,7 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/pinchtab/semantic/internal/types"
+	"math"
 	"sort"
+)
+
+const (
+	defaultCombinedLexicalWeight   = 0.6
+	defaultCombinedEmbeddingWeight = 0.4
 )
 
 // combinedMatcher fuses lexical and embedding scores:
@@ -30,8 +36,8 @@ func NewCombinedMatcher(embedder Embedder) *CombinedMatcher {
 	return &CombinedMatcher{
 		lexical:         NewLexicalMatcher(),
 		embedding:       NewEmbeddingMatcher(embedder),
-		LexicalWeight:   0.6,
-		EmbeddingWeight: 0.4,
+		LexicalWeight:   defaultCombinedLexicalWeight,
+		EmbeddingWeight: defaultCombinedEmbeddingWeight,
 	}
 }
 
@@ -40,9 +46,11 @@ func (c *CombinedMatcher) Strategy() string {
 }
 
 func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
-	if opts.TopK <= 0 {
-		opts.TopK = 3
+	if ctx == nil {
+		ctx = context.Background()
 	}
+
+	opts = sanitizeFindOptions(opts, len(elements), 3)
 
 	visualHints := parseVisualQueryHints(query)
 	effectiveQuery := query
@@ -67,10 +75,49 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []typ
 }
 
 func (c *CombinedMatcher) weights(opts types.FindOptions) (float64, float64) {
-	if opts.LexicalWeight > 0 || opts.EmbeddingWeight > 0 {
-		return opts.LexicalWeight, opts.EmbeddingWeight
+	baseLex, baseEmb := normalizeWeights(c.LexicalWeight, c.EmbeddingWeight)
+	if baseLex == 0 && baseEmb == 0 {
+		baseLex, baseEmb = defaultCombinedLexicalWeight, defaultCombinedEmbeddingWeight
 	}
-	return c.LexicalWeight, c.EmbeddingWeight
+
+	reqLex := sanitizeWeight(opts.LexicalWeight)
+	reqEmb := sanitizeWeight(opts.EmbeddingWeight)
+	if reqLex == 0 && reqEmb == 0 {
+		return baseLex, baseEmb
+	}
+
+	if reqLex > 0 && reqEmb == 0 && reqLex <= 1 {
+		reqEmb = 1 - reqLex
+	}
+	if reqEmb > 0 && reqLex == 0 && reqEmb <= 1 {
+		reqLex = 1 - reqEmb
+	}
+
+	lex, emb := normalizeWeights(reqLex, reqEmb)
+	if lex == 0 && emb == 0 {
+		return baseLex, baseEmb
+	}
+
+	return lex, emb
+}
+
+func sanitizeWeight(weight float64) float64 {
+	if math.IsNaN(weight) || math.IsInf(weight, 0) || weight < 0 {
+		return 0
+	}
+	return weight
+}
+
+func normalizeWeights(lexicalWeight, embeddingWeight float64) (float64, float64) {
+	lexicalWeight = sanitizeWeight(lexicalWeight)
+	embeddingWeight = sanitizeWeight(embeddingWeight)
+
+	total := lexicalWeight + embeddingWeight
+	if total <= 0 {
+		return 0, 0
+	}
+
+	return lexicalWeight / total, embeddingWeight / total
 }
 
 type matcherResult struct {
@@ -106,8 +153,19 @@ func (c *CombinedMatcher) runBoth(ctx context.Context, query string, elements []
 		embCh <- matcherResult{r, err}
 	}()
 
-	lexRes := <-lexCh
-	embRes := <-embCh
+	var lexRes, embRes matcherResult
+	gotLex, gotEmb := false, false
+
+	for !gotLex || !gotEmb {
+		select {
+		case <-ctx.Done():
+			return types.FindResult{}, types.FindResult{}, ctx.Err()
+		case lexRes = <-lexCh:
+			gotLex = true
+		case embRes = <-embCh:
+			gotEmb = true
+		}
+	}
 
 	if lexRes.err != nil {
 		return types.FindResult{}, types.FindResult{}, lexRes.err
@@ -148,6 +206,12 @@ func (c *CombinedMatcher) mergeResults(lexResult, embResult types.FindResult, el
 	candidates := make([]scored, 0, len(allRefs))
 	appendCandidate := func(ref string, el types.ElementDescriptor, order int) {
 		combined := lexW*lexScores[ref] + embW*embScores[ref]
+		if combined > 1 {
+			combined = 1
+		}
+		if combined < 0 {
+			combined = 0
+		}
 		if combined < opts.Threshold {
 			return
 		}
