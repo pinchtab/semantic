@@ -44,14 +44,26 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []typ
 		opts.TopK = 3
 	}
 
+	visualHints := parseVisualQueryHints(query)
+	effectiveQuery := query
+	if visualHints.baseQuery != "" {
+		effectiveQuery = visualHints.baseQuery
+	}
+
+	mergeOpts := opts
+	if visualHints.hasHints {
+		mergeOpts.TopK = len(elements)
+	}
+
 	lexW, embW := c.weights(opts)
 
-	lexResult, embResult, err := c.runBoth(ctx, query, elements, opts)
+	lexResult, embResult, err := c.runBoth(ctx, effectiveQuery, elements, opts)
 	if err != nil {
 		return types.FindResult{}, err
 	}
 
-	return c.mergeResults(lexResult, embResult, elements, opts, lexW, embW), nil
+	merged := c.mergeResults(lexResult, embResult, elements, mergeOpts, lexW, embW)
+	return applyVisualHintBoost(merged, visualHints, elements, opts.TopK), nil
 }
 
 func (c *CombinedMatcher) weights(opts types.FindOptions) (float64, float64) {

@@ -33,6 +33,11 @@ semantic find "login" --snapshot page.json --format json
 
 # Just refs (for piping)
 semantic find "submit" --snapshot page.json --format refs
+
+# Visual layout hints
+semantic find "button in top right corner" --snapshot page.json
+semantic find "link below the search box" --snapshot page.json
+semantic find "sidebar on the left" --snapshot page.json
 ```
 
 ### `semantic match`

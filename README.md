@@ -103,6 +103,7 @@ Implementations are internal — consumers use the `ElementMatcher` interface an
 ## Features
 
 - **Synonym expansion** — 54 UI synonym groups ("sign in" ↔ "log in", "cart" ↔ "basket", "preferences" ↔ "settings", etc.)
+- **Visual position hints** — Understand layout cues like `top`, `bottom`, `left`, `right`, and `above`/`below` anchors
 - **Confidence calibration** — Scores mapped to high (≥ 0.8) / medium (≥ 0.6) / low labels
 - **Error classification** — Classify browser errors (CDP, chromedp) as recoverable or not
 - **Self-healing recovery** — Re-locate stale elements after DOM changes via callback interfaces
@@ -183,6 +184,11 @@ curl -s localhost:9999/snapshot | semantic find "search box"
 semantic find "login" --snapshot page.json --format json    # machine-readable
 semantic find "login" --snapshot page.json --format table   # human-readable
 semantic find "login" --snapshot page.json --format refs    # just refs
+
+# Visual position hints
+semantic find "button in top right corner" --snapshot page.json
+semantic find "link below the search box" --snapshot page.json
+semantic find "sidebar on the left" --snapshot page.json
 
 # Score a specific element
 semantic match "login" e4 --snapshot page.json
