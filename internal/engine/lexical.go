@@ -52,6 +52,12 @@ func (m *LexicalMatcher) Find(_ context.Context, query string, elements []types.
 		opts.TopK = 3
 	}
 
+	constraints := parseNegativeConstraints(query)
+	searchQuery := query
+	if constraints.baseQuery != "" {
+		searchQuery = constraints.baseQuery
+	}
+
 	ef := BuildElementFrequency(elements)
 
 	type scored struct {
@@ -61,9 +67,13 @@ func (m *LexicalMatcher) Find(_ context.Context, query string, elements []types.
 
 	var candidates []scored
 	for _, el := range elements {
+		if shouldExcludeElement(el, constraints.exclusionPhrase) {
+			continue
+		}
+
 		composite := el.Composite()
-		score := lexicalScore(query, composite, el.Interactive, ef)
-		score += positionalBoost(query, el.Positional)
+		score := lexicalScore(searchQuery, composite, el.Interactive, ef)
+		score += positionalBoost(searchQuery, el.Positional)
 		if score > 1.0 {
 			score = 1.0
 		}

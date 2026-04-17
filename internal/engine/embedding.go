@@ -52,6 +52,12 @@ func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []type
 		opts.TopK = 3
 	}
 
+	constraints := parseNegativeConstraints(query)
+	searchQuery := query
+	if constraints.baseQuery != "" {
+		searchQuery = constraints.baseQuery
+	}
+
 	// Build composite descriptions.
 	descs := make([]string, len(elements))
 	for i, el := range elements {
@@ -59,7 +65,7 @@ func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []type
 	}
 
 	// Embed query + all descriptions in a single batch.
-	texts := append([]string{query}, descs...)
+	texts := append([]string{searchQuery}, descs...)
 	vectors, err := m.embedder.Embed(texts)
 	if err != nil {
 		return types.FindResult{}, err
@@ -79,6 +85,10 @@ func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []type
 
 	var candidates []scored
 	for i, el := range elements {
+		if shouldExcludeElement(el, constraints.exclusionPhrase) {
+			continue
+		}
+
 		sim := CosineSimilarity(queryVec, contextVecs[i])
 		if sim >= opts.Threshold {
 			candidates = append(candidates, scored{desc: el, score: sim})
