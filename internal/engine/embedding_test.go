@@ -2,10 +2,12 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/pinchtab/semantic/internal/types"
 	"math"
 	"testing"
+	"time"
 )
 
 // dummyEmbedder tests
@@ -278,6 +280,124 @@ func TestEmbeddingMatcher_SingleElement_WithNeighborWeight(t *testing.T) {
 	if len(res.Matches) != 1 {
 		t.Fatalf("expected one match, got %d", len(res.Matches))
 	}
+}
+
+func TestEmbeddingMatcher_Find_ContextCanceledBeforeEmbed(t *testing.T) {
+	e := &countingEmbedder{}
+	m := NewEmbeddingMatcher(e)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := m.Find(ctx, "save button", []types.ElementDescriptor{{Ref: "e1", Role: "button", Name: "Save"}}, types.FindOptions{Threshold: 0, TopK: 1})
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context canceled error, got %v", err)
+	}
+	if e.calls != 0 {
+		t.Fatalf("embedder should not have been invoked on canceled context, calls=%d", e.calls)
+	}
+}
+
+func TestEmbeddingMatcher_Find_ContextCanceledDuringEmbedContext(t *testing.T) {
+	e := &blockingContextEmbedder{started: make(chan struct{}), release: make(chan struct{})}
+	defer close(e.release)
+
+	m := NewEmbeddingMatcher(e)
+	elements := []types.ElementDescriptor{{Ref: "e1", Role: "button", Name: "Save"}}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		_, err := m.Find(ctx, "save button", elements, types.FindOptions{Threshold: 0, TopK: 1})
+		done <- err
+	}()
+
+	select {
+	case <-e.started:
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("expected embedding to start")
+	}
+
+	cancel()
+
+	select {
+	case err := <-done:
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("expected context canceled error, got %v", err)
+		}
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("Find did not return promptly after context cancellation")
+	}
+}
+
+func TestEmbeddingMatcher_Find_EmbedderVectorCountMismatchReturnsError(t *testing.T) {
+	m := NewEmbeddingMatcher(&malformedEmbedder{
+		vectors: [][]float32{{1, 0, 0}},
+	})
+
+	_, err := m.Find(context.Background(), "query", []types.ElementDescriptor{
+		{Ref: "e1", Role: "button", Name: "Save"},
+		{Ref: "e2", Role: "button", Name: "Cancel"},
+	}, types.FindOptions{Threshold: 0, TopK: 2})
+	if err == nil {
+		t.Fatal("expected embedder vector count mismatch error")
+	}
+}
+
+func TestEmbeddingMatcher_Find_InconsistentVectorDimensionsReturnsError(t *testing.T) {
+	m := NewEmbeddingMatcher(&malformedEmbedder{
+		vectors: [][]float32{{1, 0}, {1}, {0, 1}},
+	})
+
+	_, err := m.Find(context.Background(), "query", []types.ElementDescriptor{
+		{Ref: "e1", Role: "button", Name: "Save"},
+		{Ref: "e2", Role: "button", Name: "Cancel"},
+	}, types.FindOptions{Threshold: 0, TopK: 2})
+	if err == nil {
+		t.Fatal("expected inconsistent embedding dimension error")
+	}
+}
+
+type countingEmbedder struct {
+	calls int
+}
+
+func (e *countingEmbedder) Strategy() string { return "counting" }
+
+func (e *countingEmbedder) Embed(texts []string) ([][]float32, error) {
+	e.calls++
+	return fixedVectors(len(texts), 4), nil
+}
+
+type blockingContextEmbedder struct {
+	started chan struct{}
+	release chan struct{}
+}
+
+func (e *blockingContextEmbedder) Strategy() string { return "blocking-context" }
+
+func (e *blockingContextEmbedder) Embed(texts []string) ([][]float32, error) {
+	return fixedVectors(len(texts), 4), nil
+}
+
+func (e *blockingContextEmbedder) EmbedContext(ctx context.Context, texts []string) ([][]float32, error) {
+	close(e.started)
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-e.release:
+		return fixedVectors(len(texts), 4), nil
+	}
+}
+
+type malformedEmbedder struct {
+	vectors [][]float32
+}
+
+func (e *malformedEmbedder) Strategy() string { return "malformed" }
+
+func (e *malformedEmbedder) Embed(_ []string) ([][]float32, error) {
+	return e.vectors, nil
 }
 
 type scriptedEmbedder struct {

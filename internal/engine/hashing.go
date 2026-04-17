@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"context"
 	"hash/fnv"
 	"math"
 	"strings"
@@ -39,8 +40,25 @@ func NewHashingEmbedder(dim int) *HashingEmbedder {
 func (h *HashingEmbedder) Strategy() string { return "hashing" }
 
 func (h *HashingEmbedder) Embed(texts []string) ([][]float32, error) {
+	return h.EmbedContext(context.Background(), texts)
+}
+
+func (h *HashingEmbedder) EmbedContext(ctx context.Context, texts []string) ([][]float32, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
 	result := make([][]float32, len(texts))
 	for i, text := range texts {
+		if i%64 == 0 {
+			if err := ctx.Err(); err != nil {
+				return nil, err
+			}
+		}
+
 		result[i] = h.vectorize(text)
 	}
 	return result, nil
