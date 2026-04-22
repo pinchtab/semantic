@@ -49,11 +49,12 @@ func (m *EmbeddingMatcher) Strategy() string {
 }
 
 func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
-	parsed := ParseQuery(query)
-	return m.findWithParsed(parsed, elements, opts)
+	ctx := ParseQueryContext(query)
+	return m.findWithParsed(ctx, elements, opts)
 }
 
-func (m *EmbeddingMatcher) findWithParsed(parsed types.ParsedQuery, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
+func (m *EmbeddingMatcher) findWithParsed(ctx QueryContext, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
+	parsed := ctx.Base
 	if opts.TopK <= 0 {
 		opts.TopK = 3
 	}
@@ -65,17 +66,52 @@ func (m *EmbeddingMatcher) findWithParsed(parsed types.ParsedQuery, elements []t
 		}, nil
 	}
 
+	filtered := filterContextExcludedElements(elements, ctx)
+	if len(filtered) == 0 {
+		return types.FindResult{Strategy: m.Strategy(), ElementCount: len(elements)}, nil
+	}
+
+	vectors, err := m.embedQueryAndElements(parsed, filtered)
+	if err != nil {
+		return types.FindResult{}, err
+	}
+
+	candidates := m.scoreCandidates(parsed, filtered, vectors, opts.Threshold)
+	sort.Slice(candidates, func(i, j int) bool {
+		scoreDiff := candidates[i].score - candidates[j].score
+		if math.Abs(scoreDiff) > 1e-9 {
+			return scoreDiff > 0
+		}
+		return candidates[i].desc.Ref < candidates[j].desc.Ref
+	})
+
+	if len(candidates) > opts.TopK {
+		candidates = candidates[:opts.TopK]
+	}
+
+	return buildEmbeddingResult(m.Strategy(), len(elements), candidates), nil
+}
+
+func filterContextExcludedElements(elements []types.ElementDescriptor, ctx QueryContext) []types.ElementDescriptor {
+	filtered := make([]types.ElementDescriptor, 0, len(elements))
+	for _, el := range elements {
+		if ctx.HasScope && matchesExcludedContext(el, ctx.Exclude) {
+			continue
+		}
+		filtered = append(filtered, el)
+	}
+	return filtered
+}
+
+func (m *EmbeddingMatcher) embedQueryAndElements(parsed types.ParsedQuery, elements []types.ElementDescriptor) ([][]float32, error) {
 	positiveQuery := strings.Join(parsed.Positive, " ")
 	negativeQuery := strings.Join(parsed.Negative, " ")
-	negativeOnly := len(parsed.Positive) == 0 && len(parsed.Negative) > 0
 
-	// Build composite descriptions.
 	descs := make([]string, len(elements))
 	for i, el := range elements {
 		descs[i] = el.Composite()
 	}
 
-	// Embed positive/negative query components and all descriptions in one batch.
 	texts := make([]string, 0, len(descs)+2)
 	if len(parsed.Positive) > 0 {
 		texts = append(texts, positiveQuery)
@@ -84,11 +120,16 @@ func (m *EmbeddingMatcher) findWithParsed(parsed types.ParsedQuery, elements []t
 		texts = append(texts, negativeQuery)
 	}
 	texts = append(texts, descs...)
-	vectors, err := m.embedder.Embed(texts)
-	if err != nil {
-		return types.FindResult{}, err
-	}
+	return m.embedder.Embed(texts)
+}
 
+type embeddingScored struct {
+	desc  types.ElementDescriptor
+	score float64
+}
+
+func (m *EmbeddingMatcher) scoreCandidates(parsed types.ParsedQuery, elements []types.ElementDescriptor, vectors [][]float32, threshold float64) []embeddingScored {
+	negativeOnly := len(parsed.Positive) == 0 && len(parsed.Negative) > 0
 	idx := 0
 	var posVec []float32
 	if len(parsed.Positive) > 0 {
@@ -108,64 +149,50 @@ func (m *EmbeddingMatcher) findWithParsed(parsed types.ParsedQuery, elements []t
 		contextVecs = m.withNeighborContext(elemVecs)
 	}
 
-	type scored struct {
-		desc  types.ElementDescriptor
-		score float64
-	}
-
-	var candidates []scored
+	var candidates []embeddingScored
 	for i, el := range elements {
-		score := 1.0
-		if len(parsed.Positive) > 0 {
-			score = CosineSimilarity(posVec, contextVecs[i])
-		}
-
-		if len(parsed.Negative) > 0 {
-			// Debug note: negSim is the negative-token similarity used to apply
-			// exclusion/down-weight penalties for this candidate.
-			// Negatives should compare against the element vector itself.
-			negSim := CosineSimilarity(negVec, elemVecs[i])
-			if len(parsed.Positive) == 0 {
-				if negSim > 0.5 {
-					score = 0
-				}
-			} else if negSim > 0.5 {
-				score *= 1 - (negSim * 0.8)
-			}
-		}
-
-		if score < 0 {
-			score = 0
-		}
-		if score > 1 {
-			score = 1
-		}
+		score := scoreEmbeddingCandidate(parsed, posVec, negVec, contextVecs[i], elemVecs[i])
 		if negativeOnly && score == 0 {
 			continue
 		}
+		if score >= threshold {
+			candidates = append(candidates, embeddingScored{desc: el, score: score})
+		}
+	}
+	return candidates
+}
 
-		if score >= opts.Threshold {
-			candidates = append(candidates, scored{desc: el, score: score})
+func scoreEmbeddingCandidate(parsed types.ParsedQuery, posVec, negVec, contextVec, elemVec []float32) float64 {
+	score := 1.0
+	if len(parsed.Positive) > 0 {
+		score = CosineSimilarity(posVec, contextVec)
+	}
+
+	if len(parsed.Negative) > 0 {
+		negSim := CosineSimilarity(negVec, elemVec)
+		if len(parsed.Positive) == 0 {
+			if negSim > 0.5 {
+				score = 0
+			}
+		} else if negSim > 0.5 {
+			score *= 1 - (negSim * 0.8)
 		}
 	}
 
-	sort.Slice(candidates, func(i, j int) bool {
-		scoreDiff := candidates[i].score - candidates[j].score
-		if math.Abs(scoreDiff) > 1e-9 {
-			return scoreDiff > 0
-		}
-		return candidates[i].desc.Ref < candidates[j].desc.Ref
-	})
-
-	if len(candidates) > opts.TopK {
-		candidates = candidates[:opts.TopK]
+	if score < 0 {
+		return 0
 	}
+	if score > 1 {
+		return 1
+	}
+	return score
+}
 
+func buildEmbeddingResult(strategy string, elementCount int, candidates []embeddingScored) types.FindResult {
 	result := types.FindResult{
-		Strategy:     m.Strategy(),
-		ElementCount: len(elements),
+		Strategy:     strategy,
+		ElementCount: elementCount,
 	}
-
 	for _, c := range candidates {
 		result.Matches = append(result.Matches, types.ElementMatch{
 			Ref:   c.desc.Ref,
@@ -174,13 +201,11 @@ func (m *EmbeddingMatcher) findWithParsed(parsed types.ParsedQuery, elements []t
 			Name:  c.desc.Name,
 		})
 	}
-
 	if len(result.Matches) > 0 {
 		result.BestRef = result.Matches[0].Ref
 		result.BestScore = result.Matches[0].Score
 	}
-
-	return result, nil
+	return result
 }
 
 func (m *EmbeddingMatcher) withNeighborContext(base [][]float32) [][]float32 {

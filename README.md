@@ -58,12 +58,18 @@ result, err := matcher.Find(ctx, "log in button", elements, semantic.FindOptions
 Queries can include exclusion intent using:
 `not`, `without`, `exclude`, `excluding`, `except`, `no`, `ignore`.
 
+There are two supported patterns:
+- token exclusion, for example `button not submit`
+- context exclusion, for example `submit button not in header`
+
 Examples:
 
 ```text
 button not submit
 link without logout
 textbox excluding email
+submit button not in header
+login link, not the footer one
 ```
 
 CLI examples:
