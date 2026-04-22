@@ -33,6 +33,15 @@ semantic find "login" --snapshot page.json --format json
 
 # Just refs (for piping)
 semantic find "submit" --snapshot page.json --format refs
+
+# Exclude contexts for duplicate labels
+semantic find "submit button not in header" --snapshot page.json
+semantic find "login link, not the footer one" --snapshot page.json
+
+# Select by ordinal position
+semantic find "second button" --snapshot page.json
+semantic find "last input field" --snapshot page.json
+semantic find "second button not in header" --snapshot page.json
 ```
 
 ### `semantic match`

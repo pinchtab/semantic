@@ -13,47 +13,50 @@ type QueryContext struct {
 	Base     ParsedQuery
 	Exclude  []string
 	HasScope bool
+	Ordinal  OrdinalConstraint
 }
 
 func ParseQueryContext(raw string) QueryContext {
-	parsed := ParseQuery(raw)
-	cleaned := strings.TrimSpace(raw)
+	ordinal, baseRaw := parseOrdinalConstraint(raw)
+	parsed := ParseQuery(baseRaw)
+	cleaned := strings.TrimSpace(baseRaw)
 	if cleaned == "" {
-		return QueryContext{Base: parsed}
+		return QueryContext{Base: parsed, Ordinal: ordinal}
 	}
 
 	loc := negativeContextPattern.FindStringIndex(cleaned)
 	if loc == nil {
-		return QueryContext{Base: parsed}
+		return QueryContext{Base: parsed, Ordinal: ordinal}
 	}
 
-	baseRaw := strings.TrimSpace(cleaned[:loc[0]])
+	contextBaseRaw := strings.TrimSpace(cleaned[:loc[0]])
 	remainder := strings.TrimSpace(cleaned[loc[1]:])
-	if baseRaw == "" || remainder == "" {
-		return QueryContext{Base: parsed}
+	if contextBaseRaw == "" || remainder == "" {
+		return QueryContext{Base: parsed, Ordinal: ordinal}
 	}
 
-	baseParsed := ParseQuery(baseRaw)
+	baseParsed := ParseQuery(contextBaseRaw)
 	if len(baseParsed.Positive) == 0 {
-		return QueryContext{Base: parsed}
+		return QueryContext{Base: parsed, Ordinal: ordinal}
 	}
 	if len(parsed.Negative) == 0 {
-		return QueryContext{Base: parsed}
+		return QueryContext{Base: parsed, Ordinal: ordinal}
 	}
 
 	exclude := normalizeContextPhrase(remainder)
 	if len(exclude) == 0 {
-		return QueryContext{Base: parsed}
+		return QueryContext{Base: parsed, Ordinal: ordinal}
 	}
 
 	if !looksLikeContextPhrase(exclude) {
-		return QueryContext{Base: parsed}
+		return QueryContext{Base: parsed, Ordinal: ordinal}
 	}
 
 	return QueryContext{
 		Base:     baseParsed,
 		Exclude:  exclude,
 		HasScope: true,
+		Ordinal:  ordinal,
 	}
 }
 
