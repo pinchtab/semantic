@@ -44,9 +44,11 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []typ
 		opts.TopK = 3
 	}
 
+	parsed := ParseQuery(query)
+
 	lexW, embW := c.weights(opts)
 
-	lexResult, embResult, err := c.runBoth(ctx, query, elements, opts)
+	lexResult, embResult, err := c.runBothParsed(ctx, parsed, elements, opts)
 	if err != nil {
 		return types.FindResult{}, err
 	}
@@ -66,8 +68,10 @@ type matcherResult struct {
 	err    error
 }
 
-func (c *CombinedMatcher) runBoth(ctx context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, types.FindResult, error) {
+func (c *CombinedMatcher) runBothParsed(ctx context.Context, parsed types.ParsedQuery, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, types.FindResult, error) {
 	internalOpts := types.FindOptions{
+		// Lower threshold allows both strategies to contribute to fusion
+		// before final filtering at the caller's requested threshold.
 		Threshold: opts.Threshold * 0.5,
 		TopK:      len(elements),
 	}
@@ -81,8 +85,8 @@ func (c *CombinedMatcher) runBoth(ctx context.Context, query string, elements []
 				lexCh <- matcherResult{err: fmt.Errorf("lexical matcher panic: %v", p)}
 			}
 		}()
-		r, err := c.lexical.Find(ctx, query, elements, internalOpts)
-		lexCh <- matcherResult{r, err}
+		r := c.lexical.findWithParsed(parsed, elements, internalOpts)
+		lexCh <- matcherResult{result: r}
 	}()
 	go func() {
 		defer func() {
@@ -90,7 +94,7 @@ func (c *CombinedMatcher) runBoth(ctx context.Context, query string, elements []
 				embCh <- matcherResult{err: fmt.Errorf("embedding matcher panic: %v", p)}
 			}
 		}()
-		r, err := c.embedding.Find(ctx, query, elements, internalOpts)
+		r, err := c.embedding.findWithParsed(parsed, elements, internalOpts)
 		embCh <- matcherResult{r, err}
 	}()
 
@@ -135,6 +139,12 @@ func (c *CombinedMatcher) mergeResults(lexResult, embResult types.FindResult, el
 	candidates := make([]scored, 0, len(allRefs))
 	for ref := range allRefs {
 		combined := lexW*lexScores[ref] + embW*embScores[ref]
+		if combined < 0 {
+			combined = 0
+		}
+		if combined > 1 {
+			combined = 1
+		}
 		if combined >= opts.Threshold {
 			s := scored{ref: ref, score: combined, el: refToElem[ref]}
 			if opts.Explain {

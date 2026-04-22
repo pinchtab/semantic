@@ -5,6 +5,7 @@ import (
 	"github.com/pinchtab/semantic/internal/types"
 	"math"
 	"sort"
+	"strings"
 )
 
 // Embedder converts text into dense vectors. See NewHashingEmbedder.
@@ -48,9 +49,25 @@ func (m *EmbeddingMatcher) Strategy() string {
 }
 
 func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
+	parsed := ParseQuery(query)
+	return m.findWithParsed(parsed, elements, opts)
+}
+
+func (m *EmbeddingMatcher) findWithParsed(parsed types.ParsedQuery, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
 	if opts.TopK <= 0 {
 		opts.TopK = 3
 	}
+
+	if len(parsed.Positive) == 0 && len(parsed.Negative) == 0 {
+		return types.FindResult{
+			Strategy:     m.Strategy(),
+			ElementCount: len(elements),
+		}, nil
+	}
+
+	positiveQuery := strings.Join(parsed.Positive, " ")
+	negativeQuery := strings.Join(parsed.Negative, " ")
+	negativeOnly := len(parsed.Positive) == 0 && len(parsed.Negative) > 0
 
 	// Build composite descriptions.
 	descs := make([]string, len(elements))
@@ -58,15 +75,34 @@ func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []type
 		descs[i] = el.Composite()
 	}
 
-	// Embed query + all descriptions in a single batch.
-	texts := append([]string{query}, descs...)
+	// Embed positive/negative query components and all descriptions in one batch.
+	texts := make([]string, 0, len(descs)+2)
+	if len(parsed.Positive) > 0 {
+		texts = append(texts, positiveQuery)
+	}
+	if len(parsed.Negative) > 0 {
+		texts = append(texts, negativeQuery)
+	}
+	texts = append(texts, descs...)
 	vectors, err := m.embedder.Embed(texts)
 	if err != nil {
 		return types.FindResult{}, err
 	}
 
-	queryVec := vectors[0]
-	elemVecs := vectors[1:]
+	idx := 0
+	var posVec []float32
+	if len(parsed.Positive) > 0 {
+		posVec = vectors[idx]
+		idx++
+	}
+
+	var negVec []float32
+	if len(parsed.Negative) > 0 {
+		negVec = vectors[idx]
+		idx++
+	}
+
+	elemVecs := vectors[idx:]
 	contextVecs := elemVecs
 	if m.neighborWeight > 0 && len(elemVecs) > 1 {
 		contextVecs = m.withNeighborContext(elemVecs)
@@ -79,14 +115,46 @@ func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []type
 
 	var candidates []scored
 	for i, el := range elements {
-		sim := CosineSimilarity(queryVec, contextVecs[i])
-		if sim >= opts.Threshold {
-			candidates = append(candidates, scored{desc: el, score: sim})
+		score := 1.0
+		if len(parsed.Positive) > 0 {
+			score = CosineSimilarity(posVec, contextVecs[i])
+		}
+
+		if len(parsed.Negative) > 0 {
+			// Debug note: negSim is the negative-token similarity used to apply
+			// exclusion/down-weight penalties for this candidate.
+			// Negatives should compare against the element vector itself.
+			negSim := CosineSimilarity(negVec, elemVecs[i])
+			if len(parsed.Positive) == 0 {
+				if negSim > 0.5 {
+					score = 0
+				}
+			} else if negSim > 0.5 {
+				score *= 1 - (negSim * 0.8)
+			}
+		}
+
+		if score < 0 {
+			score = 0
+		}
+		if score > 1 {
+			score = 1
+		}
+		if negativeOnly && score == 0 {
+			continue
+		}
+
+		if score >= opts.Threshold {
+			candidates = append(candidates, scored{desc: el, score: score})
 		}
 	}
 
 	sort.Slice(candidates, func(i, j int) bool {
-		return candidates[i].score > candidates[j].score
+		scoreDiff := candidates[i].score - candidates[j].score
+		if math.Abs(scoreDiff) > 1e-9 {
+			return scoreDiff > 0
+		}
+		return candidates[i].desc.Ref < candidates[j].desc.Ref
 	})
 
 	if len(candidates) > opts.TopK {
