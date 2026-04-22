@@ -53,6 +53,13 @@ type FindResult struct {
 	ElementCount int // total elements evaluated
 }
 
+// ParsedQuery splits a raw query into positive and negative token groups.
+// Negative tokens are interpreted as terms that should be penalized or excluded.
+type ParsedQuery struct {
+	Positive []string
+	Negative []string
+}
+
 // ConfidenceLabel returns "high", "medium", or "low" for the best match.
 func (r *FindResult) ConfidenceLabel() string {
 	return CalibrateConfidence(r.BestScore)

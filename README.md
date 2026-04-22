@@ -53,6 +53,34 @@ result, err := matcher.Find(ctx, "log in button", elements, semantic.FindOptions
 // result.BestScore = 0.82
 ```
 
+## Negative Queries
+
+Queries can include exclusion intent using:
+`not`, `without`, `exclude`, `excluding`, `except`, `no`, `ignore`.
+
+Examples:
+
+```text
+button not submit
+link without logout
+textbox excluding email
+```
+
+CLI examples:
+
+```bash
+semantic find "button not submit" --snapshot page.json
+semantic find "link without logout" --snapshot page.json
+semantic find "textbox not email" --snapshot page.json --strategy combined
+```
+
+Behavior:
+
+- Positive tokens contribute to base match score.
+- Negative tokens apply penalty when they match an element.
+- Strong negative hits can fully exclude an element from results.
+- Negative matching is synonym-aware (for example, `not login` can penalize `Sign In`).
+
 ## Package Layout
 
 ```

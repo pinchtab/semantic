@@ -48,9 +48,24 @@ func NewLexicalMatcher() *LexicalMatcher {
 func (m *LexicalMatcher) Strategy() string { return "lexical" }
 
 func (m *LexicalMatcher) Find(_ context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
+	parsed := ParseQuery(query)
+	return m.findWithParsed(parsed, elements, opts), nil
+}
+
+func (m *LexicalMatcher) findWithParsed(parsed types.ParsedQuery, elements []types.ElementDescriptor, opts types.FindOptions) types.FindResult {
 	if opts.TopK <= 0 {
 		opts.TopK = 3
 	}
+
+	if len(parsed.Positive) == 0 && len(parsed.Negative) == 0 {
+		return types.FindResult{
+			Strategy:     "lexical",
+			ElementCount: len(elements),
+		}
+	}
+
+	negativeOnly := len(parsed.Positive) == 0 && len(parsed.Negative) > 0
+	positiveQuery := strings.Join(parsed.Positive, " ")
 
 	ef := BuildElementFrequency(elements)
 
@@ -62,10 +77,38 @@ func (m *LexicalMatcher) Find(_ context.Context, query string, elements []types.
 	var candidates []scored
 	for _, el := range elements {
 		composite := el.Composite()
-		score := lexicalScore(query, composite, el.Interactive, ef)
-		score += positionalBoost(query, el.Positional)
+		descTokens := tokenize(composite)
+		score := 0.0
+		if len(parsed.Positive) == 0 {
+			// Negative-only query means "everything except negatives".
+			score = 1.0
+		} else {
+			score = lexicalScoreTokens(parsed.Positive, descTokens, el.Interactive, ef)
+			score += positionalBoost(positiveQuery, el.Positional)
+		}
+
+		if len(parsed.Negative) > 0 {
+			// Debug note: negativeScore reflects how strongly negative tokens match
+			// this element; hasStrongNegativeHit indicates exact/synonym token hit.
+			negativeScore := lexicalScoreTokens(parsed.Negative, descTokens, el.Interactive, ef)
+			switch {
+			case hasStrongNegativeHit(parsed.Negative, descTokens) || negativeScore > 0.7:
+				// Applied penalty: full exclusion.
+				score = 0
+			case negativeScore > 0.4:
+				// Applied penalty: multiplicative down-weight.
+				score *= 1 - negativeScore
+			}
+		}
+
+		if score < 0 {
+			score = 0
+		}
 		if score > 1.0 {
 			score = 1.0
+		}
+		if negativeOnly && score == 0 {
+			continue
 		}
 		if score >= opts.Threshold {
 			candidates = append(candidates, scored{desc: el, score: score})
@@ -116,7 +159,7 @@ func (m *LexicalMatcher) Find(_ context.Context, query string, elements []types.
 		result.BestScore = result.Matches[0].Score
 	}
 
-	return result, nil
+	return result
 }
 
 func tokenize(s string) []string {
@@ -226,7 +269,10 @@ func LexicalScoreWithFrequency(query, desc string, ef *ElementFrequency) float64
 func lexicalScore(query, desc string, interactive bool, ef *ElementFrequency) float64 {
 	rawQTokens := tokenize(query)
 	rawDTokens := tokenize(desc)
+	return lexicalScoreTokens(rawQTokens, rawDTokens, interactive, ef)
+}
 
+func lexicalScoreTokens(rawQTokens, rawDTokens []string, interactive bool, ef *ElementFrequency) float64 {
 	qTokens := removeStopwordsContextAware(rawQTokens, rawDTokens)
 	dTokens := removeStopwordsContextAware(rawDTokens, rawQTokens)
 
@@ -560,4 +606,45 @@ func tokenPrefixScore(qTokens, dTokens []string) float64 {
 	}
 
 	return total / float64(len(qTokens))
+}
+
+func hasStrongNegativeHit(negativeTokens, descTokens []string) bool {
+	if len(negativeTokens) == 0 || len(descTokens) == 0 {
+		return false
+	}
+
+	dSet := tokenSet(descTokens)
+	for _, nt := range negativeTokens {
+		if isStopword(nt) || isSemanticStopword(nt) {
+			continue
+		}
+		if dSet[nt] {
+			return true
+		}
+		if syns, ok := synonymIndex[nt]; ok {
+			for syn := range syns {
+				synTokens := strings.Fields(syn)
+				if len(synTokens) == 0 {
+					continue
+				}
+				allPresent := true
+				hasMeaningfulToken := false
+				for _, st := range synTokens {
+					if isStopword(st) || isSemanticStopword(st) {
+						continue
+					}
+					hasMeaningfulToken = true
+					if !dSet[st] {
+						allPresent = false
+						break
+					}
+				}
+				if hasMeaningfulToken && allPresent {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
 }
