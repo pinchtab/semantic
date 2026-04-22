@@ -44,7 +44,7 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []typ
 		opts.TopK = 3
 	}
 
-	parsed := ParseQuery(query)
+	parsed := ParseQueryContext(query)
 
 	lexW, embW := c.weights(opts)
 
@@ -68,7 +68,7 @@ type matcherResult struct {
 	err    error
 }
 
-func (c *CombinedMatcher) runBothParsed(ctx context.Context, parsed types.ParsedQuery, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, types.FindResult, error) {
+func (c *CombinedMatcher) runBothParsed(ctx context.Context, parsed QueryContext, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, types.FindResult, error) {
 	internalOpts := types.FindOptions{
 		// Lower threshold allows both strategies to contribute to fusion
 		// before final filtering at the caller's requested threshold.
