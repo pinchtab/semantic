@@ -53,7 +53,7 @@ result, err := matcher.Find(ctx, "log in button", elements, semantic.FindOptions
 // result.BestScore = 0.82
 ```
 
-## Negative Queries
+## Negative and Ordinal Queries
 
 Queries can include exclusion intent using:
 `not`, `without`, `exclude`, `excluding`, `except`, `no`, `ignore`.
@@ -80,12 +80,22 @@ semantic find "link without logout" --snapshot page.json
 semantic find "textbox not email" --snapshot page.json --strategy combined
 ```
 
+Ordinal queries are also supported for position-based selection:
+
+```text
+second button
+third menu item
+last input field
+```
+
 Behavior:
 
 - Positive tokens contribute to base match score.
 - Negative tokens apply penalty when they match an element.
 - Strong negative hits can fully exclude an element from results.
 - Negative matching is synonym-aware (for example, `not login` can penalize `Sign In`).
+- Ordinals select from the final matching candidates in document order.
+- Ordinals compose with context exclusion, for example `second button not in header`.
 
 ## Package Layout
 
