@@ -48,11 +48,12 @@ func NewLexicalMatcher() *LexicalMatcher {
 func (m *LexicalMatcher) Strategy() string { return "lexical" }
 
 func (m *LexicalMatcher) Find(_ context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
-	parsed := ParseQuery(query)
-	return m.findWithParsed(parsed, elements, opts), nil
+	ctx := ParseQueryContext(query)
+	return m.findWithParsed(ctx, elements, opts), nil
 }
 
-func (m *LexicalMatcher) findWithParsed(parsed types.ParsedQuery, elements []types.ElementDescriptor, opts types.FindOptions) types.FindResult {
+func (m *LexicalMatcher) findWithParsed(ctx QueryContext, elements []types.ElementDescriptor, opts types.FindOptions) types.FindResult {
+	parsed := ctx.Base
 	if opts.TopK <= 0 {
 		opts.TopK = 3
 	}
@@ -76,6 +77,10 @@ func (m *LexicalMatcher) findWithParsed(parsed types.ParsedQuery, elements []typ
 
 	var candidates []scored
 	for _, el := range elements {
+		if ctx.HasScope && matchesExcludedContext(el, ctx.Exclude) {
+			continue
+		}
+
 		composite := el.Composite()
 		descTokens := tokenize(composite)
 		score := 0.0
