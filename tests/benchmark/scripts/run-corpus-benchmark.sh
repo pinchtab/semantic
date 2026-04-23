@@ -3,7 +3,7 @@
 # Run semantic matching benchmark with ranking metrics
 #
 # Usage:
-#   ./run-corpus-benchmark.sh [--strategy <name>] [--corpus <dir>]
+#   ./run-corpus-benchmark.sh [--strategy <name>] [--corpus <dir>] [--lexical-weight <n>] [--embedding-weight <n>]
 #
 # Metrics:
 #   - MRR (Mean Reciprocal Rank)
@@ -22,14 +22,23 @@ RESULTS_DIR="${BENCHMARK_DIR}/results"
 STRATEGY="combined"
 SPECIFIC_CORPUS=""
 TOP_K=5
+LEXICAL_WEIGHT=0.6
+EMBEDDING_WEIGHT=0.4
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --strategy) STRATEGY="$2"; shift 2 ;;
         --corpus) SPECIFIC_CORPUS="$2"; shift 2 ;;
         --top-k) TOP_K="$2"; shift 2 ;;
+        --lexical-weight) LEXICAL_WEIGHT="$2"; shift 2 ;;
+        --embedding-weight) EMBEDDING_WEIGHT="$2"; shift 2 ;;
         *) echo "Unknown option: $1"; exit 1 ;;
     esac
 done
+
+case "${STRATEGY}" in
+    lexical|embedding|combined) ;;
+    *) echo "Unknown strategy: ${STRATEGY}"; exit 1 ;;
+esac
 
 mkdir -p "${RESULTS_DIR}"
 
@@ -46,12 +55,18 @@ jq -n \
     --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     --arg strategy "${STRATEGY}" \
     --argjson top_k "${TOP_K}" \
+    --argjson lexical_weight "${LEXICAL_WEIGHT}" \
+    --argjson embedding_weight "${EMBEDDING_WEIGHT}" \
     '{
         benchmark: {
             timestamp: $ts,
             strategy: $strategy,
             top_k: $top_k,
-            type: "corpus"
+            type: "corpus",
+            weights: {
+                lexical: $lexical_weight,
+                embedding: $embedding_weight
+            }
         },
         results: [],
         metrics: {
@@ -69,6 +84,9 @@ jq -n \
 declare -a ALL_RRS=()
 declare -a ALL_P1=()
 declare -a ALL_P3=()
+declare -a ALL_HIT3=()
+declare -a ALL_HIT5=()
+declare -a ALL_MARGINS=()
 declare -a ALL_LATENCIES=()
 
 run_corpus() {
@@ -80,6 +98,9 @@ run_corpus() {
     local queries="${corpus_path}/queries.json"
 
     if [[ ! -f "$snapshot" ]] || [[ ! -f "$queries" ]]; then
+        if [[ -f "${corpus_path}/cases.json" ]] || [[ -f "${corpus_path}/scenarios.json" ]]; then
+            return
+        fi
         echo "  Skipping ${corpus_name}: missing files"
         return
     fi
@@ -104,12 +125,24 @@ run_corpus() {
         local start_ns end_ns duration_ms result
         start_ns=$(python3 -c 'import time; print(int(time.time() * 1000000))')
 
-        result=$("${SEMANTIC}" find "${query}" \
+        if ! result=$("${SEMANTIC}" find "${query}" \
             --snapshot "${snapshot}" \
             --strategy "${STRATEGY}" \
             --threshold 0.01 \
             --top-k "${TOP_K}" \
-            --format json 2>/dev/null || echo '{"matches":[]}')
+            --lexical-weight "${LEXICAL_WEIGHT}" \
+            --embedding-weight "${EMBEDDING_WEIGHT}" \
+            --format json 2>&1); then
+            echo "  [${id}] ERROR: semantic find failed for query: ${query}" >&2
+            echo "${result}" >&2
+            exit 1
+        fi
+
+        if ! echo "$result" | jq -e '(.matches | type) == "array"' > /dev/null 2>&1; then
+            echo "  [${id}] ERROR: semantic find returned invalid JSON" >&2
+            echo "${result}" >&2
+            exit 1
+        fi
 
         end_ns=$(python3 -c 'import time; print(int(time.time() * 1000000))')
         duration_ms=$(( (end_ns - start_ns) / 1000 ))
@@ -142,22 +175,61 @@ run_corpus() {
         # Calculate P@3 (count relevant in top 3, partials count as 0.5)
         local relevant_in_top3=0
         local partial_in_top3=0
-        for rank in 1 2 3; do
+        local hit_at_3=0
+        local hit_at_5=0
+        local best_relevant_rank="null"
+        for rank in 1 2 3 4 5; do
             local ref_at_rank
             ref_at_rank=$(echo "$result" | jq -r ".matches[$((rank-1))].ref // \"\"")
             if echo "$relevant_refs" | jq -e "index(\"${ref_at_rank}\")" > /dev/null 2>&1; then
-                relevant_in_top3=$((relevant_in_top3 + 1))
-            elif echo "$partial_refs" | jq -e "index(\"${ref_at_rank}\")" > /dev/null 2>&1; then
-                partial_in_top3=$((partial_in_top3 + 1))
+                if [[ "$best_relevant_rank" == "null" ]]; then
+                    best_relevant_rank=$rank
+                fi
+                if [[ $rank -le 3 ]]; then
+                    relevant_in_top3=$((relevant_in_top3 + 1))
+                    hit_at_3=1
+                fi
+                hit_at_5=1
+            elif [[ $rank -le 3 ]]; then
+                if echo "$partial_refs" | jq -e "index(\"${ref_at_rank}\")" > /dev/null 2>&1; then
+                    partial_in_top3=$((partial_in_top3 + 1))
+                fi
             fi
         done
         local p3
         p3=$(echo "scale=4; (${relevant_in_top3} + ${partial_in_top3} * 0.5) / 3" | bc)
 
+        # Calculate best_relevant_score, best_wrong_score, and margin
+        local best_relevant_score=0
+        local best_wrong_score=0
+        local num_matches
+        num_matches=$(echo "$result" | jq '.matches | length')
+        for idx in $(seq 0 $((num_matches - 1))); do
+            local ref_at_idx score_at_idx
+            ref_at_idx=$(echo "$result" | jq -r ".matches[$idx].ref // \"\"")
+            score_at_idx=$(echo "$result" | jq -r ".matches[$idx].score // 0")
+            if echo "$relevant_refs" | jq -e "index(\"${ref_at_idx}\")" > /dev/null 2>&1; then
+                if (( $(echo "$score_at_idx > $best_relevant_score" | bc -l) )); then
+                    best_relevant_score=$score_at_idx
+                fi
+            elif echo "$partial_refs" | jq -e "index(\"${ref_at_idx}\")" > /dev/null 2>&1; then
+                : # partials don't count as wrong
+            else
+                if (( $(echo "$score_at_idx > $best_wrong_score" | bc -l) )); then
+                    best_wrong_score=$score_at_idx
+                fi
+            fi
+        done
+        local margin
+        margin=$(echo "scale=4; $best_relevant_score - $best_wrong_score" | bc)
+
         # Collect metrics
         ALL_RRS+=("$rr")
         ALL_P1+=("$p1")
         ALL_P3+=("$p3")
+        ALL_HIT3+=("$hit_at_3")
+        ALL_HIT5+=("$hit_at_5")
+        ALL_MARGINS+=("$margin")
         ALL_LATENCIES+=("$duration_ms")
 
         # Status indicator
@@ -186,6 +258,12 @@ run_corpus() {
             --argjson rr "$rr" \
             --argjson p1 "$p1" \
             --argjson p3 "$p3" \
+            --argjson hit_at_3 "$hit_at_3" \
+            --argjson hit_at_5 "$hit_at_5" \
+            --argjson best_relevant_rank "$best_relevant_rank" \
+            --argjson best_relevant_score "$best_relevant_score" \
+            --argjson best_wrong_score "$best_wrong_score" \
+            --argjson margin "$margin" \
             --argjson latency "$duration_ms" \
             '{
                 id: $id, query: $query, corpus: $corpus,
@@ -193,6 +271,11 @@ run_corpus() {
                 best_ref: $best_ref, best_score: $best_score,
                 matches: $matches, relevant_refs: $relevant,
                 rr: $rr, p_at_1: $p1, p_at_3: $p3,
+                hit_at_3: $hit_at_3, hit_at_5: $hit_at_5,
+                best_relevant_rank: $best_relevant_rank,
+                best_relevant_score: $best_relevant_score,
+                best_wrong_score: $best_wrong_score,
+                margin: $margin,
                 latency_ms: $latency
             }')
 
@@ -233,6 +316,15 @@ P1=$(printf '%s\n' "${ALL_P1[@]}" | awk '{s+=$1} END {printf "%.4f", s/NR}')
 # P@3
 P3=$(printf '%s\n' "${ALL_P3[@]}" | awk '{s+=$1} END {printf "%.4f", s/NR}')
 
+# Hit@3
+HIT3=$(printf '%s\n' "${ALL_HIT3[@]}" | awk '{s+=$1} END {printf "%.4f", s/NR}')
+
+# Hit@5
+HIT5=$(printf '%s\n' "${ALL_HIT5[@]}" | awk '{s+=$1} END {printf "%.4f", s/NR}')
+
+# Average margin
+AVG_MARGIN=$(printf '%s\n' "${ALL_MARGINS[@]}" | awk '{s+=$1} END {printf "%.4f", s/NR}')
+
 # Latency percentiles
 SORTED_LAT=($(printf '%s\n' "${ALL_LATENCIES[@]}" | sort -n))
 P50_IDX=$(( TOTAL * 50 / 100 ))
@@ -250,6 +342,9 @@ jq \
     --argjson mrr "$MRR" \
     --argjson p1 "$P1" \
     --argjson p3 "$P3" \
+    --argjson hit3 "$HIT3" \
+    --argjson hit5 "$HIT5" \
+    --argjson avg_margin "$AVG_MARGIN" \
     --argjson lat_avg "$LAT_AVG" \
     --argjson lat_p50 "$LAT_P50" \
     --argjson lat_p95 "$LAT_P95" \
@@ -259,6 +354,9 @@ jq \
         mrr: $mrr,
         p_at_1: $p1,
         p_at_3: $p3,
+        hit_at_3: $hit3,
+        hit_at_5: $hit5,
+        avg_margin: $avg_margin,
         latency_avg_ms: $lat_avg,
         latency_p50_ms: $lat_p50,
         latency_p95_ms: $lat_p95,
@@ -274,9 +372,50 @@ jq '.metrics.by_difficulty = (
         value: {
             count: length,
             mrr: ([.[].rr] | add / length),
-            p_at_1: ([.[].p_at_1] | add / length)
+            p_at_1: ([.[].p_at_1] | add / length),
+            hit_at_3: ([.[].hit_at_3] | add / length),
+            hit_at_5: ([.[].hit_at_5] | add / length),
+            avg_margin: ([.[].margin] | add / length)
         }
     }) | from_entries
+)' "$REPORT_FILE" > "$tmp"
+mv "$tmp" "$REPORT_FILE"
+
+# Add by-corpus breakdown
+tmp=$(mktemp)
+jq '.metrics.by_corpus = (
+    .results | group_by(.corpus) | map({
+        key: .[0].corpus,
+        value: {
+            count: length,
+            mrr: ([.[].rr] | add / length),
+            p_at_1: ([.[].p_at_1] | add / length),
+            hit_at_3: ([.[].hit_at_3] | add / length),
+            hit_at_5: ([.[].hit_at_5] | add / length),
+            avg_margin: ([.[].margin] | add / length)
+        }
+    }) | from_entries
+)' "$REPORT_FILE" > "$tmp"
+mv "$tmp" "$REPORT_FILE"
+
+# Add by-tag breakdown
+tmp=$(mktemp)
+jq '.metrics.by_tag = (
+    [.results[] | {tags: .tags, rr: .rr, p_at_1: .p_at_1, hit_at_3: .hit_at_3, hit_at_5: .hit_at_5, margin: .margin}]
+    | [.[] | .tags[] as $tag | {tag: $tag, rr: .rr, p_at_1: .p_at_1, hit_at_3: .hit_at_3, hit_at_5: .hit_at_5, margin: .margin}]
+    | group_by(.tag)
+    | map({
+        key: .[0].tag,
+        value: {
+            count: length,
+            mrr: ([.[].rr] | add / length),
+            p_at_1: ([.[].p_at_1] | add / length),
+            hit_at_3: ([.[].hit_at_3] | add / length),
+            hit_at_5: ([.[].hit_at_5] | add / length),
+            avg_margin: ([.[].margin] | add / length)
+        }
+    })
+    | from_entries
 )' "$REPORT_FILE" > "$tmp"
 mv "$tmp" "$REPORT_FILE"
 
@@ -292,6 +431,8 @@ cat > "${SUMMARY_FILE}" << EOF
 |-------|-------|
 | Timestamp | $(jq -r '.benchmark.timestamp' "$REPORT_FILE") |
 | Strategy | ${STRATEGY} |
+| Lexical Weight | ${LEXICAL_WEIGHT} |
+| Embedding Weight | ${EMBEDDING_WEIGHT} |
 | Top-K | ${TOP_K} |
 | Total Queries | ${TOTAL} |
 
@@ -302,6 +443,9 @@ cat > "${SUMMARY_FILE}" << EOF
 | **MRR** | **${MRR}** | Mean Reciprocal Rank |
 | **P@1** | **${P1}** | Precision at rank 1 |
 | **P@3** | **${P3}** | Precision at rank 3 |
+| **Hit@3** | **${HIT3}** | Any relevant in top 3 |
+| **Hit@5** | **${HIT5}** | Any relevant in top 5 |
+| **Avg Margin** | **${AVG_MARGIN}** | best_relevant - best_wrong |
 
 ## Latency
 
@@ -314,7 +458,15 @@ cat > "${SUMMARY_FILE}" << EOF
 
 ## By Difficulty
 
-$(jq -r '.metrics.by_difficulty | to_entries | .[] | "| \(.key) | \(.value.count) queries | MRR: \(.value.mrr | . * 100 | floor / 100) | P@1: \(.value.p_at_1 | . * 100 | floor / 100) |"' "$REPORT_FILE")
+| Difficulty | Count | MRR | P@1 | Hit@3 | Margin |
+|------------|-------|-----|-----|-------|--------|
+$(jq -r '.metrics.by_difficulty | to_entries | .[] | "| \(.key) | \(.value.count) | \(.value.mrr | . * 100 | floor / 100) | \(.value.p_at_1 | . * 100 | floor / 100) | \(.value.hit_at_3 | . * 100 | floor / 100) | \(.value.avg_margin | . * 100 | floor / 100) |"' "$REPORT_FILE")
+
+## By Corpus
+
+| Corpus | Count | MRR | P@1 | Hit@3 | Margin |
+|--------|-------|-----|-----|-------|--------|
+$(jq -r '.metrics.by_corpus | to_entries | .[] | "| \(.key) | \(.value.count) | \(.value.mrr | . * 100 | floor / 100) | \(.value.p_at_1 | . * 100 | floor / 100) | \(.value.hit_at_3 | . * 100 | floor / 100) | \(.value.avg_margin | . * 100 | floor / 100) |"' "$REPORT_FILE")
 
 ## Misses (P@1 = 0)
 
@@ -332,10 +484,14 @@ echo "================================================"
 echo "  CORPUS BENCHMARK RESULTS"
 echo "================================================"
 echo "  Strategy:    ${STRATEGY}"
+echo "  Weights:     lexical=${LEXICAL_WEIGHT} embedding=${EMBEDDING_WEIGHT}"
 echo "  Queries:     ${TOTAL}"
 echo "  MRR:         ${MRR}"
 echo "  P@1:         ${P1}"
 echo "  P@3:         ${P3}"
+echo "  Hit@3:       ${HIT3}"
+echo "  Hit@5:       ${HIT5}"
+echo "  Avg Margin:  ${AVG_MARGIN}"
 echo "  Latency P50: ${LAT_P50} ms"
 echo "  Latency P95: ${LAT_P95} ms"
 echo "================================================"

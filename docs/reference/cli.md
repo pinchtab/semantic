@@ -16,6 +16,8 @@ semantic find <query> [flags]
 | `--threshold` | 0.3 | Minimum score |
 | `--top-k` | 3 | Maximum results |
 | `--strategy` | combined | `combined`, `lexical`, or `embedding` |
+| `--lexical-weight` | 0 | Combined strategy lexical weight override |
+| `--embedding-weight` | 0 | Combined strategy embedding weight override |
 | `--format` | table | `table`, `json`, or `refs` |
 
 **Examples:**
@@ -30,6 +32,9 @@ curl -s localhost:9999/snapshot | semantic find "search box"
 
 # Machine-readable
 semantic find "login" --snapshot page.json --format json
+
+# Tune combined scoring
+semantic find "login" --snapshot page.json --lexical-weight 0.7 --embedding-weight 0.3
 
 # Just refs (for piping)
 semantic find "submit" --snapshot page.json --format refs

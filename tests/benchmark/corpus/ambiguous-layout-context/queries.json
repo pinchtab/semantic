@@ -1,0 +1,138 @@
+[
+  {
+    "id": "alc-001",
+    "query": "header search box",
+    "relevant_refs": ["e1"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["duplicate-labels", "section", "position"]
+  },
+  {
+    "id": "alc-002",
+    "query": "sidebar search",
+    "relevant_refs": ["e6"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["duplicate-labels", "section", "position"]
+  },
+  {
+    "id": "alc-003",
+    "query": "search on the left",
+    "relevant_refs": ["e6"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["duplicate-labels", "visual", "position"]
+  },
+  {
+    "id": "alc-004",
+    "query": "search in top right area",
+    "relevant_refs": ["e1"],
+    "partially_relevant_refs": ["e2"],
+    "difficulty": "hard",
+    "tags": ["duplicate-labels", "visual", "position"]
+  },
+  {
+    "id": "alc-005",
+    "query": "save button in profile",
+    "relevant_refs": ["e18"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["duplicate-labels", "section", "context-exclusion"]
+  },
+  {
+    "id": "alc-006",
+    "query": "save in billing section",
+    "relevant_refs": ["e22"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["duplicate-labels", "section", "context-exclusion"]
+  },
+  {
+    "id": "alc-007",
+    "query": "second save button",
+    "relevant_refs": ["e22"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["duplicate-labels", "ordinal"]
+  },
+  {
+    "id": "alc-008",
+    "query": "cancel button below password",
+    "relevant_refs": ["e19"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["duplicate-labels", "visual", "position"]
+  },
+  {
+    "id": "alc-009",
+    "query": "login link not in footer",
+    "relevant_refs": ["e3"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["duplicate-labels", "context-exclusion"]
+  },
+  {
+    "id": "alc-010",
+    "query": "footer login link",
+    "relevant_refs": ["e29"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["duplicate-labels", "section"]
+  },
+  {
+    "id": "alc-011",
+    "query": "home link in sidebar",
+    "relevant_refs": ["e7"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["duplicate-labels", "section"]
+  },
+  {
+    "id": "alc-012",
+    "query": "home link at bottom",
+    "relevant_refs": ["e25"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["duplicate-labels", "visual", "position"]
+  },
+  {
+    "id": "alc-013",
+    "query": "help in sidebar not footer",
+    "relevant_refs": ["e10"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["duplicate-labels", "context-exclusion"]
+  },
+  {
+    "id": "alc-014",
+    "query": "main content save button",
+    "relevant_refs": ["e18"],
+    "partially_relevant_refs": ["e22"],
+    "difficulty": "hard",
+    "tags": ["duplicate-labels", "section"]
+  },
+  {
+    "id": "alc-015",
+    "query": "first cancel button",
+    "relevant_refs": ["e19"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["duplicate-labels", "ordinal"]
+  },
+  {
+    "id": "alc-016",
+    "query": "submit at the bottom of the page",
+    "relevant_refs": ["e32"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["visual", "position"]
+  },
+  {
+    "id": "alc-017",
+    "query": "input field below username",
+    "relevant_refs": ["e16"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["visual", "position"]
+  }
+]

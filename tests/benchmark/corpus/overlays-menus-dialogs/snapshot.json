@@ -1,0 +1,60 @@
+[
+  {"ref": "e1", "role": "button", "name": "Cancel", "parent": null, "section": "Page Header"},
+  {"ref": "e2", "role": "button", "name": "Save", "parent": null, "section": "Page Header"},
+  {"ref": "e3", "role": "button", "name": "Settings", "parent": null, "section": "Navigation"},
+  {"ref": "e4", "role": "button", "name": "Account Menu", "parent": null, "section": "Navigation", "expanded": false},
+  {"ref": "e5", "role": "link", "name": "Home", "parent": null, "section": "Navigation"},
+  {"ref": "e6", "role": "button", "name": "More Options", "parent": null, "section": "Repository Actions"},
+  {"ref": "e7", "role": "button", "name": "Delete Repository", "parent": null, "section": "Repository Actions"},
+
+  {"ref": "e10", "role": "dialog", "name": "Confirm Delete", "parent": null, "modal": true},
+  {"ref": "e11", "role": "heading", "name": "Delete Repository?", "parent": "e10", "section": "Confirm Delete"},
+  {"ref": "e12", "role": "StaticText", "name": "This action cannot be undone.", "parent": "e10", "section": "Confirm Delete"},
+  {"ref": "e13", "role": "button", "name": "Cancel", "parent": "e10", "section": "Confirm Delete"},
+  {"ref": "e14", "role": "button", "name": "Delete", "parent": "e10", "section": "Confirm Delete"},
+  {"ref": "e15", "role": "button", "name": "Close", "parent": "e10", "section": "Confirm Delete", "description": "Close dialog"},
+
+  {"ref": "e20", "role": "menu", "name": "Account Menu", "parent": null, "expanded": true},
+  {"ref": "e21", "role": "menuitem", "name": "Profile", "parent": "e20", "section": "Account Menu"},
+  {"ref": "e22", "role": "menuitem", "name": "Settings", "parent": "e20", "section": "Account Menu"},
+  {"ref": "e23", "role": "menuitem", "name": "Billing", "parent": "e20", "section": "Account Menu"},
+  {"ref": "e24", "role": "menuitem", "name": "Sign Out", "parent": "e20", "section": "Account Menu"},
+  {"ref": "e25", "role": "menuitem", "name": "Help", "parent": "e20", "section": "Account Menu"},
+
+  {"ref": "e30", "role": "menu", "name": "Repository Options", "parent": null, "expanded": true},
+  {"ref": "e31", "role": "menuitem", "name": "Export CSV", "parent": "e30", "section": "Repository Options"},
+  {"ref": "e32", "role": "menuitem", "name": "Export JSON", "parent": "e30", "section": "Repository Options"},
+  {"ref": "e33", "role": "menuitem", "name": "Duplicate", "parent": "e30", "section": "Repository Options"},
+  {"ref": "e34", "role": "menuitem", "name": "Archive", "parent": "e30", "section": "Repository Options"},
+  {"ref": "e35", "role": "menuitem", "name": "Delete", "parent": "e30", "section": "Repository Options"},
+
+  {"ref": "e40", "role": "alertdialog", "name": "Notification", "parent": null},
+  {"ref": "e41", "role": "StaticText", "name": "Changes saved successfully", "parent": "e40", "section": "Notification"},
+  {"ref": "e42", "role": "button", "name": "Dismiss", "parent": "e40", "section": "Notification"},
+  {"ref": "e43", "role": "button", "name": "Undo", "parent": "e40", "section": "Notification"},
+
+  {"ref": "e50", "role": "dialog", "name": "Settings", "parent": null, "modal": true},
+  {"ref": "e51", "role": "heading", "name": "Settings", "parent": "e50", "section": "Settings Dialog"},
+  {"ref": "e52", "role": "checkbox", "name": "Dark Mode", "parent": "e50", "section": "Settings Dialog"},
+  {"ref": "e53", "role": "checkbox", "name": "Notifications", "parent": "e50", "section": "Settings Dialog"},
+  {"ref": "e54", "role": "button", "name": "Save", "parent": "e50", "section": "Settings Dialog"},
+  {"ref": "e55", "role": "button", "name": "Cancel", "parent": "e50", "section": "Settings Dialog"},
+  {"ref": "e56", "role": "button", "name": "Close", "parent": "e50", "section": "Settings Dialog"},
+
+  {"ref": "e60", "role": "combobox", "name": "Select Theme", "parent": "e50", "section": "Settings Dialog", "expanded": true},
+  {"ref": "e61", "role": "option", "name": "Light", "parent": "e60"},
+  {"ref": "e62", "role": "option", "name": "Dark", "parent": "e60"},
+  {"ref": "e63", "role": "option", "name": "System", "parent": "e60"},
+
+  {"ref": "e70", "role": "button", "name": "Save", "parent": null, "section": "Footer"},
+  {"ref": "e71", "role": "button", "name": "Cancel", "parent": null, "section": "Footer"},
+  {"ref": "e72", "role": "link", "name": "Help", "parent": null, "section": "Footer"},
+
+  {"ref": "e80", "role": "tooltip", "name": "Save your changes", "parent": null},
+
+  {"ref": "e90", "role": "menu", "name": "Context Menu", "parent": null, "expanded": true},
+  {"ref": "e91", "role": "menuitem", "name": "Cut", "parent": "e90"},
+  {"ref": "e92", "role": "menuitem", "name": "Copy", "parent": "e90"},
+  {"ref": "e93", "role": "menuitem", "name": "Paste", "parent": "e90"},
+  {"ref": "e94", "role": "menuitem", "name": "Delete", "parent": "e90"}
+]

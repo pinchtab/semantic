@@ -6,7 +6,7 @@
 #   ./run-benchmark.sh [--strategy <name>] [--cases <file>]
 #
 # Options:
-#   --strategy <name>   Strategy to benchmark (lexical, embedding, combined, all)
+#   --strategy <name>   Strategy to benchmark (lexical, embedding, combined)
 #   --cases <file>      Specific case file to run (default: all)
 #   --output <dir>      Output directory (default: ../results)
 #
@@ -30,6 +30,11 @@ while [[ $# -gt 0 ]]; do
         *) echo "Unknown option: $1"; exit 1 ;;
     esac
 done
+
+case "${STRATEGY}" in
+    lexical|embedding|combined) ;;
+    *) echo "Unknown strategy: ${STRATEGY}"; exit 1 ;;
+esac
 
 mkdir -p "${RESULTS_DIR}"
 
@@ -65,6 +70,12 @@ jq -n \
     }' > "${REPORT_FILE}"
 
 # Run cases
+score_at_least() {
+    local score="$1"
+    local min_score="$2"
+    awk -v score="${score}" -v min_score="${min_score}" 'BEGIN { exit (score + 0 >= min_score + 0) ? 0 : 1 }'
+}
+
 run_case() {
     local case_file="$1"
     local case_name
@@ -142,18 +153,30 @@ run_case() {
                 fi
             elif [[ "${expect_has_matches}" == "true" ]]; then
                 if [[ ${match_count} -gt 0 ]]; then
-                    status="pass"
-                    notes="${match_count} matches"
+                    if score_at_least "${got_score}" "${min_score}"; then
+                        status="pass"
+                        notes="${match_count} matches, score=${got_score}"
+                    else
+                        notes="${match_count} matches, score=${got_score} below min_score=${min_score}"
+                    fi
                 else
                     notes="expected matches, got 0"
                 fi
             elif [[ -n "${expect_ref}" ]]; then
                 if [[ "${got_ref}" == "${expect_ref}" ]]; then
-                    status="pass"
-                    notes="ref=${got_ref}, score=${got_score}"
+                    if score_at_least "${got_score}" "${min_score}"; then
+                        status="pass"
+                        notes="ref=${got_ref}, score=${got_score}"
+                    else
+                        notes="ref=${got_ref}, score=${got_score} below min_score=${min_score}"
+                    fi
                 elif [[ -n "${expect_ref_alt}" ]] && echo ",${expect_ref_alt}," | grep -q ",${got_ref},"; then
-                    status="pass"
-                    notes="ref=${got_ref} (alt), score=${got_score}"
+                    if score_at_least "${got_score}" "${min_score}"; then
+                        status="pass"
+                        notes="ref=${got_ref} (alt), score=${got_score}"
+                    else
+                        notes="ref=${got_ref} (alt), score=${got_score} below min_score=${min_score}"
+                    fi
                 else
                     notes="got ${got_ref}, want ${expect_ref}"
                 fi
