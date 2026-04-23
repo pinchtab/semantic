@@ -2,10 +2,12 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/pinchtab/semantic/internal/types"
 	"math"
 	"testing"
+
+	"github.com/pinchtab/semantic/internal/types"
 )
 
 // dummyEmbedder tests
@@ -382,3 +384,108 @@ func findMatchScore(matches []types.ElementMatch, ref string) (float64, bool) {
 }
 
 // FindResult.ConfidenceLabel tests
+
+// Hardening tests
+
+func TestEmbeddingMatcher_Find_ContextCanceledBeforeEmbed(t *testing.T) {
+	m := NewEmbeddingMatcher(newDummyEmbedder(64))
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := m.Find(ctx, "submit button", []types.ElementDescriptor{
+		{Ref: "e1", Role: "button", Name: "Submit"},
+	}, types.FindOptions{Threshold: 0, TopK: 1})
+
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context canceled error, got %v", err)
+	}
+}
+
+func TestEmbeddingMatcher_Find_EmbedderVectorCountMismatchReturnsError(t *testing.T) {
+	e := &malformedEmbedder{vectors: fixedVectors(1, 64)}
+	m := NewEmbeddingMatcher(e)
+
+	_, err := m.Find(context.Background(), "submit", []types.ElementDescriptor{
+		{Ref: "e1", Role: "button", Name: "Submit"},
+		{Ref: "e2", Role: "button", Name: "Cancel"},
+	}, types.FindOptions{Threshold: 0, TopK: 2})
+
+	if err == nil {
+		t.Fatal("expected error for vector count mismatch")
+	}
+}
+
+func TestEmbeddingMatcher_Find_InconsistentVectorDimensionsReturnsError(t *testing.T) {
+	e := &malformedEmbedder{vectors: [][]float32{
+		{1, 0, 0},
+		{0, 1},
+		{0, 0, 1},
+	}}
+	m := NewEmbeddingMatcher(e)
+
+	_, err := m.Find(context.Background(), "submit", []types.ElementDescriptor{
+		{Ref: "e1", Role: "button", Name: "Submit"},
+		{Ref: "e2", Role: "button", Name: "Cancel"},
+	}, types.FindOptions{Threshold: 0, TopK: 2})
+
+	if err == nil {
+		t.Fatal("expected error for inconsistent vector dimensions")
+	}
+}
+
+type malformedEmbedder struct {
+	vectors [][]float32
+}
+
+func (e *malformedEmbedder) Strategy() string { return "malformed" }
+
+func (e *malformedEmbedder) Embed(texts []string) ([][]float32, error) {
+	return e.vectors, nil
+}
+
+func TestValidateEmbeddedVectors(t *testing.T) {
+	tests := []struct {
+		name     string
+		vectors  [][]float32
+		expected int
+		wantErr  bool
+	}{
+		{"empty valid", [][]float32{}, 0, false},
+		{"correct count", fixedVectors(3, 64), 3, false},
+		{"wrong count", fixedVectors(2, 64), 3, true},
+		{"inconsistent dims", [][]float32{{1, 0}, {0, 1, 0}}, 2, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateEmbeddedVectors(tt.vectors, tt.expected)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("validateEmbeddedVectors() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestEmbedWithContext_UsesContextAwareEmbedder(t *testing.T) {
+	e := NewHashingEmbedder(64)
+	ctx := context.Background()
+
+	vecs, err := embedWithContext(ctx, e, []string{"test"})
+	if err != nil {
+		t.Fatalf("embedWithContext error: %v", err)
+	}
+	if len(vecs) != 1 {
+		t.Fatalf("expected 1 vector, got %d", len(vecs))
+	}
+}
+
+func TestEmbedWithContext_CanceledBeforeNonContextAware(t *testing.T) {
+	e := newDummyEmbedder(64) // doesn't implement contextAwareEmbedder
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := embedWithContext(ctx, e, []string{"test"})
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context canceled, got %v", err)
+	}
+}

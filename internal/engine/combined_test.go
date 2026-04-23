@@ -2,9 +2,13 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/pinchtab/semantic/internal/types"
+	"math"
 	"testing"
+	"time"
+
+	"github.com/pinchtab/semantic/internal/types"
 )
 
 // CATEGORY 6: Role Boost Accumulation Test (Bug Fix)
@@ -593,5 +597,148 @@ func TestCombinedMatcher_DeterministicTieBreak(t *testing.T) {
 		if result.BestRef != "first" {
 			t.Fatalf("run %d: expected BestRef=first, got %s", i, result.BestRef)
 		}
+	}
+}
+
+// Hardening tests
+
+func TestCombinedMatcher_Weights_AdversarialNormalizationGrid(t *testing.T) {
+	m := NewCombinedMatcher(NewHashingEmbedder(128))
+
+	inputs := []float64{
+		-10, -1, -0.25, 0, 0.001, 0.2, 0.5, 0.9, 1, 2, 10,
+		math.NaN(), math.Inf(1),
+	}
+
+	for _, baseLex := range inputs {
+		for _, baseEmb := range inputs {
+			m.LexicalWeight = baseLex
+			m.EmbeddingWeight = baseEmb
+
+			for _, reqLex := range inputs {
+				for _, reqEmb := range inputs {
+					lex, emb := m.weights(types.FindOptions{LexicalWeight: reqLex, EmbeddingWeight: reqEmb})
+
+					if math.IsNaN(lex) || math.IsNaN(emb) || math.IsInf(lex, 0) || math.IsInf(emb, 0) {
+						t.Fatalf("non-finite weights from base=(%v,%v) req=(%v,%v): lexical=%v embedding=%v",
+							baseLex, baseEmb, reqLex, reqEmb, lex, emb)
+					}
+					if lex < 0 || emb < 0 {
+						t.Fatalf("negative weights from base=(%v,%v) req=(%v,%v): lexical=%v embedding=%v",
+							baseLex, baseEmb, reqLex, reqEmb, lex, emb)
+					}
+
+					sum := lex + emb
+					if math.Abs(sum-1) > 1e-9 {
+						t.Fatalf("weights do not normalize to 1 from base=(%v,%v) req=(%v,%v): sum=%v",
+							baseLex, baseEmb, reqLex, reqEmb, sum)
+					}
+				}
+			}
+		}
+	}
+}
+
+func TestCombinedMatcher_ScoreBoundedUnderInvalidModelWeights(t *testing.T) {
+	m := NewCombinedMatcher(NewHashingEmbedder(128))
+	m.LexicalWeight = 9
+	m.EmbeddingWeight = 9
+
+	elements := []types.ElementDescriptor{
+		{Ref: "e0", Role: "button", Name: "Sign in"},
+		{Ref: "e1", Role: "link", Name: "Register"},
+	}
+
+	result, err := m.Find(context.Background(), "sign in button", elements, types.FindOptions{Threshold: 0, TopK: 2})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if result.BestScore < 0 || result.BestScore > 1 {
+		t.Fatalf("best score out of [0,1]: %f", result.BestScore)
+	}
+	for _, match := range result.Matches {
+		if match.Score < 0 || match.Score > 1 {
+			t.Fatalf("match %s score out of [0,1]: %f", match.Ref, match.Score)
+		}
+	}
+}
+
+func TestCombinedMatcher_Find_ContextCanceledWhileEmbeddingBlocked(t *testing.T) {
+	e := &blockingEmbedder{started: make(chan struct{}), release: make(chan struct{})}
+	defer close(e.release)
+
+	m := NewCombinedMatcher(e)
+	elements := []types.ElementDescriptor{
+		{Ref: "e1", Role: "button", Name: "Save"},
+		{Ref: "e2", Role: "link", Name: "Cancel"},
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		_, err := m.Find(ctx, "save button", elements, types.FindOptions{Threshold: 0, TopK: 2})
+		done <- err
+	}()
+
+	select {
+	case <-e.started:
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("expected embedding to start")
+	}
+
+	cancel()
+
+	select {
+	case err := <-done:
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("expected context canceled error, got %v", err)
+		}
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("Find did not return promptly after context cancellation")
+	}
+}
+
+type blockingEmbedder struct {
+	started chan struct{}
+	release chan struct{}
+}
+
+func (e *blockingEmbedder) Strategy() string { return "blocking" }
+
+func (e *blockingEmbedder) Embed(texts []string) ([][]float32, error) {
+	close(e.started)
+	<-e.release
+	return nil, errors.New("released")
+}
+
+func TestSanitizeFindOptions(t *testing.T) {
+	tests := []struct {
+		name        string
+		opts        types.FindOptions
+		elemCount   int
+		defaultTopK int
+		wantTopK    int
+		wantThresh  float64
+	}{
+		{"zero topk uses default", types.FindOptions{TopK: 0}, 10, 3, 3, 0},
+		{"negative topk uses default", types.FindOptions{TopK: -5}, 10, 3, 3, 0},
+		{"topk exceeds elements clamped", types.FindOptions{TopK: 20}, 5, 3, 5, 0},
+		{"NaN threshold becomes 0", types.FindOptions{Threshold: math.NaN()}, 10, 3, 3, 0},
+		{"Inf threshold becomes 0", types.FindOptions{Threshold: math.Inf(1)}, 10, 3, 3, 0},
+		{"negative threshold becomes 0", types.FindOptions{Threshold: -0.5}, 10, 3, 3, 0},
+		{"threshold > 1 becomes 1", types.FindOptions{Threshold: 1.5}, 10, 3, 3, 1},
+		{"valid threshold preserved", types.FindOptions{Threshold: 0.5, TopK: 5}, 10, 3, 5, 0.5},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := sanitizeFindOptions(tt.opts, tt.elemCount, tt.defaultTopK)
+			if got.TopK != tt.wantTopK {
+				t.Errorf("TopK = %d, want %d", got.TopK, tt.wantTopK)
+			}
+			if got.Threshold != tt.wantThresh {
+				t.Errorf("Threshold = %f, want %f", got.Threshold, tt.wantThresh)
+			}
+		})
 	}
 }

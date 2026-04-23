@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"context"
+	"errors"
 	"math"
 	"testing"
 )
@@ -254,6 +256,31 @@ func TestHashingEmbedder_BatchConsistency(t *testing.T) {
 				break
 			}
 		}
+	}
+}
+
+// Hardening tests
+
+func TestHashingEmbedder_EmbedContext_Canceled(t *testing.T) {
+	e := NewHashingEmbedder(128)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := e.EmbedContext(ctx, []string{"test"})
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context canceled error, got %v", err)
+	}
+}
+
+func TestHashingEmbedder_EmbedContext_NilContext(t *testing.T) {
+	e := NewHashingEmbedder(128)
+	//nolint:staticcheck // intentionally testing nil context handling
+	vecs, err := e.EmbedContext(nil, []string{"test"})
+	if err != nil {
+		t.Fatalf("expected no error with nil context, got %v", err)
+	}
+	if len(vecs) != 1 || len(vecs[0]) != 128 {
+		t.Fatalf("expected 1 vector of dim 128, got %d vectors", len(vecs))
 	}
 }
 

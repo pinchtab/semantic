@@ -11,6 +11,20 @@ else
   ASSETS_DIR="${E2E_DIR}/assets"
 fi
 
+if [ "$E2E_DIR" != "/e2e" ] && [ -z "${SEMANTIC_E2E_BOOTSTRAPPED:-}" ]; then
+  REPO_ROOT="$(cd "${E2E_DIR}/../.." && pwd)"
+  if ! command -v go >/dev/null 2>&1; then
+    echo "ERROR: go is required to run local E2E tests" >&2
+    exit 1
+  fi
+  if ! (cd "$REPO_ROOT" && go build -o "${E2E_DIR}/semantic" ./cmd/semantic); then
+    echo "ERROR: failed to build semantic binary for local E2E tests" >&2
+    exit 1
+  fi
+  export PATH="${E2E_DIR}:$PATH"
+  export SEMANTIC_E2E_BOOTSTRAPPED=1
+fi
+
 PASSED=0
 FAILED=0
 ERRORS=""
