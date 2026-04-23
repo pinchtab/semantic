@@ -21,7 +21,7 @@ commands=(
   "vet:🔬:Run go vet"
   "check:✅:Run all checks (fmt + vet + lint + test)"
   "build:📦:Build CLI binary"
-  "benchmark:🏋:Run benchmark study"
+  "bench:🏋:Run corpus benchmark suite"
   "e2e:🐳:Run E2E tests (Docker)"
 )
 
@@ -114,9 +114,9 @@ run_build() {
   echo "  ${SUCCESS}✓${NC} Built: ./semantic"
 }
 
-run_benchmark() {
-  echo "  ${ACCENT}${BOLD}⏱️  Running benchmark study${NC}"
-  go test -run TestBenchmarkStudy -v -count=1
+run_bench() {
+  echo "  ${ACCENT}${BOLD}⏱️  Running corpus benchmark suite${NC}"
+  bash tests/benchmark/scripts/run-corpus-benchmark.sh
 }
 
 run_e2e() {
@@ -143,7 +143,7 @@ case "${1:-help}" in
   vet)       run_vet ;;
   check)     run_check ;;
   build)     run_build ;;
-  benchmark) run_benchmark ;;
+  bench|benchmark) run_bench ;;
   e2e)       run_e2e ;;
   help|*)    show_help ;;
 esac
