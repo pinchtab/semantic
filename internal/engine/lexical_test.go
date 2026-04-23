@@ -2,10 +2,12 @@ package engine
 
 import (
 	"context"
-	"github.com/pinchtab/semantic/internal/types"
+	"errors"
 	"math"
 	"strconv"
 	"testing"
+
+	"github.com/pinchtab/semantic/internal/types"
 )
 
 func TestTokenPrefixScore_BtnButton(t *testing.T) {
@@ -640,6 +642,22 @@ func TestLexicalMatcher_EmptyQueryReturnsNoResults(t *testing.T) {
 	}
 	if len(result.Matches) != 0 {
 		t.Fatalf("expected no matches for empty query, got %d", len(result.Matches))
+	}
+}
+
+// Hardening tests
+
+func TestLexicalMatcher_Find_ContextCanceled(t *testing.T) {
+	m := NewLexicalMatcher()
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := m.Find(ctx, "submit button", []types.ElementDescriptor{
+		{Ref: "e1", Role: "button", Name: "Submit"},
+	}, types.FindOptions{Threshold: 0, TopK: 1})
+
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context canceled error, got %v", err)
 	}
 }
 

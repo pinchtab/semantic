@@ -47,16 +47,25 @@ func NewLexicalMatcher() *LexicalMatcher {
 
 func (m *LexicalMatcher) Strategy() string { return "lexical" }
 
-func (m *LexicalMatcher) Find(_ context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
-	ctx := ParseQueryContext(query)
-	return m.findWithParsed(ctx, elements, opts), nil
+func (m *LexicalMatcher) Find(ctx context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := ctx.Err(); err != nil {
+		return types.FindResult{}, err
+	}
+
+	queryCtx := ParseQueryContext(query)
+	return m.findWithParsedContext(ctx, queryCtx, elements, opts), nil
 }
 
-func (m *LexicalMatcher) findWithParsed(ctx QueryContext, elements []types.ElementDescriptor, opts types.FindOptions) types.FindResult {
-	parsed := ctx.Base
-	if opts.TopK <= 0 {
-		opts.TopK = 3
-	}
+func (m *LexicalMatcher) findWithParsed(queryCtx QueryContext, elements []types.ElementDescriptor, opts types.FindOptions) types.FindResult {
+	return m.findWithParsedContext(context.Background(), queryCtx, elements, opts)
+}
+
+func (m *LexicalMatcher) findWithParsedContext(ctx context.Context, queryCtx QueryContext, elements []types.ElementDescriptor, opts types.FindOptions) types.FindResult {
+	parsed := queryCtx.Base
+	opts = sanitizeFindOptions(opts, len(elements), 3)
 
 	if len(parsed.Positive) == 0 && len(parsed.Negative) == 0 {
 		return types.FindResult{
@@ -76,8 +85,14 @@ func (m *LexicalMatcher) findWithParsed(ctx QueryContext, elements []types.Eleme
 	}
 
 	var candidates []scored
-	for _, el := range elements {
-		if ctx.HasScope && matchesExcludedContext(el, ctx.Exclude) {
+	for i, el := range elements {
+		if i%64 == 0 {
+			if ctx.Err() != nil {
+				break
+			}
+		}
+
+		if queryCtx.HasScope && matchesExcludedContext(el, queryCtx.Exclude) {
 			continue
 		}
 
@@ -85,7 +100,6 @@ func (m *LexicalMatcher) findWithParsed(ctx QueryContext, elements []types.Eleme
 		descTokens := tokenize(composite)
 		score := 0.0
 		if len(parsed.Positive) == 0 {
-			// Negative-only query means "everything except negatives".
 			score = 1.0
 		} else {
 			score = lexicalScoreTokens(parsed.Positive, descTokens, el.Interactive, ef)
@@ -93,15 +107,11 @@ func (m *LexicalMatcher) findWithParsed(ctx QueryContext, elements []types.Eleme
 		}
 
 		if len(parsed.Negative) > 0 {
-			// Debug note: negativeScore reflects how strongly negative tokens match
-			// this element; hasStrongNegativeHit indicates exact/synonym token hit.
 			negativeScore := lexicalScoreTokens(parsed.Negative, descTokens, el.Interactive, ef)
 			switch {
 			case hasStrongNegativeHit(parsed.Negative, descTokens) || negativeScore > 0.7:
-				// Applied penalty: full exclusion.
 				score = 0
 			case negativeScore > 0.4:
-				// Applied penalty: multiplicative down-weight.
 				score *= 1 - negativeScore
 			}
 		}
