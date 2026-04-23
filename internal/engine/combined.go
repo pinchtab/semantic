@@ -209,10 +209,10 @@ func (c *CombinedMatcher) mergeResults(lexResult, embResult types.FindResult, el
 }
 
 func documentOrderIndex(el types.ElementDescriptor, fallback int) int {
-	if el.DocumentIdx > 0 || (el.DocumentIdx == 0 && el.Ref != "") {
+	if el.DocumentIdx > 0 {
 		return el.DocumentIdx
 	}
-	if el.Positional.SiblingIndex > 0 || (el.Positional.SiblingIndex == 0 && el.Ref != "") {
+	if el.Positional.SiblingIndex > 0 {
 		return el.Positional.SiblingIndex
 	}
 	return fallback
