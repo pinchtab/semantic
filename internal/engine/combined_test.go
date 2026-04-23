@@ -577,3 +577,21 @@ func TestCombinedMatcher_ClampsScoreWithCustomWeights(t *testing.T) {
 		}
 	}
 }
+
+func TestCombinedMatcher_DeterministicTieBreak(t *testing.T) {
+	m := NewCombinedMatcher(NewHashingEmbedder(128))
+	elements := []types.ElementDescriptor{
+		{Ref: "first", Role: "button", Name: "Open", Positional: types.PositionalHints{Depth: 2, SiblingIndex: 0}},
+		{Ref: "second", Role: "button", Name: "Open", Positional: types.PositionalHints{Depth: 2, SiblingIndex: 0}},
+	}
+
+	for i := 0; i < 100; i++ {
+		result, err := m.Find(context.Background(), "open button", elements, types.FindOptions{Threshold: 0, TopK: 2})
+		if err != nil {
+			t.Fatalf("Find returned error: %v", err)
+		}
+		if result.BestRef != "first" {
+			t.Fatalf("run %d: expected BestRef=first, got %s", i, result.BestRef)
+		}
+	}
+}

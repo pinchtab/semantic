@@ -3,9 +3,9 @@ package engine
 import (
 	"context"
 	"fmt"
-	"github.com/pinchtab/semantic/internal/types"
-	"math"
 	"sort"
+
+	"github.com/pinchtab/semantic/internal/types"
 )
 
 // combinedMatcher fuses lexical and embedding scores:
@@ -124,6 +124,7 @@ type scored struct {
 	ref      string
 	score    float64
 	el       types.ElementDescriptor
+	order    int
 	lexScore float64
 	embScore float64
 }
@@ -133,8 +134,10 @@ func (c *CombinedMatcher) mergeResults(lexResult, embResult types.FindResult, el
 	embScores := scoreMap(embResult.Matches)
 
 	refToElem := make(map[string]types.ElementDescriptor, len(elements))
-	for _, el := range elements {
+	refToOrder := make(map[string]int, len(elements))
+	for i, el := range elements {
 		refToElem[el.Ref] = el
+		refToOrder[el.Ref] = i
 	}
 
 	// Collect all refs from either matcher.
@@ -156,7 +159,7 @@ func (c *CombinedMatcher) mergeResults(lexResult, embResult types.FindResult, el
 			combined = 1
 		}
 		if combined >= opts.Threshold {
-			s := scored{ref: ref, score: combined, el: refToElem[ref]}
+			s := scored{ref: ref, score: combined, el: refToElem[ref], order: refToOrder[ref]}
 			if opts.Explain {
 				s.lexScore = lexW * lexScores[ref]
 				s.embScore = embW * embScores[ref]
@@ -166,18 +169,10 @@ func (c *CombinedMatcher) mergeResults(lexResult, embResult types.FindResult, el
 	}
 
 	sort.Slice(candidates, func(i, j int) bool {
-		scoreDiff := candidates[i].score - candidates[j].score
-		if math.Abs(scoreDiff) > 1e-9 {
-			return scoreDiff > 0
-		}
-
-		idxI := documentOrderIndex(candidates[i].el, i)
-		idxJ := documentOrderIndex(candidates[j].el, j)
-		if idxI != idxJ {
-			return idxI < idxJ
-		}
-
-		return candidates[i].ref < candidates[j].ref
+		return rankedMatchLess(
+			candidates[i].score, candidates[i].el, candidates[i].order,
+			candidates[j].score, candidates[j].el, candidates[j].order,
+		)
 	})
 	if len(candidates) > opts.TopK {
 		candidates = candidates[:opts.TopK]
@@ -208,16 +203,6 @@ func (c *CombinedMatcher) mergeResults(lexResult, embResult types.FindResult, el
 		result.BestScore = result.Matches[0].Score
 	}
 	return result
-}
-
-func documentOrderIndex(el types.ElementDescriptor, fallback int) int {
-	if el.DocumentIdx > 0 {
-		return el.DocumentIdx
-	}
-	if el.Positional.SiblingIndex > 0 {
-		return el.Positional.SiblingIndex
-	}
-	return fallback
 }
 
 func scoreMap(matches []types.ElementMatch) map[string]float64 {
