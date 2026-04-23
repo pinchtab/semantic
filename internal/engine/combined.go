@@ -47,13 +47,15 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []typ
 
 	parsed := ParseQueryContext(query)
 	mergeOpts := opts
+	internalOpts := opts
 	if parsed.Ordinal.HasOrdinal {
 		mergeOpts.TopK = len(elements)
+		internalOpts.TopK = len(elements)
 	}
 
 	lexW, embW := c.weights(opts)
 
-	lexResult, embResult, err := c.runBothParsed(ctx, parsed, elements, opts)
+	lexResult, embResult, err := c.runBothParsed(ctx, parsed, elements, internalOpts)
 	if err != nil {
 		return types.FindResult{}, err
 	}
@@ -167,8 +169,8 @@ func (c *CombinedMatcher) mergeResults(lexResult, embResult types.FindResult, el
 			return scoreDiff > 0
 		}
 
-		idxI := candidates[i].el.Positional.SiblingIndex
-		idxJ := candidates[j].el.Positional.SiblingIndex
+		idxI := documentOrderIndex(candidates[i].el, i)
+		idxJ := documentOrderIndex(candidates[j].el, j)
 		if idxI != idxJ {
 			return idxI < idxJ
 		}
@@ -204,6 +206,16 @@ func (c *CombinedMatcher) mergeResults(lexResult, embResult types.FindResult, el
 		result.BestScore = result.Matches[0].Score
 	}
 	return result
+}
+
+func documentOrderIndex(el types.ElementDescriptor, fallback int) int {
+	if el.DocumentIdx > 0 || (el.DocumentIdx == 0 && el.Ref != "") {
+		return el.DocumentIdx
+	}
+	if el.Positional.SiblingIndex > 0 || (el.Positional.SiblingIndex == 0 && el.Ref != "") {
+		return el.Positional.SiblingIndex
+	}
+	return fallback
 }
 
 func scoreMap(matches []types.ElementMatch) map[string]float64 {

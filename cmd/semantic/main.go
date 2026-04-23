@@ -135,6 +135,7 @@ func loadSnapshot(path string) ([]semantic.ElementDescriptor, error) {
 			Interactive: e.Interactive,
 			Parent:      e.Parent,
 			Section:     e.Section,
+			DocumentIdx: i,
 			Positional: semantic.PositionalHints{
 				Depth:        depth,
 				SiblingIndex: siblingIdx,

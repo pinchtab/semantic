@@ -153,7 +153,11 @@ func selectOrdinalMatchInOrder(result types.FindResult, constraint OrdinalConstr
 
 	refOrder := make(map[string]int, len(elements))
 	for idx, el := range elements {
-		refOrder[el.Ref] = idx
+		order := el.DocumentIdx
+		if order < 0 {
+			order = idx
+		}
+		refOrder[el.Ref] = order
 	}
 
 	ordered := make([]types.ElementMatch, len(filtered))
@@ -203,7 +207,7 @@ func filterOrdinalCandidates(matches []types.ElementMatch) []types.ElementMatch 
 		}
 	}
 
-	floor := bestScore * 0.75
+	floor := bestScore - 0.15
 	if floor < 0.2 {
 		floor = 0.2
 	}
