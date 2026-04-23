@@ -46,9 +46,10 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []typ
 	}
 
 	parsed := ParseQueryContext(query)
+	visualHints := parseVisualQueryHints(query)
 	mergeOpts := opts
 	internalOpts := opts
-	if parsed.Ordinal.HasOrdinal {
+	if parsed.Ordinal.HasOrdinal || visualHints.hasHints {
 		mergeOpts.TopK = len(elements)
 		internalOpts.TopK = len(elements)
 	}
@@ -61,6 +62,7 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []typ
 	}
 
 	merged := c.mergeResults(lexResult, embResult, elements, mergeOpts, lexW, embW)
+	merged = applyVisualHintBoost(merged, visualHints, elements, mergeOpts.TopK)
 	return selectOrdinalMatchInOrder(merged, parsed.Ordinal, elements), nil
 }
 
