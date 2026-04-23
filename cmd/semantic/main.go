@@ -56,6 +56,8 @@ Flags (find/match):
   --threshold <n>     Minimum score (default: 0.3)
   --top-k <n>         Max results (default: 3)
   --strategy <name>   lexical, embedding, or combined (default: combined)
+  --lexical-weight <n>   Combined strategy lexical weight override
+  --embedding-weight <n> Combined strategy embedding weight override
   --format <fmt>      json, table, or refs (default: table)
 `)
 }
@@ -209,6 +211,8 @@ func runFind(args []string) {
 	threshold := fs.Float64("threshold", 0.3, "minimum score")
 	topK := fs.Int("top-k", 3, "max results")
 	strategy := fs.String("strategy", "combined", "matching strategy")
+	lexicalWeight := fs.Float64("lexical-weight", 0, "combined strategy lexical weight override")
+	embeddingWeight := fs.Float64("embedding-weight", 0, "combined strategy embedding weight override")
 	format := fs.String("format", "table", "output format: json, table, refs")
 	_ = fs.Parse(args)
 
@@ -226,8 +230,10 @@ func runFind(args []string) {
 
 	matcher := newMatcher(*strategy)
 	result, err := matcher.Find(context.Background(), query, elements, semantic.FindOptions{
-		Threshold: *threshold,
-		TopK:      *topK,
+		Threshold:       *threshold,
+		TopK:            *topK,
+		LexicalWeight:   *lexicalWeight,
+		EmbeddingWeight: *embeddingWeight,
 	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)

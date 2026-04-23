@@ -1,0 +1,146 @@
+[
+  {
+    "id": "fsc-001",
+    "query": "keep me logged in",
+    "relevant_refs": ["e10"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["implicit", "checkbox", "state"]
+  },
+  {
+    "id": "fsc-002",
+    "query": "remember me checkbox",
+    "relevant_refs": ["e10"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["checkbox", "state"]
+  },
+  {
+    "id": "fsc-003",
+    "query": "subscribe to newsletter",
+    "relevant_refs": ["e15"],
+    "partially_relevant_refs": ["e14", "e16"],
+    "difficulty": "hard",
+    "tags": ["implicit", "checkbox", "state"]
+  },
+  {
+    "id": "fsc-004",
+    "query": "opt out of marketing",
+    "relevant_refs": ["e15"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["implicit", "checkbox", "state"]
+  },
+  {
+    "id": "fsc-005",
+    "query": "enable 2FA",
+    "relevant_refs": ["e11"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["implicit", "checkbox", "state", "domain-intent"]
+  },
+  {
+    "id": "fsc-006",
+    "query": "use same address for shipping",
+    "relevant_refs": ["e28"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["implicit", "checkbox", "state"]
+  },
+  {
+    "id": "fsc-007",
+    "query": "select payment method",
+    "relevant_refs": ["e24", "e25", "e26"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["radio", "state"]
+  },
+  {
+    "id": "fsc-008",
+    "query": "pay with PayPal",
+    "relevant_refs": ["e25"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["radio", "state"]
+  },
+  {
+    "id": "fsc-009",
+    "query": "change my country",
+    "relevant_refs": ["e33"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["combobox", "state"]
+  },
+  {
+    "id": "fsc-010",
+    "query": "select language preference",
+    "relevant_refs": ["e35"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["combobox", "state"]
+  },
+  {
+    "id": "fsc-011",
+    "query": "turn on push notifications",
+    "relevant_refs": ["e17"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["toggle", "switch", "state"]
+  },
+  {
+    "id": "fsc-012",
+    "query": "enable text alerts",
+    "relevant_refs": ["e18"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["implicit", "toggle", "switch", "state"]
+  },
+  {
+    "id": "fsc-013",
+    "query": "export my data",
+    "relevant_refs": ["e42"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["domain-intent", "link"]
+  },
+  {
+    "id": "fsc-014",
+    "query": "delete my account",
+    "relevant_refs": ["e43"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["domain-intent", "link"]
+  },
+  {
+    "id": "fsc-015",
+    "query": "show advanced settings",
+    "relevant_refs": ["e44"],
+    "partially_relevant_refs": ["e45"],
+    "difficulty": "medium",
+    "tags": ["implicit", "button", "state"]
+  },
+  {
+    "id": "fsc-016",
+    "query": "enable beta features",
+    "relevant_refs": ["e47"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["checkbox", "state"]
+  },
+  {
+    "id": "fsc-017",
+    "query": "hide my profile from search",
+    "relevant_refs": ["e40"],
+    "partially_relevant_refs": ["e39"],
+    "difficulty": "hard",
+    "tags": ["implicit", "checkbox", "state"]
+  },
+  {
+    "id": "fsc-018",
+    "query": "stop sharing data with partners",
+    "relevant_refs": ["e41"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["implicit", "checkbox", "state"]
+  }
+]

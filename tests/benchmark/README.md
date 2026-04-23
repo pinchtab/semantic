@@ -14,6 +14,9 @@ cd tests/benchmark
 ./scripts/run-corpus-benchmark.sh --strategy lexical
 ./scripts/run-corpus-benchmark.sh --strategy embedding
 ./scripts/run-corpus-benchmark.sh --strategy combined
+
+# Sweep combined lexical/embedding weights
+./scripts/tune-weights.sh
 ```
 
 ## Metrics
@@ -55,25 +58,27 @@ corpus/
 ## Current Results (combined strategy)
 
 ```
-Queries:     50
-MRR:         0.88
-P@1:         0.87
-P@3:         0.34
-Latency P50: 31 ms
-Latency P95: 52 ms
+Queries:     105
+MRR:         0.8897
+P@1:         0.8762
+P@3:         0.3412
+Latency P50: 23 ms
+Latency P95: 28 ms
 
 By Difficulty:
-  easy:   34 queries, P@1 = 0.95
-  medium: 14 queries, P@1 = 0.78
-  hard:    2 queries, P@1 = 0.00
+  easy:   76 queries, P@1 = 0.94
+  medium: 25 queries, P@1 = 0.74
+  hard:    4 queries, P@1 = 0.50
 ```
 
 ## Optimization Targets
 
-The 6 current misses are "hard" cases requiring:
+The current misses cluster around:
 - Synonym expansion (save for later → wishlist)
 - Implicit actions (clone → Code button)
 - Domain knowledge (CI status → Actions tab)
+- Form/input intent (type new query → search box)
+- Accessibility/navigation shortcuts (skip to content, homepage)
 
 ## Scripts
 
@@ -81,6 +86,7 @@ The 6 current misses are "hard" cases requiring:
 |--------|---------|
 | `run-corpus-benchmark.sh` | Main benchmark with MRR/P@K metrics |
 | `run-benchmark.sh` | Simple pass/fail test runner |
+| `tune-weights.sh` | Grid search combined matcher lexical/embedding weights |
 
 ## Adding to Corpus
 
@@ -94,6 +100,13 @@ The 6 current misses are "hard" cases requiring:
 2. Create `queries.json` with annotated ground truth
 
 3. Run benchmark to establish baseline
+
+4. Add several related queries for the same behavior, not one isolated case.
+   Include easy, medium, hard, and at least one near-miss or partial match where
+   ambiguity matters.
+
+5. Re-run `./scripts/tune-weights.sh` after larger corpus changes to see whether
+   the best combined weights moved.
 
 ## CI Integration
 
