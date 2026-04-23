@@ -18,7 +18,7 @@ SUMMARY_FILE="${REPORT_FILE%.json}_summary.md"
 # Calculate final metrics
 TMP_FILE=$(mktemp)
 jq '
-    .summary.accuracy = (if .summary.total > 0 then (.summary.passed / .summary.total * 100 | floor / 100) else 0 end) |
+    .summary.accuracy = (if .summary.total > 0 then (.summary.passed / .summary.total * 10000 | floor / 100) else 0 end) |
     .summary.avg_score = (if (.results | length) > 0 then ([.results[].score] | add / length | . * 1000 | floor / 1000) else 0 end) |
     .summary.avg_latency_ms = (if (.results | length) > 0 then ([.results[].latency_ms] | add / length | floor) else 0 end) |
     .summary.min_score = (if (.results | length) > 0 then ([.results[].score] | min) else 0 end) |

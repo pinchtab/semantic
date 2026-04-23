@@ -31,6 +31,11 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+case "${STRATEGY}" in
+    lexical|embedding|combined) ;;
+    *) echo "Unknown strategy: ${STRATEGY}"; exit 1 ;;
+esac
+
 mkdir -p "${RESULTS_DIR}"
 
 # Build semantic binary
@@ -80,6 +85,9 @@ run_corpus() {
     local queries="${corpus_path}/queries.json"
 
     if [[ ! -f "$snapshot" ]] || [[ ! -f "$queries" ]]; then
+        if [[ -f "${corpus_path}/cases.json" ]] || [[ -f "${corpus_path}/scenarios.json" ]]; then
+            return
+        fi
         echo "  Skipping ${corpus_name}: missing files"
         return
     fi
@@ -104,12 +112,22 @@ run_corpus() {
         local start_ns end_ns duration_ms result
         start_ns=$(python3 -c 'import time; print(int(time.time() * 1000000))')
 
-        result=$("${SEMANTIC}" find "${query}" \
+        if ! result=$("${SEMANTIC}" find "${query}" \
             --snapshot "${snapshot}" \
             --strategy "${STRATEGY}" \
             --threshold 0.01 \
             --top-k "${TOP_K}" \
-            --format json 2>/dev/null || echo '{"matches":[]}')
+            --format json 2>&1); then
+            echo "  [${id}] ERROR: semantic find failed for query: ${query}" >&2
+            echo "${result}" >&2
+            exit 1
+        fi
+
+        if ! echo "$result" | jq -e '(.matches | type) == "array"' > /dev/null 2>&1; then
+            echo "  [${id}] ERROR: semantic find returned invalid JSON" >&2
+            echo "${result}" >&2
+            exit 1
+        fi
 
         end_ns=$(python3 -c 'import time; print(int(time.time() * 1000000))')
         duration_ms=$(( (end_ns - start_ns) / 1000 ))
