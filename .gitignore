@@ -1,5 +1,7 @@
-# Binary (root only, not cmd/semantic/)
+# Binary
 /semantic
+tests/benchmark/semantic
+tests/e2e/semantic
 *.exe
 
 # Test

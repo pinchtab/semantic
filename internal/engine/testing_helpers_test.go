@@ -47,3 +47,16 @@ func (d *dummyEmbedder) hashVec(s string) []float32 {
 	}
 	return vec
 }
+
+func fixedVectors(n, dim int) [][]float32 {
+	if dim <= 0 {
+		dim = 1
+	}
+	vectors := make([][]float32, n)
+	for i := 0; i < n; i++ {
+		vec := make([]float32, dim)
+		vec[i%dim] = 1
+		vectors[i] = vec
+	}
+	return vectors
+}

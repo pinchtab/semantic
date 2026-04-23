@@ -2,10 +2,12 @@ package engine
 
 import (
 	"context"
-	"github.com/pinchtab/semantic/internal/types"
+	"fmt"
 	"math"
 	"sort"
 	"strings"
+
+	"github.com/pinchtab/semantic/internal/types"
 )
 
 // Embedder converts text into dense vectors. See NewHashingEmbedder.
@@ -48,16 +50,27 @@ func (m *EmbeddingMatcher) Strategy() string {
 	return "embedding:" + m.embedder.Strategy()
 }
 
-func (m *EmbeddingMatcher) Find(_ context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
-	ctx := ParseQueryContext(query)
-	return m.findWithParsed(ctx, elements, opts)
+// contextAwareEmbedder is an optional interface for embedders that support
+// context cancellation during embedding.
+type contextAwareEmbedder interface {
+	EmbedContext(ctx context.Context, texts []string) ([][]float32, error)
 }
 
-func (m *EmbeddingMatcher) findWithParsed(ctx QueryContext, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
-	parsed := ctx.Base
-	if opts.TopK <= 0 {
-		opts.TopK = 3
+func (m *EmbeddingMatcher) Find(ctx context.Context, query string, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
+	if ctx == nil {
+		ctx = context.Background()
 	}
+	if err := ctx.Err(); err != nil {
+		return types.FindResult{}, err
+	}
+
+	queryCtx := ParseQueryContext(query)
+	return m.findWithParsedContext(ctx, queryCtx, elements, opts)
+}
+
+func (m *EmbeddingMatcher) findWithParsedContext(ctx context.Context, queryCtx QueryContext, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
+	parsed := queryCtx.Base
+	opts = sanitizeFindOptions(opts, len(elements), 3)
 
 	if len(parsed.Positive) == 0 && len(parsed.Negative) == 0 {
 		return types.FindResult{
@@ -66,17 +79,25 @@ func (m *EmbeddingMatcher) findWithParsed(ctx QueryContext, elements []types.Ele
 		}, nil
 	}
 
-	filtered := filterContextExcludedElements(elements, ctx)
+	filtered := filterContextExcludedElements(elements, queryCtx)
 	if len(filtered) == 0 {
 		return types.FindResult{Strategy: m.Strategy(), ElementCount: len(elements)}, nil
 	}
 
-	vectors, err := m.embedQueryAndElements(parsed, filtered)
+	vectors, err := m.embedQueryAndElementsWithContext(ctx, parsed, filtered)
 	if err != nil {
 		return types.FindResult{}, err
 	}
 
-	candidates := m.scoreCandidates(parsed, filtered, vectors, opts.Threshold)
+	if err := validateEmbeddedVectors(vectors, len(filtered)+countQueryVectors(parsed)); err != nil {
+		return types.FindResult{}, err
+	}
+
+	if err := ctx.Err(); err != nil {
+		return types.FindResult{}, err
+	}
+
+	candidates := m.scoreCandidatesWithContext(ctx, parsed, filtered, vectors, opts.Threshold)
 	sort.Slice(candidates, func(i, j int) bool {
 		return rankedMatchLess(
 			candidates[i].score, candidates[i].desc, candidates[i].order,
@@ -91,6 +112,10 @@ func (m *EmbeddingMatcher) findWithParsed(ctx QueryContext, elements []types.Ele
 	return buildEmbeddingResult(m.Strategy(), len(elements), candidates), nil
 }
 
+func (m *EmbeddingMatcher) findWithParsed(queryCtx QueryContext, elements []types.ElementDescriptor, opts types.FindOptions) (types.FindResult, error) {
+	return m.findWithParsedContext(context.Background(), queryCtx, elements, opts)
+}
+
 func filterContextExcludedElements(elements []types.ElementDescriptor, ctx QueryContext) []types.ElementDescriptor {
 	filtered := make([]types.ElementDescriptor, 0, len(elements))
 	for _, el := range elements {
@@ -102,7 +127,7 @@ func filterContextExcludedElements(elements []types.ElementDescriptor, ctx Query
 	return filtered
 }
 
-func (m *EmbeddingMatcher) embedQueryAndElements(parsed types.ParsedQuery, elements []types.ElementDescriptor) ([][]float32, error) {
+func (m *EmbeddingMatcher) embedQueryAndElementsWithContext(ctx context.Context, parsed types.ParsedQuery, elements []types.ElementDescriptor) ([][]float32, error) {
 	positiveQuery := strings.Join(parsed.Positive, " ")
 	negativeQuery := strings.Join(parsed.Negative, " ")
 
@@ -119,7 +144,44 @@ func (m *EmbeddingMatcher) embedQueryAndElements(parsed types.ParsedQuery, eleme
 		texts = append(texts, negativeQuery)
 	}
 	texts = append(texts, descs...)
-	return m.embedder.Embed(texts)
+	return embedWithContext(ctx, m.embedder, texts)
+}
+
+func embedWithContext(ctx context.Context, embedder Embedder, texts []string) ([][]float32, error) {
+	if ce, ok := embedder.(contextAwareEmbedder); ok {
+		return ce.EmbedContext(ctx, texts)
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	return embedder.Embed(texts)
+}
+
+func countQueryVectors(parsed types.ParsedQuery) int {
+	count := 0
+	if len(parsed.Positive) > 0 {
+		count++
+	}
+	if len(parsed.Negative) > 0 {
+		count++
+	}
+	return count
+}
+
+func validateEmbeddedVectors(vectors [][]float32, expected int) error {
+	if len(vectors) != expected {
+		return fmt.Errorf("embedder returned %d vectors, expected %d", len(vectors), expected)
+	}
+	if len(vectors) == 0 {
+		return nil
+	}
+	dim := len(vectors[0])
+	for i := 1; i < len(vectors); i++ {
+		if len(vectors[i]) != dim {
+			return fmt.Errorf("embedder returned inconsistent vector dimensions at index %d: %d vs %d", i, len(vectors[i]), dim)
+		}
+	}
+	return nil
 }
 
 type embeddingScored struct {
@@ -128,7 +190,7 @@ type embeddingScored struct {
 	order int
 }
 
-func (m *EmbeddingMatcher) scoreCandidates(parsed types.ParsedQuery, elements []types.ElementDescriptor, vectors [][]float32, threshold float64) []embeddingScored {
+func (m *EmbeddingMatcher) scoreCandidatesWithContext(ctx context.Context, parsed types.ParsedQuery, elements []types.ElementDescriptor, vectors [][]float32, threshold float64) []embeddingScored {
 	negativeOnly := len(parsed.Positive) == 0 && len(parsed.Negative) > 0
 	idx := 0
 	var posVec []float32
@@ -151,6 +213,11 @@ func (m *EmbeddingMatcher) scoreCandidates(parsed types.ParsedQuery, elements []
 
 	var candidates []embeddingScored
 	for i, el := range elements {
+		if i%64 == 0 {
+			if ctx.Err() != nil {
+				return candidates
+			}
+		}
 		score := scoreEmbeddingCandidate(parsed, posVec, negVec, contextVecs[i], elemVecs[i])
 		if negativeOnly && score == 0 {
 			continue
