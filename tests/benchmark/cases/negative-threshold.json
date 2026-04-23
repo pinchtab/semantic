@@ -1,0 +1,117 @@
+[
+  {
+    "id": "neg-001",
+    "query": "xyzzy plugh qwerty",
+    "snapshot": "login-page.json",
+    "expect_no_match": true,
+    "threshold": 0.3,
+    "tags": ["no-match", "nonsense"]
+  },
+  {
+    "id": "neg-002",
+    "query": "upload spreadsheet to cloud",
+    "snapshot": "login-page.json",
+    "expect_no_match": true,
+    "threshold": 0.4,
+    "tags": ["no-match", "absent-control"]
+  },
+  {
+    "id": "neg-003",
+    "query": "open video player",
+    "snapshot": "dashboard.json",
+    "expect_no_match": true,
+    "threshold": 0.4,
+    "tags": ["no-match", "absent-control"]
+  },
+  {
+    "id": "neg-004",
+    "query": "print receipt",
+    "snapshot": "login-page.json",
+    "expect_no_match": true,
+    "threshold": 0.4,
+    "tags": ["no-match", "absent-control"]
+  },
+  {
+    "id": "neg-005",
+    "query": "submit button",
+    "snapshot": "multi-form.json",
+    "expect_ref": "e11",
+    "expect_ref_alt": ["e3", "e7"],
+    "threshold": 0.3,
+    "min_score": 0.5,
+    "tags": ["threshold", "duplicate-labels"]
+  },
+  {
+    "id": "neg-006",
+    "query": "enter",
+    "snapshot": "login-page.json",
+    "expect_has_matches": true,
+    "threshold": 0.1,
+    "min_score": 0.15,
+    "tags": ["threshold", "weak-match"]
+  },
+  {
+    "id": "neg-007",
+    "query": "click",
+    "snapshot": "ecommerce-product.json",
+    "expect_has_matches": true,
+    "threshold": 0.1,
+    "tags": ["threshold", "generic-verb"]
+  },
+  {
+    "id": "neg-008",
+    "query": "the thing",
+    "snapshot": "dashboard.json",
+    "expect_has_matches": true,
+    "threshold": 0.05,
+    "tags": ["threshold", "vague-query"]
+  },
+  {
+    "id": "neg-009",
+    "query": "asdfghjkl",
+    "snapshot": "multi-form.json",
+    "expect_no_match": true,
+    "threshold": 0.3,
+    "tags": ["no-match", "keyboard-mash"]
+  },
+  {
+    "id": "neg-010",
+    "query": "stale element e999",
+    "snapshot": "login-page.json",
+    "expect_no_match": true,
+    "threshold": 0.3,
+    "tags": ["no-match", "stale-ref"]
+  },
+  {
+    "id": "neg-011",
+    "query": "a b c d e f",
+    "snapshot": "dashboard.json",
+    "expect_no_crash": true,
+    "threshold": 0.3,
+    "tags": ["threshold", "noise-tokens"]
+  },
+  {
+    "id": "neg-012",
+    "query": "configure webhook endpoint",
+    "snapshot": "login-page.json",
+    "expect_no_match": true,
+    "threshold": 0.4,
+    "tags": ["no-match", "absent-control", "domain-intent"]
+  },
+  {
+    "id": "neg-013",
+    "query": "invoice download",
+    "snapshot": "ecommerce-product.json",
+    "expect_no_match": true,
+    "threshold": 0.4,
+    "tags": ["no-match", "absent-control"]
+  },
+  {
+    "id": "neg-014",
+    "query": "share on twitter",
+    "snapshot": "login-page.json",
+    "expect_no_match": true,
+    "threshold": 0.4,
+    "tags": ["no-match", "absent-control"]
+  }
+]

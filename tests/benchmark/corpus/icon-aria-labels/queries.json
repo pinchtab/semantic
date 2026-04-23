@@ -1,0 +1,227 @@
+[
+  {
+    "id": "icon-001",
+    "query": "settings gear",
+    "relevant_refs": ["e1"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["icon", "exact-match", "description"],
+    "notes": "Settings button with gear icon description"
+  },
+  {
+    "id": "icon-002",
+    "query": "delete trash icon",
+    "relevant_refs": ["e2", "e13"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["icon", "duplicate-labels", "description"],
+    "notes": "Multiple delete buttons with trash icon"
+  },
+  {
+    "id": "icon-003",
+    "query": "more options",
+    "relevant_refs": ["e3"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["icon", "exact-match"],
+    "notes": "Kebab/three dots menu"
+  },
+  {
+    "id": "icon-004",
+    "query": "kebab menu",
+    "relevant_refs": ["e3"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["icon", "synonym"],
+    "notes": "Three dots menu using slang term"
+  },
+  {
+    "id": "icon-005",
+    "query": "notifications bell",
+    "relevant_refs": ["e4"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["icon", "description"],
+    "notes": "Bell icon for notifications"
+  },
+  {
+    "id": "icon-006",
+    "query": "search magnifier",
+    "relevant_refs": ["e5"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["icon", "synonym", "description"],
+    "notes": "Search with magnifying glass"
+  },
+  {
+    "id": "icon-007",
+    "query": "copy link",
+    "relevant_refs": ["e6"],
+    "partially_relevant_refs": ["e14"],
+    "difficulty": "easy",
+    "tags": ["icon", "exact-match"],
+    "notes": "Copy link button"
+  },
+  {
+    "id": "icon-008",
+    "query": "share",
+    "relevant_refs": ["e7"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["icon", "exact-match"],
+    "notes": "Share button"
+  },
+  {
+    "id": "icon-009",
+    "query": "refresh",
+    "relevant_refs": ["e8"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["icon", "exact-match"],
+    "notes": "Refresh button with circular arrows"
+  },
+  {
+    "id": "icon-010",
+    "query": "download",
+    "relevant_refs": ["e9"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["icon", "exact-match"],
+    "notes": "Download button"
+  },
+  {
+    "id": "icon-011",
+    "query": "upload file",
+    "relevant_refs": ["e10"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["icon", "action"],
+    "notes": "Upload button"
+  },
+  {
+    "id": "icon-012",
+    "query": "calendar picker",
+    "relevant_refs": ["e20"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["icon", "section"],
+    "notes": "Calendar button in date picker"
+  },
+  {
+    "id": "icon-013",
+    "query": "hamburger menu",
+    "relevant_refs": ["e30"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["icon", "synonym"],
+    "notes": "Menu button using slang term"
+  },
+  {
+    "id": "icon-014",
+    "query": "play video",
+    "relevant_refs": ["e40"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["icon", "action", "media"],
+    "notes": "Play button in media controls"
+  },
+  {
+    "id": "icon-015",
+    "query": "mute audio",
+    "relevant_refs": ["e46"],
+    "partially_relevant_refs": ["e45"],
+    "difficulty": "medium",
+    "tags": ["icon", "action", "media"],
+    "notes": "Mute button or volume control"
+  },
+  {
+    "id": "icon-016",
+    "query": "fullscreen expand",
+    "relevant_refs": ["e47"],
+    "partially_relevant_refs": ["e52"],
+    "difficulty": "medium",
+    "tags": ["icon", "synonym"],
+    "notes": "Fullscreen or expand button"
+  },
+  {
+    "id": "icon-017",
+    "query": "plus add button",
+    "relevant_refs": ["e50"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["icon", "description"],
+    "notes": "Add button with plus icon"
+  },
+  {
+    "id": "icon-018",
+    "query": "star favorite",
+    "relevant_refs": ["e60"],
+    "partially_relevant_refs": ["e63"],
+    "difficulty": "medium",
+    "tags": ["icon", "synonym", "social"],
+    "notes": "Star or favorite button"
+  },
+  {
+    "id": "icon-019",
+    "query": "like heart",
+    "relevant_refs": ["e61"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["icon", "description", "social"],
+    "notes": "Like button with heart icon"
+  },
+  {
+    "id": "icon-020",
+    "query": "undo last action",
+    "relevant_refs": ["e70"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["icon", "action"],
+    "notes": "Undo button"
+  },
+  {
+    "id": "icon-021",
+    "query": "info circle",
+    "relevant_refs": ["e80"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["icon", "description"],
+    "notes": "Info button (i in circle)"
+  },
+  {
+    "id": "icon-022",
+    "query": "question help",
+    "relevant_refs": ["e81"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["icon", "synonym"],
+    "notes": "Help button"
+  },
+  {
+    "id": "icon-023",
+    "query": "trash in toolbar",
+    "relevant_refs": ["e2"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["icon", "section-context", "description"],
+    "notes": "Delete in toolbar section, not row actions"
+  },
+  {
+    "id": "icon-024",
+    "query": "pencil edit icon",
+    "relevant_refs": ["e11"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["icon", "description"],
+    "notes": "Edit button identified by pencil"
+  },
+  {
+    "id": "icon-025",
+    "query": "eye view button",
+    "relevant_refs": ["e12"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["icon", "description"],
+    "notes": "View button with eye icon"
+  }
+]

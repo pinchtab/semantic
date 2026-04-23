@@ -1,0 +1,218 @@
+[
+  {
+    "id": "overlay-001",
+    "query": "close dialog",
+    "relevant_refs": ["e15", "e56"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["dialog", "action", "duplicate-labels"],
+    "notes": "Multiple dialogs have close buttons"
+  },
+  {
+    "id": "overlay-002",
+    "query": "confirm delete",
+    "relevant_refs": ["e14"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["dialog", "action", "context-exclusion"],
+    "notes": "Delete button in the Confirm Delete dialog"
+  },
+  {
+    "id": "overlay-003",
+    "query": "cancel inside modal",
+    "relevant_refs": ["e13", "e55"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["dialog", "action", "context-exclusion"],
+    "notes": "Cancel buttons inside modals vs page"
+  },
+  {
+    "id": "overlay-004",
+    "query": "cancel on page not modal",
+    "relevant_refs": ["e1", "e71"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["dialog", "negative-context", "context-exclusion"],
+    "notes": "Cancel buttons on the page, excluding modals"
+  },
+  {
+    "id": "overlay-005",
+    "query": "open account menu",
+    "relevant_refs": ["e4"],
+    "partially_relevant_refs": ["e20"],
+    "difficulty": "easy",
+    "tags": ["menu", "action"],
+    "notes": "Account Menu button or the open menu"
+  },
+  {
+    "id": "overlay-006",
+    "query": "select export CSV from menu",
+    "relevant_refs": ["e31"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["menu", "menuitem", "action"],
+    "notes": "Export CSV menuitem in Repository Options"
+  },
+  {
+    "id": "overlay-007",
+    "query": "choose billing from dropdown",
+    "relevant_refs": ["e23"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["menu", "menuitem", "synonym"],
+    "notes": "Billing menuitem in Account Menu"
+  },
+  {
+    "id": "overlay-008",
+    "query": "more options for repository",
+    "relevant_refs": ["e6"],
+    "partially_relevant_refs": ["e30"],
+    "difficulty": "medium",
+    "tags": ["menu", "action"],
+    "notes": "More Options button in Repository Actions"
+  },
+  {
+    "id": "overlay-009",
+    "query": "dismiss notification",
+    "relevant_refs": ["e42"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["alertdialog", "action", "exact-match"],
+    "notes": "Dismiss button in notification"
+  },
+  {
+    "id": "overlay-010",
+    "query": "save changes in dialog",
+    "relevant_refs": ["e54"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["dialog", "action", "context-exclusion"],
+    "notes": "Save button inside Settings dialog, not page"
+  },
+  {
+    "id": "overlay-011",
+    "query": "sign out from menu",
+    "relevant_refs": ["e24"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["menu", "menuitem", "action"],
+    "notes": "Sign Out menuitem"
+  },
+  {
+    "id": "overlay-012",
+    "query": "archive repository",
+    "relevant_refs": ["e34"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["menu", "menuitem", "action"],
+    "notes": "Archive menuitem in Repository Options"
+  },
+  {
+    "id": "overlay-013",
+    "query": "delete in context menu",
+    "relevant_refs": ["e94"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["menu", "context-exclusion", "duplicate-labels"],
+    "notes": "Delete in Context Menu vs other menus"
+  },
+  {
+    "id": "overlay-014",
+    "query": "copy from right click menu",
+    "relevant_refs": ["e92"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["menu", "menuitem", "synonym"],
+    "notes": "Copy in Context Menu (right-click equivalent)"
+  },
+  {
+    "id": "overlay-015",
+    "query": "theme dropdown options",
+    "relevant_refs": ["e60"],
+    "partially_relevant_refs": ["e61", "e62", "e63"],
+    "difficulty": "medium",
+    "tags": ["combobox", "dialog"],
+    "notes": "Select Theme combobox in Settings"
+  },
+  {
+    "id": "overlay-016",
+    "query": "choose dark theme",
+    "relevant_refs": ["e62"],
+    "partially_relevant_refs": ["e52"],
+    "difficulty": "medium",
+    "tags": ["option", "combobox"],
+    "notes": "Dark option in theme dropdown"
+  },
+  {
+    "id": "overlay-017",
+    "query": "help in footer not menu",
+    "relevant_refs": ["e72"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["link", "negative-context", "context-exclusion"],
+    "notes": "Help link in Footer, excluding menu"
+  },
+  {
+    "id": "overlay-018",
+    "query": "settings menuitem",
+    "relevant_refs": ["e22"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["menu", "menuitem", "duplicate-labels"],
+    "notes": "Settings in Account Menu, not the nav button"
+  },
+  {
+    "id": "overlay-019",
+    "query": "undo notification action",
+    "relevant_refs": ["e43"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["alertdialog", "action"],
+    "notes": "Undo button in notification"
+  },
+  {
+    "id": "overlay-020",
+    "query": "profile in account dropdown",
+    "relevant_refs": ["e21"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["menu", "menuitem"],
+    "notes": "Profile menuitem"
+  },
+  {
+    "id": "overlay-021",
+    "query": "delete from repository options menu",
+    "relevant_refs": ["e35"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["menu", "context-exclusion", "duplicate-labels"],
+    "notes": "Delete in Repository Options, not Context Menu"
+  },
+  {
+    "id": "overlay-022",
+    "query": "enable dark mode checkbox",
+    "relevant_refs": ["e52"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["dialog", "checkbox"],
+    "notes": "Dark Mode checkbox in Settings"
+  },
+  {
+    "id": "overlay-023",
+    "query": "page save button not dialog",
+    "relevant_refs": ["e2", "e70"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["button", "negative-context", "context-exclusion"],
+    "notes": "Save buttons on page, excluding dialogs"
+  },
+  {
+    "id": "overlay-024",
+    "query": "paste from clipboard",
+    "relevant_refs": ["e93"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["menu", "menuitem", "action"],
+    "notes": "Paste menuitem in Context Menu"
+  }
+]

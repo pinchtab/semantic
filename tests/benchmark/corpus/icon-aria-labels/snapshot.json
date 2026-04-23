@@ -1,0 +1,59 @@
+[
+  {"ref": "e1", "role": "button", "name": "Settings", "parent": null, "section": "Toolbar", "description": "gear icon"},
+  {"ref": "e2", "role": "button", "name": "Delete", "parent": null, "section": "Toolbar", "description": "trash icon"},
+  {"ref": "e3", "role": "button", "name": "More options", "parent": null, "section": "Toolbar", "description": "three dots vertical"},
+  {"ref": "e4", "role": "button", "name": "Notifications", "parent": null, "section": "Toolbar", "description": "bell icon"},
+  {"ref": "e5", "role": "button", "name": "Search", "parent": null, "section": "Toolbar", "description": "magnifying glass icon"},
+  {"ref": "e6", "role": "button", "name": "Copy link", "parent": null, "section": "Toolbar"},
+  {"ref": "e7", "role": "button", "name": "Share", "parent": null, "section": "Toolbar"},
+  {"ref": "e8", "role": "button", "name": "Refresh", "parent": null, "section": "Toolbar", "description": "circular arrows"},
+  {"ref": "e9", "role": "button", "name": "Download", "parent": null, "section": "Toolbar", "description": "down arrow"},
+  {"ref": "e10", "role": "button", "name": "Upload", "parent": null, "section": "Toolbar", "description": "up arrow"},
+
+  {"ref": "e11", "role": "button", "name": "Edit", "parent": null, "section": "Row Actions", "description": "pencil icon"},
+  {"ref": "e12", "role": "button", "name": "View", "parent": null, "section": "Row Actions", "description": "eye icon"},
+  {"ref": "e13", "role": "button", "name": "Delete", "parent": null, "section": "Row Actions", "description": "trash icon"},
+  {"ref": "e14", "role": "button", "name": "Copy", "parent": null, "section": "Row Actions", "description": "two rectangles"},
+  {"ref": "e15", "role": "button", "name": "Move", "parent": null, "section": "Row Actions", "description": "folder with arrow"},
+
+  {"ref": "e20", "role": "button", "name": "Calendar", "parent": null, "section": "Date Picker", "description": "calendar icon"},
+  {"ref": "e21", "role": "button", "name": "Previous month", "parent": "e20", "description": "left chevron"},
+  {"ref": "e22", "role": "button", "name": "Next month", "parent": "e20", "description": "right chevron"},
+  {"ref": "e23", "role": "button", "name": "Today", "parent": "e20"},
+
+  {"ref": "e30", "role": "button", "name": "Menu", "parent": null, "section": "Navigation", "description": "hamburger icon"},
+  {"ref": "e31", "role": "button", "name": "Close", "parent": null, "section": "Navigation", "description": "X icon"},
+  {"ref": "e32", "role": "button", "name": "Back", "parent": null, "section": "Navigation", "description": "left arrow"},
+  {"ref": "e33", "role": "button", "name": "Forward", "parent": null, "section": "Navigation", "description": "right arrow"},
+  {"ref": "e34", "role": "button", "name": "Home", "parent": null, "section": "Navigation", "description": "house icon"},
+
+  {"ref": "e40", "role": "button", "name": "Play", "parent": null, "section": "Media Controls", "description": "triangle pointing right"},
+  {"ref": "e41", "role": "button", "name": "Pause", "parent": null, "section": "Media Controls", "description": "two vertical bars"},
+  {"ref": "e42", "role": "button", "name": "Stop", "parent": null, "section": "Media Controls", "description": "square"},
+  {"ref": "e43", "role": "button", "name": "Skip forward", "parent": null, "section": "Media Controls", "description": "double right arrows"},
+  {"ref": "e44", "role": "button", "name": "Skip back", "parent": null, "section": "Media Controls", "description": "double left arrows"},
+  {"ref": "e45", "role": "button", "name": "Volume", "parent": null, "section": "Media Controls", "description": "speaker icon"},
+  {"ref": "e46", "role": "button", "name": "Mute", "parent": null, "section": "Media Controls", "description": "speaker with X"},
+  {"ref": "e47", "role": "button", "name": "Fullscreen", "parent": null, "section": "Media Controls", "description": "expand arrows"},
+
+  {"ref": "e50", "role": "button", "name": "Add", "parent": null, "section": "Quick Actions", "description": "plus icon"},
+  {"ref": "e51", "role": "button", "name": "Remove", "parent": null, "section": "Quick Actions", "description": "minus icon"},
+  {"ref": "e52", "role": "button", "name": "Expand", "parent": null, "section": "Quick Actions", "description": "chevron down"},
+  {"ref": "e53", "role": "button", "name": "Collapse", "parent": null, "section": "Quick Actions", "description": "chevron up"},
+  {"ref": "e54", "role": "button", "name": "Pin", "parent": null, "section": "Quick Actions", "description": "pin icon"},
+  {"ref": "e55", "role": "button", "name": "Unpin", "parent": null, "section": "Quick Actions", "description": "pin with slash"},
+
+  {"ref": "e60", "role": "button", "name": "Star", "parent": null, "section": "Social", "description": "star outline"},
+  {"ref": "e61", "role": "button", "name": "Like", "parent": null, "section": "Social", "description": "heart icon"},
+  {"ref": "e62", "role": "button", "name": "Comment", "parent": null, "section": "Social", "description": "speech bubble"},
+  {"ref": "e63", "role": "button", "name": "Bookmark", "parent": null, "section": "Social", "description": "bookmark icon"},
+  {"ref": "e64", "role": "button", "name": "Flag", "parent": null, "section": "Social", "description": "flag icon"},
+
+  {"ref": "e70", "role": "button", "name": "Undo", "parent": null, "section": "History", "description": "curved left arrow"},
+  {"ref": "e71", "role": "button", "name": "Redo", "parent": null, "section": "History", "description": "curved right arrow"},
+  {"ref": "e72", "role": "button", "name": "History", "parent": null, "section": "History", "description": "clock icon"},
+
+  {"ref": "e80", "role": "button", "name": "Info", "parent": null, "section": "Help", "description": "i in circle"},
+  {"ref": "e81", "role": "button", "name": "Help", "parent": null, "section": "Help", "description": "question mark in circle"},
+  {"ref": "e82", "role": "button", "name": "Warning", "parent": null, "section": "Help", "description": "triangle with exclamation"}
+]

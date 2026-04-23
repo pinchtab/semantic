@@ -1,6 +1,6 @@
 [
   {
-    "id": "visual-001",
+    "id": "vcase-001",
     "query": "button in top right",
     "snapshot": "visual-layout.json",
     "expect_ref": "e1",
@@ -8,7 +8,7 @@
     "tags": ["visual", "position", "directional"]
   },
   {
-    "id": "visual-002",
+    "id": "vcase-002",
     "query": "button on the left",
     "snapshot": "visual-layout.json",
     "expect_ref": "e0",
@@ -16,7 +16,7 @@
     "tags": ["visual", "position", "directional"]
   },
   {
-    "id": "visual-003",
+    "id": "vcase-003",
     "query": "button at bottom",
     "snapshot": "visual-layout.json",
     "expect_ref": "e7",
@@ -24,7 +24,7 @@
     "tags": ["visual", "position", "directional"]
   },
   {
-    "id": "visual-004",
+    "id": "vcase-004",
     "query": "link on left side",
     "snapshot": "visual-layout.json",
     "expect_ref": "e3",
@@ -32,7 +32,7 @@
     "tags": ["visual", "position", "directional"]
   },
   {
-    "id": "visual-005",
+    "id": "vcase-005",
     "query": "top left menu button",
     "snapshot": "visual-layout.json",
     "expect_ref": "e0",
@@ -40,7 +40,7 @@
     "tags": ["visual", "position", "compound"]
   },
   {
-    "id": "visual-006",
+    "id": "vcase-006",
     "query": "settings in upper right corner",
     "snapshot": "visual-layout.json",
     "expect_ref": "e1",

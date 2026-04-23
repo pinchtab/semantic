@@ -1,0 +1,146 @@
+[
+  {
+    "id": "idi-001",
+    "query": "clone this repository",
+    "relevant_refs": ["e24"],
+    "partially_relevant_refs": ["e28", "e29"],
+    "difficulty": "medium",
+    "tags": ["implicit", "domain-intent", "action"]
+  },
+  {
+    "id": "idi-002",
+    "query": "download the source code",
+    "relevant_refs": ["e30"],
+    "partially_relevant_refs": ["e24"],
+    "difficulty": "hard",
+    "tags": ["implicit", "domain-intent", "action"]
+  },
+  {
+    "id": "idi-003",
+    "query": "switch to a different branch",
+    "relevant_refs": ["e21"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["implicit", "domain-intent", "action"]
+  },
+  {
+    "id": "idi-004",
+    "query": "check CI status",
+    "relevant_refs": ["e15", "e33"],
+    "partially_relevant_refs": ["e32"],
+    "difficulty": "hard",
+    "tags": ["implicit", "domain-intent", "navigation"]
+  },
+  {
+    "id": "idi-005",
+    "query": "view build results",
+    "relevant_refs": ["e15", "e33"],
+    "partially_relevant_refs": ["e32"],
+    "difficulty": "hard",
+    "tags": ["implicit", "domain-intent", "navigation"]
+  },
+  {
+    "id": "idi-006",
+    "query": "save this project for later",
+    "relevant_refs": ["e11", "e39"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["implicit", "domain-intent", "action"]
+  },
+  {
+    "id": "idi-007",
+    "query": "bookmark this repo",
+    "relevant_refs": ["e11"],
+    "partially_relevant_refs": ["e39"],
+    "difficulty": "hard",
+    "tags": ["implicit", "domain-intent", "action"]
+  },
+  {
+    "id": "idi-008",
+    "query": "compare branches",
+    "relevant_refs": ["e37"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["implicit", "domain-intent", "action"]
+  },
+  {
+    "id": "idi-009",
+    "query": "go to my profile",
+    "relevant_refs": ["e7"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["implicit", "domain-intent", "navigation"]
+  },
+  {
+    "id": "idi-010",
+    "query": "check my notifications",
+    "relevant_refs": ["e6"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["implicit", "domain-intent", "navigation"]
+  },
+  {
+    "id": "idi-011",
+    "query": "contact support",
+    "relevant_refs": ["e52"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["implicit", "domain-intent", "navigation"]
+  },
+  {
+    "id": "idi-012",
+    "query": "privacy policy",
+    "relevant_refs": ["e48"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["implicit", "domain-intent", "navigation"]
+  },
+  {
+    "id": "idi-013",
+    "query": "type a new search query",
+    "relevant_refs": ["e5"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["implicit", "domain-intent", "input"]
+  },
+  {
+    "id": "idi-014",
+    "query": "fork this project",
+    "relevant_refs": ["e10"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["domain-intent", "action", "button"]
+  },
+  {
+    "id": "idi-015",
+    "query": "open pull requests",
+    "relevant_refs": ["e14"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["domain-intent", "navigation"]
+  },
+  {
+    "id": "idi-016",
+    "query": "see who contributed",
+    "relevant_refs": ["e42"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["implicit", "domain-intent", "navigation"]
+  },
+  {
+    "id": "idi-017",
+    "query": "check latest releases",
+    "relevant_refs": ["e40"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["implicit", "domain-intent", "navigation"]
+  },
+  {
+    "id": "idi-018",
+    "query": "create a new file",
+    "relevant_refs": ["e23"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["implicit", "domain-intent", "action"]
+  }
+]
