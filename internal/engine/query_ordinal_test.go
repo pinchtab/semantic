@@ -100,9 +100,9 @@ func TestCombinedMatcher_OrdinalQuery_SecondButton(t *testing.T) {
 func TestCombinedMatcher_OrdinalQuery_LastInputField(t *testing.T) {
 	m := NewCombinedMatcher(NewHashingEmbedder(128))
 	elements := []types.ElementDescriptor{
-		{Ref: "input-1", Role: "textbox", Name: "Email", Positional: types.PositionalHints{SiblingIndex: 0}},
-		{Ref: "input-2", Role: "textbox", Name: "Email", Positional: types.PositionalHints{SiblingIndex: 1}},
-		{Ref: "input-3", Role: "textbox", Name: "Email", Positional: types.PositionalHints{SiblingIndex: 2}},
+		{Ref: "input-1", Role: "textbox", Name: "Email", DocumentIdx: 0, Positional: types.PositionalHints{SiblingIndex: 1}},
+		{Ref: "input-2", Role: "textbox", Name: "Email", DocumentIdx: 1, Positional: types.PositionalHints{SiblingIndex: 2}},
+		{Ref: "input-3", Role: "textbox", Name: "Email", DocumentIdx: 2, Positional: types.PositionalHints{SiblingIndex: 3}},
 	}
 
 	res, err := m.Find(context.Background(), "last input field", elements, types.FindOptions{Threshold: 0, TopK: 3})
