@@ -34,14 +34,10 @@ semantic find "login" --snapshot page.json --format json
 # Just refs (for piping)
 semantic find "submit" --snapshot page.json --format refs
 
-# Exclude contexts for duplicate labels
-semantic find "submit button not in header" --snapshot page.json
-semantic find "login link, not the footer one" --snapshot page.json
-
-# Select by ordinal position
-semantic find "second button" --snapshot page.json
-semantic find "last input field" --snapshot page.json
-semantic find "second button not in header" --snapshot page.json
+# Visual layout hints
+semantic find "button in top right corner" --snapshot page.json
+semantic find "link below the search box" --snapshot page.json
+semantic find "sidebar on the left" --snapshot page.json
 ```
 
 ### `semantic match`
@@ -90,8 +86,34 @@ The CLI expects a JSON array of element descriptors:
 
 ```json
 [
-  {"ref": "e0", "role": "button", "name": "Sign In"},
-  {"ref": "e1", "role": "textbox", "name": "Email"},
-  {"ref": "e2", "role": "link", "name": "Forgot Password"}
+  {
+    "ref": "e0",
+    "role": "button",
+    "name": "Sign In",
+    "interactive": true,
+    "parent": "Auth card",
+    "section": "Header",
+    "x": 920,
+    "y": 16,
+    "width": 96,
+    "height": 32
+  },
+  {
+    "ref": "e1",
+    "role": "textbox",
+    "name": "Email",
+    "positional": {
+      "depth": 3,
+      "sibling_index": 1,
+      "sibling_count": 2,
+      "labelled_by": "Email",
+      "left": 120,
+      "top": 240,
+      "width": 320,
+      "height": 36
+    }
+  }
 ]
 ```
+
+Top-level geometry (`x`, `y`, `top`, `left`, `width`, `height`) and nested `positional` fields are both supported. Supplying coordinates improves results for visual hints such as `top right`, `below`, and `left`.

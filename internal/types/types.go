@@ -89,6 +89,10 @@ type PositionalHints struct {
 	SiblingIndex int
 	SiblingCount int
 	LabelledBy   string
+	X            float64
+	Y            float64
+	Width        float64
+	Height       float64
 }
 
 // ElementDescriptor describes a single accessibility tree node.
