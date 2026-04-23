@@ -1,0 +1,44 @@
+[
+  {
+    "id": "ordinal-001",
+    "query": "second submit button",
+    "relevant_refs": ["e2"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["ordinal", "button", "duplicate-labels"]
+  },
+  {
+    "id": "ordinal-002",
+    "query": "last submit button",
+    "relevant_refs": ["e4"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["ordinal", "button", "duplicate-labels"]
+  },
+  {
+    "id": "ordinal-003",
+    "query": "second submit button not in header",
+    "relevant_refs": ["e3"],
+    "partially_relevant_refs": ["e4"],
+    "difficulty": "hard",
+    "tags": ["ordinal", "context-exclusion", "button", "duplicate-labels"],
+    "notes": "Header submit should be excluded before ordinal selection"
+  },
+  {
+    "id": "ordinal-004",
+    "query": "last login link except footer",
+    "relevant_refs": ["e6"],
+    "partially_relevant_refs": ["e5"],
+    "difficulty": "hard",
+    "tags": ["ordinal", "context-exclusion", "link", "duplicate-labels"]
+  },
+  {
+    "id": "ordinal-005",
+    "query": "first name",
+    "relevant_refs": [],
+    "partially_relevant_refs": ["e8", "e9", "e10"],
+    "difficulty": "medium",
+    "tags": ["guard", "literal-text", "textbox"],
+    "notes": "Guard case, should not trigger ordinal parsing just because of the word first"
+  }
+]

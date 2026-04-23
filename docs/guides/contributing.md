@@ -19,7 +19,7 @@ Doctor checks Go version, golangci-lint, dependencies, build, tests, and git hoo
 ./dev lint          # golangci-lint
 ./dev check         # all checks (fmt + vet + lint + test)
 ./dev build         # build CLI binary
-./dev benchmark     # run benchmark study
+./dev bench         # run corpus benchmark suite
 ```
 
 ## Project Structure
