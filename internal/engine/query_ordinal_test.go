@@ -175,3 +175,36 @@ func TestCombinedMatcher_OrdinalWithContextExclusion(t *testing.T) {
 		t.Fatalf("expected second non-header button, got %s", res.BestRef)
 	}
 }
+
+func TestFilterOrdinalCandidates_DropsWeakSemanticTail(t *testing.T) {
+	matches := []types.ElementMatch{
+		{Ref: "e1", Score: 0.92},
+		{Ref: "e2", Score: 0.81},
+		{Ref: "e3", Score: 0.18},
+	}
+
+	filtered := filterOrdinalCandidates(matches)
+	if len(filtered) != 2 {
+		t.Fatalf("expected 2 strong candidates, got %d", len(filtered))
+	}
+	if filtered[0].Ref != "e1" || filtered[1].Ref != "e2" {
+		t.Fatalf("unexpected filtered refs: %+v", filtered)
+	}
+}
+
+func TestCombinedMatcher_OrdinalQuery_IgnoresWeakNonButtonTail(t *testing.T) {
+	m := NewCombinedMatcher(NewHashingEmbedder(128))
+	elements := []types.ElementDescriptor{
+		{Ref: "btn-1", Role: "button", Name: "Submit", Positional: types.PositionalHints{SiblingIndex: 0}},
+		{Ref: "btn-2", Role: "button", Name: "Submit", Positional: types.PositionalHints{SiblingIndex: 1}},
+		{Ref: "note", Role: "note", Name: "Submission tips", Positional: types.PositionalHints{SiblingIndex: 2}},
+	}
+
+	res, err := m.Find(context.Background(), "second submit button", elements, types.FindOptions{Threshold: 0, TopK: 3})
+	if err != nil {
+		t.Fatalf("Find failed: %v", err)
+	}
+	if res.BestRef != "btn-2" {
+		t.Fatalf("expected second submit button btn-2, got %s", res.BestRef)
+	}
+}
