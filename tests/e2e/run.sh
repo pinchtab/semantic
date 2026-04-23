@@ -7,6 +7,9 @@ echo "  semantic E2E tests"
 echo "═══════════════════════════════════════════════════"
 echo ""
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/lib.sh"
+
 # Verify binary is available
 if ! command -v semantic &>/dev/null; then
   echo "ERROR: semantic binary not found"
@@ -24,7 +27,6 @@ run_suite() {
 }
 
 # Run all test suites
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 for suite in "${SCRIPT_DIR}"/cases/*.sh; do
   [ -f "$suite" ] || continue
   echo ""

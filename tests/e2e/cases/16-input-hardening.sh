@@ -50,11 +50,16 @@ set -e
 assert_eq "$exit_code" "0" "hardening: weights > 1 don't crash"
 
 # Verify scores are still bounded [0,1] with extreme weights
-best_score=$(echo "$result" | jq '.best_score')
-if awk "BEGIN {exit !($best_score >= 0 && $best_score <= 1)}"; then
-  pass "hardening: scores bounded with extreme weights"
+if [ "$exit_code" != "0" ]; then
+  fail "hardening: scores bounded with extreme weights" "semantic find failed: $result"
+elif best_score=$(echo "$result" | jq -er '.best_score' 2>/dev/null); then
+  if awk "BEGIN {exit !($best_score >= 0 && $best_score <= 1)}"; then
+    pass "hardening: scores bounded with extreme weights"
+  else
+    fail "hardening: scores bounded with extreme weights" "got score $best_score"
+  fi
 else
-  fail "hardening: scores bounded with extreme weights" "got score $best_score"
+  fail "hardening: scores bounded with extreme weights" "semantic find returned invalid JSON: $result"
 fi
 
 summary "input-hardening"
