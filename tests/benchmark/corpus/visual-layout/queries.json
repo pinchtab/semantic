@@ -1,0 +1,50 @@
+[
+  {
+    "id": "visual-001",
+    "query": "button in top right corner",
+    "relevant_refs": ["e1"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["visual", "position", "directional"]
+  },
+  {
+    "id": "visual-002",
+    "query": "button on the left side",
+    "relevant_refs": ["e0"],
+    "partially_relevant_refs": ["e3", "e4"],
+    "difficulty": "medium",
+    "tags": ["visual", "position", "directional"]
+  },
+  {
+    "id": "visual-003",
+    "query": "button at the bottom of the page",
+    "relevant_refs": ["e6", "e7"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["visual", "position", "directional"]
+  },
+  {
+    "id": "visual-004",
+    "query": "link on the left",
+    "relevant_refs": ["e3", "e4"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["visual", "position", "link"]
+  },
+  {
+    "id": "visual-005",
+    "query": "search box in the header",
+    "relevant_refs": ["e2"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["visual", "section", "search"]
+  },
+  {
+    "id": "visual-006",
+    "query": "settings button top right",
+    "relevant_refs": ["e1"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["visual", "position", "name-match"]
+  }
+]

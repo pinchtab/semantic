@@ -1,0 +1,50 @@
+[
+  {
+    "id": "visual-001",
+    "query": "button in top right",
+    "snapshot": "visual-layout.json",
+    "expect_ref": "e1",
+    "min_score": 0.5,
+    "tags": ["visual", "position", "directional"]
+  },
+  {
+    "id": "visual-002",
+    "query": "button on the left",
+    "snapshot": "visual-layout.json",
+    "expect_ref": "e0",
+    "min_score": 0.4,
+    "tags": ["visual", "position", "directional"]
+  },
+  {
+    "id": "visual-003",
+    "query": "button at bottom",
+    "snapshot": "visual-layout.json",
+    "expect_ref": "e7",
+    "min_score": 0.4,
+    "tags": ["visual", "position", "directional"]
+  },
+  {
+    "id": "visual-004",
+    "query": "link on left side",
+    "snapshot": "visual-layout.json",
+    "expect_ref": "e3",
+    "min_score": 0.4,
+    "tags": ["visual", "position", "directional"]
+  },
+  {
+    "id": "visual-005",
+    "query": "top left menu button",
+    "snapshot": "visual-layout.json",
+    "expect_ref": "e0",
+    "min_score": 0.5,
+    "tags": ["visual", "position", "compound"]
+  },
+  {
+    "id": "visual-006",
+    "query": "settings in upper right corner",
+    "snapshot": "visual-layout.json",
+    "expect_ref": "e1",
+    "min_score": 0.5,
+    "tags": ["visual", "position", "name-match"]
+  }
+]

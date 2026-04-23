@@ -323,6 +323,28 @@ func TestEmbeddingMatcher_SingleElement_WithNeighborWeight(t *testing.T) {
 	}
 }
 
+func TestEmbeddingMatcher_TieBreaksByPositionalHints(t *testing.T) {
+	e := newScriptedEmbedder(map[string][]float32{
+		"open button":  {1, 0, 0},
+		"button: Open": {1, 0, 0},
+	})
+	m := NewEmbeddingMatcherWithNeighborWeight(e, 0)
+
+	elements := []types.ElementDescriptor{
+		{Ref: "shallow", Role: "button", Name: "Open", Positional: types.PositionalHints{Depth: 1, SiblingIndex: 1}},
+		{Ref: "deep-left", Role: "button", Name: "Open", Positional: types.PositionalHints{Depth: 3, SiblingIndex: 0}},
+		{Ref: "deep-right", Role: "button", Name: "Open", Positional: types.PositionalHints{Depth: 3, SiblingIndex: 2}},
+	}
+
+	res, err := m.Find(context.Background(), "open button", elements, types.FindOptions{Threshold: 0, TopK: 3})
+	if err != nil {
+		t.Fatalf("Find failed: %v", err)
+	}
+	if res.BestRef != "deep-left" {
+		t.Fatalf("expected deep-left to win tie-break, got %s", res.BestRef)
+	}
+}
+
 type scriptedEmbedder struct {
 	vectors map[string][]float32
 }

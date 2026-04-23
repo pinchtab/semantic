@@ -69,6 +69,16 @@ func TestParseVisualQueryHints_BasicPatterns(t *testing.T) {
 	}
 }
 
+func TestParseVisualQueryHints_DoesNotTreatSignInAsVisualHint(t *testing.T) {
+	got := parseVisualQueryHints("sign in button")
+	if got.hasHints {
+		t.Fatalf("expected hasHints=false for non-visual query, got true")
+	}
+	if got.baseQuery != "sign in button" {
+		t.Fatalf("expected base query to stay unchanged, got %q", got.baseQuery)
+	}
+}
+
 func TestCombinedMatcher_VisualHint_TopRightCorner(t *testing.T) {
 	m := NewCombinedMatcher(NewHashingEmbedder(128))
 	elements := []types.ElementDescriptor{
