@@ -61,11 +61,16 @@ echo "=============================================="
 FIND_OUTPUT=$("${SCRIPT_DIR}/run-corpus-benchmark.sh" 2>&1)
 echo "$FIND_OUTPUT"
 
-# Extract metrics from output
-FIND_MRR=$(echo "$FIND_OUTPUT" | grep "MRR:" | tail -1 | awk '{print $2}')
-FIND_P1=$(echo "$FIND_OUTPUT" | grep "P@1:" | tail -1 | awk '{print $2}')
-FIND_TOTAL=$(echo "$FIND_OUTPUT" | grep "Queries:" | tail -1 | awk '{print $2}')
-FIND_LAT=$(echo "$FIND_OUTPUT" | grep "Latency P50:" | tail -1 | awk '{print $3}')
+# Extract metrics from the corpus report rather than the human-readable output.
+FIND_REPORT=$(echo "$FIND_OUTPUT" | awk '/^Report:/ {print $2}' | tail -1)
+if [[ -z "${FIND_REPORT}" ]] || [[ ! -f "${FIND_REPORT}" ]]; then
+    echo "error: could not locate corpus benchmark report" >&2
+    exit 1
+fi
+FIND_MRR=$(jq -r '.metrics.mrr' "$FIND_REPORT")
+FIND_P1=$(jq -r '.metrics.p_at_1' "$FIND_REPORT")
+FIND_TOTAL=$(jq -r '.metrics.total' "$FIND_REPORT")
+FIND_LAT=$(jq -r '.metrics.latency_p50_ms' "$FIND_REPORT")
 
 # Rebuild semantic binary (corpus benchmark deletes it)
 (cd "${BENCHMARK_DIR}/../.." && go build -o "${BENCHMARK_DIR}/semantic" ./cmd/semantic)
@@ -99,7 +104,18 @@ if [[ -f "$SCENARIOS_FILE" ]]; then
 
         # Run semantic find on after snapshot with the same minimum score
         # enforced by DefaultRecoveryConfig in the recovery engine.
-        RESULT=$("${SEMANTIC}" find "$QUERY" --snapshot "$AFTER_FILE" --format json --threshold 0.52 2>/dev/null || echo '{"matches":[]}')
+        if ! RESULT=$("${SEMANTIC}" find "$QUERY" --snapshot "$AFTER_FILE" --format json --threshold 0.52 2>&1); then
+            echo "  [$ID] ERROR: semantic find failed during recovery benchmark" >&2
+            echo "$RESULT" >&2
+            rm -f "$AFTER_FILE"
+            exit 1
+        fi
+        if ! echo "$RESULT" | jq -e '(.matches | type) == "array"' > /dev/null 2>&1; then
+            echo "  [$ID] ERROR: semantic find returned invalid JSON during recovery benchmark" >&2
+            echo "$RESULT" >&2
+            rm -f "$AFTER_FILE"
+            exit 1
+        fi
         BEST_REF=$(echo "$RESULT" | jq -r '.best_ref // ""')
 
         rm -f "$AFTER_FILE"
@@ -150,7 +166,11 @@ if [[ -f "$CLASS_FILE" ]]; then
         EXPECTED=$(jq -r ".[$i].expected_type" "$CLASS_FILE")
 
         # Run semantic classify (extract just the type, first word)
-        RESULT=$("${SEMANTIC}" classify "$ERROR" 2>/dev/null || echo "unknown")
+        if ! RESULT=$("${SEMANTIC}" classify "$ERROR" 2>&1); then
+            echo "  [$ID] ERROR: semantic classify failed" >&2
+            echo "$RESULT" >&2
+            exit 1
+        fi
         GOT=$(echo "$RESULT" | awk '{print $1}')
 
         CLASS_TOTAL=$((CLASS_TOTAL + 1))
@@ -189,6 +209,7 @@ COMPOSITE=$(echo "scale=4; \
     ($FIND_MRR * 0.20) + \
     ($RECOVERY_RATE * 0.25) + \
     ($CLASS_ACCURACY * 0.15)" | bc)
+COMPOSITE=$(awk -v value="$COMPOSITE" 'BEGIN { printf "%.4f", value }')
 
 # Assign grade
 GRADE="F"

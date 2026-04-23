@@ -1,0 +1,219 @@
+[
+  {
+    "id": "table-001",
+    "query": "edit Alice",
+    "relevant_refs": ["e15"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["table", "row-context", "action"],
+    "notes": "Edit button for Alice Johnson's row"
+  },
+  {
+    "id": "table-002",
+    "query": "delete second invoice",
+    "relevant_refs": ["e26"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["table", "ordinal", "action"],
+    "notes": "Delete button for second row (Acme Corp)"
+  },
+  {
+    "id": "table-003",
+    "query": "status for Acme Corp",
+    "relevant_refs": ["e24"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["table", "row-context", "cell"],
+    "notes": "Status cell showing Pending for Acme Corp"
+  },
+  {
+    "id": "table-004",
+    "query": "open failed payment row",
+    "relevant_refs": ["e40"],
+    "partially_relevant_refs": ["e48"],
+    "difficulty": "hard",
+    "tags": ["table", "state", "row-context"],
+    "notes": "Row with Failed status (Maya Chen)"
+  },
+  {
+    "id": "table-005",
+    "query": "download invoice INV-1024",
+    "relevant_refs": [],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["table", "no-match", "absent-control"],
+    "expect_no_match": true,
+    "notes": "Invoice doesn't exist"
+  },
+  {
+    "id": "table-006",
+    "query": "approve pending request from Maya",
+    "relevant_refs": [],
+    "partially_relevant_refs": ["e48"],
+    "difficulty": "hard",
+    "tags": ["table", "domain-intent", "row-context"],
+    "notes": "Maya has Failed status, not Pending. Retry Payment is closest."
+  },
+  {
+    "id": "table-007",
+    "query": "sort by due date",
+    "relevant_refs": ["e60"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["table", "action", "exact-match"],
+    "notes": "Exact match for sort control"
+  },
+  {
+    "id": "table-008",
+    "query": "filter unpaid invoices",
+    "relevant_refs": ["e62"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["table", "filter", "domain-intent"],
+    "notes": "Filter by Status combobox for non-paid statuses"
+  },
+  {
+    "id": "table-009",
+    "query": "open actions menu for third row",
+    "relevant_refs": ["e82"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["table", "ordinal", "action"],
+    "notes": "More button for Bob Smith (third row)"
+  },
+  {
+    "id": "table-010",
+    "query": "select all overdue invoices",
+    "relevant_refs": ["e72"],
+    "partially_relevant_refs": ["e64"],
+    "difficulty": "hard",
+    "tags": ["table", "state", "checkbox"],
+    "notes": "Only INV-1003 is overdue; select all is partial"
+  },
+  {
+    "id": "table-011",
+    "query": "download Bob Smith invoice",
+    "relevant_refs": ["e37"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["table", "row-context", "action"],
+    "notes": "Download button for Bob Smith's row"
+  },
+  {
+    "id": "table-012",
+    "query": "send reminder to Acme",
+    "relevant_refs": ["e28"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["table", "row-context", "action"],
+    "notes": "Send Reminder button for Acme Corp"
+  },
+  {
+    "id": "table-013",
+    "query": "retry payment Maya Chen",
+    "relevant_refs": ["e48"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["table", "row-context", "action"],
+    "notes": "Retry Payment button in Maya's row"
+  },
+  {
+    "id": "table-014",
+    "query": "mark overdue as bad debt",
+    "relevant_refs": ["e39"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["table", "state", "action"],
+    "notes": "Only the overdue invoice has Mark as Bad Debt"
+  },
+  {
+    "id": "table-015",
+    "query": "export table to CSV",
+    "relevant_refs": ["e63"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["table", "action", "synonym"],
+    "notes": "Export CSV button"
+  },
+  {
+    "id": "table-016",
+    "query": "delete all selected",
+    "relevant_refs": ["e65"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["table", "bulk-action", "synonym"],
+    "notes": "Bulk Delete button"
+  },
+  {
+    "id": "table-017",
+    "query": "edit first invoice",
+    "relevant_refs": ["e15"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["table", "ordinal", "action"],
+    "notes": "Edit button for first row (Alice)"
+  },
+  {
+    "id": "table-018",
+    "query": "select invoice 1003",
+    "relevant_refs": ["e72"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["table", "row-context", "checkbox"],
+    "notes": "Checkbox for INV-1003"
+  },
+  {
+    "id": "table-019",
+    "query": "last row more actions",
+    "relevant_refs": ["e84"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["table", "ordinal", "action"],
+    "notes": "More button in last row (Delta Inc)"
+  },
+  {
+    "id": "table-020",
+    "query": "search invoices",
+    "relevant_refs": ["e66"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["table", "searchbox", "exact-match"],
+    "notes": "Search invoices searchbox"
+  },
+  {
+    "id": "table-021",
+    "query": "edit Delta Inc invoice",
+    "relevant_refs": ["e55"],
+    "partially_relevant_refs": [],
+    "difficulty": "medium",
+    "tags": ["table", "row-context", "action"],
+    "notes": "Edit button for Delta Inc row"
+  },
+  {
+    "id": "table-022",
+    "query": "invoice with highest amount",
+    "relevant_refs": ["e20"],
+    "partially_relevant_refs": ["e23"],
+    "difficulty": "hard",
+    "tags": ["table", "domain-intent", "implicit"],
+    "notes": "Acme Corp has highest amount at $1500"
+  },
+  {
+    "id": "table-023",
+    "query": "select checkbox for pending invoice",
+    "relevant_refs": ["e71"],
+    "partially_relevant_refs": [],
+    "difficulty": "hard",
+    "tags": ["table", "state", "checkbox"],
+    "notes": "Only INV-1002 (Acme) is pending"
+  },
+  {
+    "id": "table-024",
+    "query": "sort invoices by amount",
+    "relevant_refs": ["e61"],
+    "partially_relevant_refs": [],
+    "difficulty": "easy",
+    "tags": ["table", "action", "exact-match"],
+    "notes": "Sort by Amount button"
+  }
+]
