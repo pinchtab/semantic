@@ -29,7 +29,7 @@ All development commands run via `./dev`:
 | `./dev vet` | Run go vet |
 | `./dev check` | All checks (fmt + vet + lint + test) |
 | `./dev build` | Build CLI binary |
-| `./dev benchmark` | Run benchmark study |
+| `./dev bench` | Run corpus benchmark suite |
 | `./dev e2e` | Run E2E tests (Docker) |
 
 ## Architecture
@@ -112,7 +112,7 @@ recovery.ClassifyFailure, recovery.DefaultRecoveryConfig
 ## Testing
 
 - **167 tests** across 3 packages (root, engine, recovery)
-- `internal/engine/` has unit tests for all matchers + benchmark study
+- `internal/engine/` has unit tests for all matchers + benchmark suite
 - Root has API-level smoke tests
 - `recovery/` has scenario tests (SPA re-render, checkout, login, etc.)
 

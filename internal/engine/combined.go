@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pinchtab/semantic/internal/types"
+	"math"
 	"sort"
 )
 
@@ -45,15 +46,22 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []typ
 	}
 
 	parsed := ParseQueryContext(query)
+	mergeOpts := opts
+	internalOpts := opts
+	if parsed.Ordinal.HasOrdinal {
+		mergeOpts.TopK = len(elements)
+		internalOpts.TopK = len(elements)
+	}
 
 	lexW, embW := c.weights(opts)
 
-	lexResult, embResult, err := c.runBothParsed(ctx, parsed, elements, opts)
+	lexResult, embResult, err := c.runBothParsed(ctx, parsed, elements, internalOpts)
 	if err != nil {
 		return types.FindResult{}, err
 	}
 
-	return c.mergeResults(lexResult, embResult, elements, opts, lexW, embW), nil
+	merged := c.mergeResults(lexResult, embResult, elements, mergeOpts, lexW, embW)
+	return selectOrdinalMatchInOrder(merged, parsed.Ordinal, elements), nil
 }
 
 func (c *CombinedMatcher) weights(opts types.FindOptions) (float64, float64) {
@@ -156,7 +164,18 @@ func (c *CombinedMatcher) mergeResults(lexResult, embResult types.FindResult, el
 	}
 
 	sort.Slice(candidates, func(i, j int) bool {
-		return candidates[i].score > candidates[j].score
+		scoreDiff := candidates[i].score - candidates[j].score
+		if math.Abs(scoreDiff) > 1e-9 {
+			return scoreDiff > 0
+		}
+
+		idxI := documentOrderIndex(candidates[i].el, i)
+		idxJ := documentOrderIndex(candidates[j].el, j)
+		if idxI != idxJ {
+			return idxI < idxJ
+		}
+
+		return candidates[i].ref < candidates[j].ref
 	})
 	if len(candidates) > opts.TopK {
 		candidates = candidates[:opts.TopK]
@@ -187,6 +206,16 @@ func (c *CombinedMatcher) mergeResults(lexResult, embResult types.FindResult, el
 		result.BestScore = result.Matches[0].Score
 	}
 	return result
+}
+
+func documentOrderIndex(el types.ElementDescriptor, fallback int) int {
+	if el.DocumentIdx > 0 {
+		return el.DocumentIdx
+	}
+	if el.Positional.SiblingIndex > 0 {
+		return el.Positional.SiblingIndex
+	}
+	return fallback
 }
 
 func scoreMap(matches []types.ElementMatch) map[string]float64 {

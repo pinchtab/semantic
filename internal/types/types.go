@@ -100,6 +100,7 @@ type ElementDescriptor struct {
 	Interactive bool
 	Parent      string
 	Section     string
+	DocumentIdx int
 	Positional  PositionalHints
 }
 
