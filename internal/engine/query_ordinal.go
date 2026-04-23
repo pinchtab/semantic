@@ -143,13 +143,21 @@ func selectOrdinalMatchInOrder(result types.FindResult, constraint OrdinalConstr
 		return result
 	}
 
+	filtered := filterOrdinalCandidates(result.Matches)
+	if len(filtered) == 0 {
+		result.Matches = nil
+		result.BestRef = ""
+		result.BestScore = 0
+		return result
+	}
+
 	refOrder := make(map[string]int, len(elements))
 	for idx, el := range elements {
 		refOrder[el.Ref] = idx
 	}
 
-	ordered := make([]types.ElementMatch, len(result.Matches))
-	copy(ordered, result.Matches)
+	ordered := make([]types.ElementMatch, len(filtered))
+	copy(ordered, filtered)
 	sort.SliceStable(ordered, func(i, j int) bool {
 		idxI, okI := refOrder[ordered[i].Ref]
 		idxJ, okJ := refOrder[ordered[j].Ref]
@@ -181,4 +189,30 @@ func selectOrdinalMatchInOrder(result types.FindResult, constraint OrdinalConstr
 	result.BestRef = chosen.Ref
 	result.BestScore = chosen.Score
 	return result
+}
+
+func filterOrdinalCandidates(matches []types.ElementMatch) []types.ElementMatch {
+	if len(matches) == 0 {
+		return nil
+	}
+
+	bestScore := matches[0].Score
+	for _, match := range matches[1:] {
+		if match.Score > bestScore {
+			bestScore = match.Score
+		}
+	}
+
+	floor := bestScore * 0.75
+	if floor < 0.2 {
+		floor = 0.2
+	}
+
+	filtered := make([]types.ElementMatch, 0, len(matches))
+	for _, match := range matches {
+		if match.Score >= floor {
+			filtered = append(filtered, match)
+		}
+	}
+	return filtered
 }

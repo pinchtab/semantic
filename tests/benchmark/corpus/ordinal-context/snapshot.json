@@ -1,0 +1,13 @@
+[
+  {"ref": "e0", "role": "heading", "name": "Checkout", "interactive": false, "section": "Header"},
+  {"ref": "e1", "role": "button", "name": "Submit", "interactive": true, "section": "Header", "parent": "Header actions", "positional": {"siblingIndex": 0}},
+  {"ref": "e2", "role": "button", "name": "Submit", "interactive": true, "section": "Login", "parent": "Login form", "positional": {"siblingIndex": 1}},
+  {"ref": "e3", "role": "button", "name": "Submit", "interactive": true, "section": "Payment", "parent": "Payment form", "positional": {"siblingIndex": 2}},
+  {"ref": "e4", "role": "button", "name": "Submit", "interactive": true, "section": "Footer", "parent": "Footer actions", "positional": {"siblingIndex": 3}},
+  {"ref": "e5", "role": "link", "name": "Log in", "interactive": true, "section": "Header", "parent": "Header nav", "positional": {"siblingIndex": 4}},
+  {"ref": "e6", "role": "link", "name": "Log in", "interactive": true, "section": "Sidebar", "parent": "Quick actions", "positional": {"siblingIndex": 5}},
+  {"ref": "e7", "role": "link", "name": "Log in", "interactive": true, "section": "Footer", "parent": "Footer nav", "positional": {"siblingIndex": 6}},
+  {"ref": "e8", "role": "textbox", "name": "Email", "interactive": true, "section": "Billing", "parent": "Billing form", "positional": {"siblingIndex": 7}},
+  {"ref": "e9", "role": "textbox", "name": "Email", "interactive": true, "section": "Shipping", "parent": "Shipping form", "positional": {"siblingIndex": 8}},
+  {"ref": "e10", "role": "textbox", "name": "Email", "interactive": true, "section": "Profile", "parent": "Profile form", "positional": {"siblingIndex": 9}}
+]
