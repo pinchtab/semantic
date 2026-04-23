@@ -62,10 +62,16 @@ Flags (find/match):
 
 // snapshotElement is the JSON shape from pinchtab's /snapshot endpoint.
 type snapshotPositional struct {
-	Depth        int    `json:"depth"`
-	SiblingIndex int    `json:"sibling_index"`
-	SiblingCount int    `json:"sibling_count"`
-	LabelledBy   string `json:"labelled_by"`
+	Depth        int     `json:"depth"`
+	SiblingIndex int     `json:"sibling_index"`
+	SiblingCount int     `json:"sibling_count"`
+	LabelledBy   string  `json:"labelled_by"`
+	X            float64 `json:"x"`
+	Y            float64 `json:"y"`
+	Top          float64 `json:"top"`
+	Left         float64 `json:"left"`
+	Width        float64 `json:"width"`
+	Height       float64 `json:"height"`
 }
 
 type snapshotElement struct {
@@ -80,6 +86,12 @@ type snapshotElement struct {
 	SiblingIdx  int                 `json:"sibling_index"`
 	SiblingCnt  int                 `json:"sibling_count"`
 	LabelledBy  string              `json:"labelled_by"`
+	X           float64             `json:"x"`
+	Y           float64             `json:"y"`
+	Top         float64             `json:"top"`
+	Left        float64             `json:"left"`
+	Width       float64             `json:"width"`
+	Height      float64             `json:"height"`
 	Positional  *snapshotPositional `json:"positional"`
 }
 
@@ -112,6 +124,16 @@ func loadSnapshot(path string) ([]semantic.ElementDescriptor, error) {
 		depth := e.Depth
 		siblingIdx := e.SiblingIdx
 		siblingCnt := e.SiblingCnt
+		x := e.X
+		y := e.Y
+		if x == 0 && e.Left != 0 {
+			x = e.Left
+		}
+		if y == 0 && e.Top != 0 {
+			y = e.Top
+		}
+		width := e.Width
+		height := e.Height
 		if e.Positional != nil {
 			if e.Positional.Depth != 0 {
 				depth = e.Positional.Depth
@@ -125,6 +147,23 @@ func loadSnapshot(path string) ([]semantic.ElementDescriptor, error) {
 			if e.Positional.LabelledBy != "" {
 				labelledBy = e.Positional.LabelledBy
 			}
+
+			hasHorizontal := e.Positional.X != 0 || e.Positional.Left != 0 || e.Positional.Width > 0
+			hasVertical := e.Positional.Y != 0 || e.Positional.Top != 0 || e.Positional.Height > 0
+			if hasHorizontal {
+				x = e.Positional.X
+				if x == 0 && e.Positional.Left != 0 {
+					x = e.Positional.Left
+				}
+				width = e.Positional.Width
+			}
+			if hasVertical {
+				y = e.Positional.Y
+				if y == 0 && e.Positional.Top != 0 {
+					y = e.Positional.Top
+				}
+				height = e.Positional.Height
+			}
 		}
 
 		descs[i] = semantic.ElementDescriptor{
@@ -135,12 +174,15 @@ func loadSnapshot(path string) ([]semantic.ElementDescriptor, error) {
 			Interactive: e.Interactive,
 			Parent:      e.Parent,
 			Section:     e.Section,
-			DocumentIdx: i,
 			Positional: semantic.PositionalHints{
 				Depth:        depth,
 				SiblingIndex: siblingIdx,
 				SiblingCount: siblingCnt,
 				LabelledBy:   labelledBy,
+				X:            x,
+				Y:            y,
+				Width:        width,
+				Height:       height,
 			},
 		}
 	}

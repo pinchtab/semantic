@@ -78,11 +78,10 @@ func (m *EmbeddingMatcher) findWithParsed(ctx QueryContext, elements []types.Ele
 
 	candidates := m.scoreCandidates(parsed, filtered, vectors, opts.Threshold)
 	sort.Slice(candidates, func(i, j int) bool {
-		scoreDiff := candidates[i].score - candidates[j].score
-		if math.Abs(scoreDiff) > 1e-9 {
-			return scoreDiff > 0
-		}
-		return candidates[i].desc.Ref < candidates[j].desc.Ref
+		return rankedMatchLess(
+			candidates[i].score, candidates[i].desc, candidates[i].order,
+			candidates[j].score, candidates[j].desc, candidates[j].order,
+		)
 	})
 
 	if len(candidates) > opts.TopK {
@@ -126,6 +125,7 @@ func (m *EmbeddingMatcher) embedQueryAndElements(parsed types.ParsedQuery, eleme
 type embeddingScored struct {
 	desc  types.ElementDescriptor
 	score float64
+	order int
 }
 
 func (m *EmbeddingMatcher) scoreCandidates(parsed types.ParsedQuery, elements []types.ElementDescriptor, vectors [][]float32, threshold float64) []embeddingScored {
@@ -156,7 +156,7 @@ func (m *EmbeddingMatcher) scoreCandidates(parsed types.ParsedQuery, elements []
 			continue
 		}
 		if score >= threshold {
-			candidates = append(candidates, embeddingScored{desc: el, score: score})
+			candidates = append(candidates, embeddingScored{desc: el, score: score, order: i})
 		}
 	}
 	return candidates

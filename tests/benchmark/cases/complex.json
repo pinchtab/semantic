@@ -1,0 +1,102 @@
+[
+  {
+    "id": "complex-001",
+    "query": "second submit button not in login",
+    "snapshot": "multi-form.json",
+    "expect_ref": "e11",
+    "min_score": 0.5,
+    "tags": ["ordinal", "negative-context", "compound"]
+  },
+  {
+    "id": "complex-002",
+    "query": "last text field in payment",
+    "snapshot": "multi-form.json",
+    "expect_ref": "e6",
+    "min_score": 0.4,
+    "tags": ["ordinal", "section-context", "compound"]
+  },
+  {
+    "id": "complex-003",
+    "query": "click the submit button in the shipping form",
+    "snapshot": "multi-form.json",
+    "expect_ref": "e11",
+    "min_score": 0.5,
+    "tags": ["natural-language", "section-context", "action-verb"]
+  },
+  {
+    "id": "complex-004",
+    "query": "first input field except login section",
+    "snapshot": "multi-form.json",
+    "expect_ref": "e4",
+    "expect_ref_alt": ["e1"],
+    "min_score": 0.4,
+    "tags": ["ordinal", "negative-context", "compound"],
+    "notes": "Known gap: ordinal applied before negative filter"
+  },
+  {
+    "id": "complex-005",
+    "query": "I want to click the sign in button",
+    "snapshot": "login-page.json",
+    "expect_ref": "e4",
+    "min_score": 0.4,
+    "tags": ["natural-language", "conversational"]
+  },
+  {
+    "id": "complex-006",
+    "query": "the button that says submit",
+    "snapshot": "multi-form.json",
+    "expect_ref": "e7",
+    "expect_ref_alt": ["e3", "e11"],
+    "min_score": 0.4,
+    "tags": ["natural-language", "descriptive"],
+    "notes": "Any Submit button is valid without ordinal"
+  },
+  {
+    "id": "complex-007",
+    "query": "where can I type my password",
+    "snapshot": "login-page.json",
+    "expect_ref": "e2",
+    "min_score": 0.3,
+    "tags": ["natural-language", "question-form"]
+  },
+  {
+    "id": "complex-008",
+    "query": "press enter to login",
+    "snapshot": "login-page.json",
+    "expect_no_crash": true,
+    "tags": ["natural-language", "action-synonym"],
+    "notes": "Known gap: 'press enter' not recognized as submit action"
+  },
+  {
+    "id": "complex-009",
+    "query": "add item to my shopping bag",
+    "snapshot": "ecommerce-product.json",
+    "expect_ref": "e10",
+    "min_score": 0.4,
+    "tags": ["synonym-chain", "ecommerce"]
+  },
+  {
+    "id": "complex-010",
+    "query": "go to my account settings",
+    "snapshot": "dashboard.json",
+    "expect_ref": "e3",
+    "min_score": 0.4,
+    "tags": ["natural-language", "navigation"]
+  },
+  {
+    "id": "complex-011",
+    "query": "sign up for a new account",
+    "snapshot": "login-page.json",
+    "expect_ref": "e6",
+    "min_score": 0.4,
+    "tags": ["synonym", "registration"]
+  },
+  {
+    "id": "complex-012",
+    "query": "search for products",
+    "snapshot": "dashboard.json",
+    "expect_ref": "e6",
+    "min_score": 0.4,
+    "tags": ["natural-language", "search"]
+  }
+]
