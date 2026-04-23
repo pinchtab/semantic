@@ -153,9 +153,9 @@ func selectOrdinalMatchInOrder(result types.FindResult, constraint OrdinalConstr
 
 	refOrder := make(map[string]int, len(elements))
 	for idx, el := range elements {
-		order := el.DocumentIdx
-		if order < 0 {
-			order = idx
+		order := idx
+		if el.DocumentIdx > 0 {
+			order = el.DocumentIdx
 		}
 		refOrder[el.Ref] = order
 	}
