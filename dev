@@ -33,7 +33,6 @@ commands=(
   "runtime:⏱️:Check runtime baseline"
   "tune:🎛️:Tune combined weights"
   "e2e:🐳:Run E2E tests (Docker)"
-  "loop:🔄:Benchmark loop (bench → compare → report)"
 )
 
 show_help() {
@@ -214,11 +213,6 @@ run_e2e() {
   bash scripts/e2e.sh
 }
 
-run_loop() {
-  echo "  ${ACCENT}${BOLD}🔄 Benchmark Loop${NC}"
-  go run ./cmd/semantic-bench check -verbose "$@"
-}
-
 case "${1:-help}" in
   pr)        run_pr ;;
   doctor)    exec bash scripts/doctor.sh ;;
@@ -258,6 +252,5 @@ case "${1:-help}" in
   runtime)   shift; run_runtime "$@" ;;
   tune)      shift; run_tune "$@" ;;
   e2e)       run_e2e ;;
-  loop)      run_loop ;;
   help|*)    show_help ;;
 esac

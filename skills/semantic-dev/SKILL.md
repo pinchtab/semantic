@@ -65,6 +65,7 @@ recovery/                  Public subpackage
   failure.go                 FailureType classification
 
 cmd/semantic/main.go       CLI tool (find, match, classify)
+cmd/semantic-bench/        Benchmark CLI (check, baseline, calibrate, tune, runtime)
 ```
 
 ## Key Design Decisions
@@ -92,57 +93,24 @@ cmd/semantic/main.go       CLI tool (find, match, classify)
 
 ## Benchmark Improvement Loop
 
-When implementing changes that affect matching quality, follow this loop:
-
-### Step 1: Ensure baseline exists
+When implementing changes that affect matching quality:
 
 ```bash
-./dev baseline
+./dev baseline          # create baseline (first time only)
+# ... make changes ...
+./dev bench             # run benchmark, compare to baseline
+./dev baseline update   # accept new baseline (if improved)
 ```
 
-Creates `tests/benchmark/baselines/combined.json` if missing.
-
-### Step 2: Implement change
-
-Make one focused improvement at a time.
-
-### Step 3: Run benchmark loop
-
-```bash
-./dev loop
-```
-
-Shows comparison table with deltas:
-- **Green (+)** = improved
-- **Red (-)** = regressed  
-- **Gray** = unchanged
-
-### Step 4: Evaluate and decide
-
-| Result | Action |
-|--------|--------|
-| All metrics improved/unchanged | `./dev baseline update` |
-| Mixed (some up, some down) | Investigate tradeoff |
-| Key metrics regressed | Fix before merging |
-
-### Step 5: Iterate
-
-Repeat steps 2-4. Each `baseline update` sets new goalpost.
-
-### Key metrics
-
+**Key metrics:**
 - **MRR** — Mean Reciprocal Rank (higher = finds correct element faster)
 - **P@1** — Precision at 1 (is top result correct?)
 - **Hit@3** — Any correct result in top 3?
-- **Margin** — Score gap between best correct and best wrong
 
-### Adding test cases
-
-When a query should work better:
-
-1. Add to `tests/benchmark/corpus/*/queries.json` or `cases/*.json`
-2. Run `./dev lint corpus`
-3. Run `./dev loop` — benchmark will show regression until fixed
+**Adding test cases:**
+1. Add to `tests/benchmark/corpus/*/queries.json`
+2. Run `./dev lint corpus` to validate
+3. Run `./dev bench` — shows regression until fixed
 
 ## Public API Surface
 
