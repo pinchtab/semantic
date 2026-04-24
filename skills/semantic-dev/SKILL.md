@@ -5,36 +5,43 @@ description: Develop and contribute to the Semantic project. Use when working on
 
 # Semantic Development
 
-Semantic is a zero-dependency Go library for matching natural language queries against accessibility tree elements.
+Zero-dependency Go library for matching natural language queries against accessibility tree elements.
 
-## Project Location
+## Essential Commands
 
+**Before any PR:**
 ```bash
-cd ~/dev/semantic
+./dev pr                # runs: check + e2e + lint corpus + bench
 ```
 
-## Dev Commands
-
+**During development:**
 ```bash
-# Before opening a PR (runs all checks + e2e + benchmark)
-./dev pr
-
-# Quick iteration
-./dev test              # unit tests
-./dev check             # fmt + vet + lint + test race
-
-# Benchmarking
-./dev bench             # corpus benchmark
-./dev baseline          # create baseline (first time)
-./dev baseline check    # check for regressions
-
-# Other
-./dev build             # build ./semantic binary
-./dev e2e               # e2e tests (Docker)
-./dev lint corpus       # validate benchmark data
-./dev calibrate         # find optimal thresholds
-./dev tune              # grid-search weights
+./dev test              # unit tests (fast)
+./dev check             # fmt + vet + lint + test race (full validation)
+./dev build             # build ./semantic CLI binary
 ```
+
+**Quality regression checks:**
+```bash
+./dev baseline check    # compare quality against baseline
+./dev runtime           # compare performance against baseline
+```
+
+**When quality changes intentionally:**
+```bash
+./dev baseline update   # accept new quality baseline (after review)
+```
+
+## When to Use Each
+
+| Scenario | Command |
+|----------|---------|
+| Made code changes, quick sanity | `./dev test` |
+| Ready to commit | `./dev check` |
+| Before opening PR | `./dev pr` |
+| Changed scoring/matching logic | `./dev baseline check` |
+| Performance-sensitive changes | `./dev runtime` |
+| Tuning weights | `./dev tune` then `./dev bench` |
 
 ## Architecture
 
