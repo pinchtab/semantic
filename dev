@@ -128,9 +128,19 @@ run_check() {
   if [ -n "$unformatted" ]; then
     echo "  ${ERROR}✗${NC} Unformatted files:"
     echo "$unformatted"
-    exit 1
+    echo ""
+    printf "  Fix formatting now? (Y/n) "
+    read -r answer
+    if [ "$answer" != "n" ] && [ "$answer" != "N" ]; then
+      gofmt -w .
+      echo "  ${SUCCESS}✓${NC} Format (fixed)"
+    else
+      echo "  ${MUTED}Run: gofmt -w .${NC}"
+      exit 1
+    fi
+  else
+    echo "  ${SUCCESS}✓${NC} Format"
   fi
-  echo "  ${SUCCESS}✓${NC} Format"
 
   echo "  ${MUTED}2/4 Vet${NC}"
   go vet ./...

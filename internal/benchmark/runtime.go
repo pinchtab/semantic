@@ -73,12 +73,13 @@ func RunRuntime(cfg RuntimeConfig) (*RuntimeResult, error) {
 			result.Benchmarks[i].BaselineNs = base.NsOp
 			result.Benchmarks[i].Ratio = ratio
 
-			if ratio > maxRatio {
+			switch {
+			case ratio > maxRatio:
 				result.Benchmarks[i].Status = "regression"
 				result.Regressions++
-			} else if ratio > 1.1 {
+			case ratio > 1.1:
 				result.Benchmarks[i].Status = "warning"
-			} else {
+			default:
 				result.Benchmarks[i].Status = "ok"
 			}
 		} else {
@@ -131,13 +132,13 @@ func parseBenchOutput(output string) []RuntimeBenchmark {
 
 		for i, f := range fields {
 			if f == "ns/op" && i > 0 {
-				fmt.Sscanf(fields[i-1], "%f", &nsOp)
+				_, _ = fmt.Sscanf(fields[i-1], "%f", &nsOp)
 			}
 			if f == "B/op" && i > 0 {
-				fmt.Sscanf(fields[i-1], "%d", &bytesOp)
+				_, _ = fmt.Sscanf(fields[i-1], "%d", &bytesOp)
 			}
 			if f == "allocs/op" && i > 0 {
-				fmt.Sscanf(fields[i-1], "%d", &allocsOp)
+				_, _ = fmt.Sscanf(fields[i-1], "%d", &allocsOp)
 			}
 		}
 

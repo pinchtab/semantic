@@ -1,6 +1,7 @@
 package benchmark
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/pinchtab/semantic"
@@ -77,7 +78,7 @@ func RunCalibrate(cfg CalibrateConfig) (*CalibrateResult, error) {
 		tp, fp, fn, tn := 0, 0, 0, 0
 
 		for _, tc := range cases {
-			findResult, _ := matcher.Find(nil, tc.query.QueryText, tc.corpus.Snapshot, semantic.FindOptions{
+			findResult, _ := matcher.Find(context.Background(), tc.query.QueryText, tc.corpus.Snapshot, semantic.FindOptions{
 				Threshold: threshold,
 				TopK:      5,
 			})
@@ -88,20 +89,17 @@ func RunCalibrate(cfg CalibrateConfig) (*CalibrateResult, error) {
 				topRef = findResult.Matches[0].Ref
 			}
 
-			if tc.query.ExpectNoMatch {
-				if hasMatch {
-					fp++
-				} else {
-					tn++
-				}
-			} else if len(tc.query.RelevantRefs) > 0 {
-				if !hasMatch {
-					fn++
-				} else if contains(tc.query.RelevantRefs, topRef) {
-					tp++
-				} else {
-					fp++
-				}
+			switch {
+			case tc.query.ExpectNoMatch && hasMatch:
+				fp++
+			case tc.query.ExpectNoMatch && !hasMatch:
+				tn++
+			case len(tc.query.RelevantRefs) > 0 && !hasMatch:
+				fn++
+			case len(tc.query.RelevantRefs) > 0 && contains(tc.query.RelevantRefs, topRef):
+				tp++
+			case len(tc.query.RelevantRefs) > 0:
+				fp++
 			}
 		}
 

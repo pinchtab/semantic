@@ -89,16 +89,16 @@ func RunCheck(cfg CheckConfig) (*CheckResult, error) {
 		}
 	}
 
-	os.MkdirAll(cfg.OutputDir, 0755)
+	_ = os.MkdirAll(cfg.OutputDir, 0755)
 	ts := time.Now().Format("20060102_150405")
 	reportPath := filepath.Join(cfg.OutputDir, fmt.Sprintf("bench_%s.json", ts))
 	summaryPath := filepath.Join(cfg.OutputDir, fmt.Sprintf("bench_%s.md", ts))
 
 	reportJSON, _ := json.MarshalIndent(report, "", "  ")
-	os.WriteFile(reportPath, reportJSON, 0644)
+	_ = os.WriteFile(reportPath, reportJSON, 0644)
 
 	summaryMD := generateSummaryMD(report, result)
-	os.WriteFile(summaryPath, []byte(summaryMD), 0644)
+	_ = os.WriteFile(summaryPath, []byte(summaryMD), 0644)
 
 	result.Artifacts.ReportJSON = reportPath
 	result.Artifacts.SummaryMD = summaryPath
@@ -131,24 +131,24 @@ func generateSummaryMD(report *Report, result *CheckResult) string {
 	var sb strings.Builder
 
 	sb.WriteString("# Benchmark Summary\n\n")
-	sb.WriteString(fmt.Sprintf("Generated: %s\n\n", report.Run.Timestamp))
+	fmt.Fprintf(&sb, "Generated: %s\n\n", report.Run.Timestamp)
 
 	sb.WriteString("## Overall Metrics\n\n")
 	sb.WriteString("| Metric | Value |\n")
 	sb.WriteString("|--------|-------|\n")
-	sb.WriteString(fmt.Sprintf("| Total | %d |\n", report.Metrics.Overall.Total))
-	sb.WriteString(fmt.Sprintf("| MRR | %.4f |\n", report.Metrics.Overall.MRR))
-	sb.WriteString(fmt.Sprintf("| P@1 | %.4f |\n", report.Metrics.Overall.PAt1))
-	sb.WriteString(fmt.Sprintf("| Hit@3 | %.4f |\n", report.Metrics.Overall.HitAt3))
-	sb.WriteString(fmt.Sprintf("| Avg Margin | %.4f |\n", report.Metrics.Overall.AvgMargin))
+	fmt.Fprintf(&sb, "| Total | %d |\n", report.Metrics.Overall.Total)
+	fmt.Fprintf(&sb, "| MRR | %.4f |\n", report.Metrics.Overall.MRR)
+	fmt.Fprintf(&sb, "| P@1 | %.4f |\n", report.Metrics.Overall.PAt1)
+	fmt.Fprintf(&sb, "| Hit@3 | %.4f |\n", report.Metrics.Overall.HitAt3)
+	fmt.Fprintf(&sb, "| Avg Margin | %.4f |\n", report.Metrics.Overall.AvgMargin)
 
 	if result.Delta != nil {
 		sb.WriteString("\n## Delta from Baseline\n\n")
 		sb.WriteString("| Metric | Delta |\n")
 		sb.WriteString("|--------|-------|\n")
-		sb.WriteString(fmt.Sprintf("| P@1 | %+.4f |\n", result.Delta.PAt1))
-		sb.WriteString(fmt.Sprintf("| MRR | %+.4f |\n", result.Delta.MRR))
-		sb.WriteString(fmt.Sprintf("| Hit@3 | %+.4f |\n", result.Delta.HitAt3))
+		fmt.Fprintf(&sb, "| P@1 | %+.4f |\n", result.Delta.PAt1)
+		fmt.Fprintf(&sb, "| MRR | %+.4f |\n", result.Delta.MRR)
+		fmt.Fprintf(&sb, "| Hit@3 | %+.4f |\n", result.Delta.HitAt3)
 	}
 
 	if len(result.TopRegs) > 0 {
@@ -159,8 +159,8 @@ func generateSummaryMD(report *Report, result *CheckResult) string {
 			if len(result.TopRegs) > 10 {
 				break
 			}
-			sb.WriteString(fmt.Sprintf("| %s | %s | %s | %s | %s |\n",
-				r.ID, r.Corpus, r.Query, r.CurrentRef, strings.Join(r.Expected, ",")))
+			fmt.Fprintf(&sb, "| %s | %s | %s | %s | %s |\n",
+				r.ID, r.Corpus, r.Query, r.CurrentRef, strings.Join(r.Expected, ","))
 		}
 	}
 

@@ -82,7 +82,7 @@ func updateBaseline(root, baselinePath string, cfg BaselineCmdConfig) (*Baseline
 			previous = &old.Metrics.Overall
 		}
 		backupPath := strings.TrimSuffix(baselinePath, ".json") + "_" + time.Now().Format("20060102_150405") + ".backup.json"
-		os.WriteFile(backupPath, data, 0644)
+		_ = os.WriteFile(backupPath, data, 0644)
 	}
 
 	result, err := createBaseline(root, baselinePath, cfg)

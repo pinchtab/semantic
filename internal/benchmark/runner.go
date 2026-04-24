@@ -8,14 +8,14 @@ import (
 )
 
 type QueryResult struct {
-	ID       string   `json:"id"`
-	Corpus   string   `json:"corpus"`
-	Query    string   `json:"query"`
-	Difficulty string `json:"difficulty"`
-	Tags     []string `json:"tags"`
-	Intent   string   `json:"intent,omitempty"`
-	PageType string   `json:"page_type,omitempty"`
-	Expected struct {
+	ID         string   `json:"id"`
+	Corpus     string   `json:"corpus"`
+	Query      string   `json:"query"`
+	Difficulty string   `json:"difficulty"`
+	Tags       []string `json:"tags"`
+	Intent     string   `json:"intent,omitempty"`
+	PageType   string   `json:"page_type,omitempty"`
+	Expected   struct {
 		RelevantRefs          []string `json:"relevant_refs"`
 		PartiallyRelevantRefs []string `json:"partially_relevant_refs"`
 	} `json:"expected"`
@@ -36,7 +36,7 @@ type QueryResult struct {
 		Margin            float64 `json:"margin"`
 	} `json:"metrics"`
 	Latency struct {
-		LibraryMs int64 `json:"library_ms"`
+		LibraryMs int64  `json:"library_ms"`
 		CLIMs     *int64 `json:"cli_ms,omitempty"`
 	} `json:"latency"`
 	Status string `json:"status"`
@@ -60,10 +60,10 @@ type Report struct {
 		Command   string `json:"command"`
 	} `json:"run"`
 	Dataset struct {
-		Name         string `json:"name"`
-		Version      string `json:"version,omitempty"`
-		QueryCount   int    `json:"query_count"`
-		CorpusCount  int    `json:"corpus_count"`
+		Name        string `json:"name"`
+		Version     string `json:"version,omitempty"`
+		QueryCount  int    `json:"query_count"`
+		CorpusCount int    `json:"corpus_count"`
 	} `json:"dataset"`
 	Config struct {
 		Profile   string  `json:"profile"`
@@ -74,11 +74,11 @@ type Report struct {
 	} `json:"config"`
 	Status  string `json:"status"`
 	Metrics struct {
-		Overall    OverallMetrics           `json:"overall"`
-		Latency    LatencyMetrics           `json:"latency"`
-		ByCorpus   map[string]CorpusMetrics `json:"by_corpus"`
+		Overall      OverallMetrics           `json:"overall"`
+		Latency      LatencyMetrics           `json:"latency"`
+		ByCorpus     map[string]CorpusMetrics `json:"by_corpus"`
 		ByDifficulty map[string]CorpusMetrics `json:"by_difficulty"`
-		ByTag      map[string]CorpusMetrics `json:"by_tag"`
+		ByTag        map[string]CorpusMetrics `json:"by_tag"`
 	} `json:"metrics"`
 	Results []QueryResult `json:"results"`
 }
@@ -243,7 +243,8 @@ func computeQueryMetrics(result *QueryResult, query Query) {
 		if i >= 5 {
 			break
 		}
-		if relevantSet[m.Ref] {
+		switch {
+		case relevantSet[m.Ref]:
 			if result.Metrics.BestRelevantRank == nil {
 				rank := i + 1
 				result.Metrics.BestRelevantRank = &rank
@@ -256,11 +257,11 @@ func computeQueryMetrics(result *QueryResult, query Query) {
 				result.Metrics.HitAt3 = 1
 			}
 			result.Metrics.HitAt5 = 1
-		} else if partialSet[m.Ref] {
+		case partialSet[m.Ref]:
 			if i < 3 {
 				partialInTop3++
 			}
-		} else {
+		default:
 			if m.Score > result.Metrics.BestWrongScore {
 				result.Metrics.BestWrongScore = m.Score
 			}
@@ -270,17 +271,18 @@ func computeQueryMetrics(result *QueryResult, query Query) {
 	result.Metrics.Margin = result.Metrics.BestRelevantScore - result.Metrics.BestWrongScore
 
 	// Status
-	if query.ExpectNoMatch {
+	switch {
+	case query.ExpectNoMatch:
 		if len(result.Actual.Matches) == 0 {
 			result.Status = "no_match_expected"
 		} else {
 			result.Status = "unexpected_match"
 		}
-	} else if result.Metrics.PAt1 >= 1.0 {
+	case result.Metrics.PAt1 >= 1.0:
 		result.Status = "hit"
-	} else if result.Metrics.PAt1 >= 0.5 {
+	case result.Metrics.PAt1 >= 0.5:
 		result.Status = "partial"
-	} else {
+	default:
 		result.Status = "miss"
 	}
 }
