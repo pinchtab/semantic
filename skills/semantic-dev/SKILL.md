@@ -5,32 +5,43 @@ description: Develop and contribute to the Semantic project. Use when working on
 
 # Semantic Development
 
-Semantic is a zero-dependency Go library for matching natural language queries against accessibility tree elements.
+Zero-dependency Go library for matching natural language queries against accessibility tree elements.
 
-## Project Location
+## Essential Commands
 
+**Before any PR:**
 ```bash
-cd ~/dev/semantic
+./dev pr                # runs: check + e2e + lint corpus + bench
 ```
 
-## Dev Commands
+**During development:**
+```bash
+./dev test              # unit tests (fast)
+./dev check             # fmt + vet + lint + test race (full validation)
+./dev build             # build ./semantic CLI binary
+```
 
-All development commands run via `./dev`:
+**Quality regression checks:**
+```bash
+./dev baseline check    # compare quality against baseline
+./dev runtime           # compare performance against baseline
+```
 
-| Command | Description |
-|---------|-------------|
-| `./dev doctor` | Setup dev environment |
-| `./dev test` | Run unit tests |
-| `./dev test verbose` | Run unit tests (verbose) |
-| `./dev test race` | Run unit tests with race detector |
-| `./dev coverage` | Run tests with coverage report |
-| `./dev lint` | Run golangci-lint |
-| `./dev fmt` | Format code |
-| `./dev vet` | Run go vet |
-| `./dev check` | All checks (fmt + vet + lint + test) |
-| `./dev build` | Build CLI binary |
-| `./dev bench` | Run corpus benchmark suite |
-| `./dev e2e` | Run E2E tests (Docker) |
+**When quality changes intentionally:**
+```bash
+./dev baseline update   # accept new quality baseline (after review)
+```
+
+## When to Use Each
+
+| Scenario | Command |
+|----------|---------|
+| Made code changes, quick sanity | `./dev test` |
+| Ready to commit | `./dev check` |
+| Before opening PR | `./dev pr` |
+| Changed scoring/matching logic | `./dev baseline check` |
+| Performance-sensitive changes | `./dev runtime` |
+| Tuning weights | `./dev tune` then `./dev bench` |
 
 ## Architecture
 
@@ -54,6 +65,7 @@ recovery/                  Public subpackage
   failure.go                 FailureType classification
 
 cmd/semantic/main.go       CLI tool (find, match, classify)
+cmd/semantic-bench/        Benchmark CLI (check, baseline, calibrate, tune, runtime)
 ```
 
 ## Key Design Decisions
@@ -78,6 +90,27 @@ cmd/semantic/main.go       CLI tool (find, match, classify)
    ```
 
 4. **Pre-commit hook** runs gofmt + golangci-lint automatically on staged files.
+
+## Benchmark Improvement Loop
+
+When implementing changes that affect matching quality:
+
+```bash
+./dev baseline          # create baseline (first time only)
+# ... make changes ...
+./dev bench             # run benchmark, compare to baseline
+./dev baseline update   # accept new baseline (if improved)
+```
+
+**Key metrics:**
+- **MRR** — Mean Reciprocal Rank (higher = finds correct element faster)
+- **P@1** — Precision at 1 (is top result correct?)
+- **Hit@3** — Any correct result in top 3?
+
+**Adding test cases:**
+1. Add to `tests/benchmark/corpus/*/queries.json`
+2. Run `./dev lint corpus` to validate
+3. Run `./dev bench` — shows regression until fixed
 
 ## Public API Surface
 

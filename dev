@@ -11,17 +11,27 @@ ERROR=$'\033[38;2;230;57;70m'
 NC=$'\033[0m'
 
 commands=(
+  "pr:🚀:Pre-PR checks (check + e2e + bench)"
   "doctor:🩺:Setup dev environment"
   "test:🧪:Run unit tests"
   "test verbose:🧪:Run unit tests (verbose)"
   "test race:🧪:Run unit tests with race detector"
   "coverage:📊:Run tests with coverage report"
   "lint:🔍:Run golangci-lint"
+  "lint corpus:🔍:Lint benchmark corpus"
+  "lint docs:🔍:Check documentation links"
   "fmt:✨:Format code"
   "vet:🔬:Run go vet"
   "check:✅:Run all checks (fmt + vet + lint + test)"
   "build:📦:Build CLI binary"
-  "bench:🏋:Run corpus benchmark suite"
+  "bench:🏋:Run corpus benchmark"
+  "bench full:🏋:Run full benchmark suite"
+  "baseline:📏:Create quality baseline"
+  "baseline check:📏:Check against baseline"
+  "baseline update:📏:Update baseline (--accept)"
+  "calibrate:🎯:Calibrate threshold recommendations"
+  "runtime:⏱️:Check runtime baseline"
+  "tune:🎛️:Tune combined weights"
   "e2e:🐳:Run E2E tests (Docker)"
 )
 
@@ -34,6 +44,36 @@ show_help() {
     printf "  ${ACCENT}%-22s${NC} %s %s\n" "./dev $cmd" "$icon" "$desc"
   done
   echo ""
+}
+
+run_pr() {
+  echo "  ${ACCENT}${BOLD}🚀 Pre-PR checks${NC}"
+  echo ""
+
+  echo "  ${MUTED}1/4 All checks (fmt + vet + lint + test)${NC}"
+  run_check
+
+  echo ""
+  echo "  ${MUTED}2/4 E2E tests${NC}"
+  if [[ -f tests/e2e/run.sh ]]; then
+    go build -o /tmp/semantic ./cmd/semantic
+    PATH="/tmp:$PATH" bash tests/e2e/run.sh
+    echo "  ${SUCCESS}✓${NC} E2E passed"
+  else
+    echo "  ${MUTED}Skipped (no e2e/run.sh)${NC}"
+  fi
+
+  echo ""
+  echo "  ${MUTED}3/4 Lint corpus${NC}"
+  run_lint_corpus
+
+  echo ""
+  echo "  ${MUTED}4/4 Corpus benchmark${NC}"
+  run_bench > /dev/null 2>&1
+  echo "  ${SUCCESS}✓${NC} Benchmark complete"
+
+  echo ""
+  echo "  ${SUCCESS}${BOLD}🚀 Ready for PR${NC}"
 }
 
 run_test() {
@@ -88,9 +128,19 @@ run_check() {
   if [ -n "$unformatted" ]; then
     echo "  ${ERROR}✗${NC} Unformatted files:"
     echo "$unformatted"
-    exit 1
+    echo ""
+    printf "  Fix formatting now? (Y/n) "
+    read -r answer
+    if [ "$answer" != "n" ] && [ "$answer" != "N" ]; then
+      gofmt -w .
+      echo "  ${SUCCESS}✓${NC} Format (fixed)"
+    else
+      echo "  ${MUTED}Run: gofmt -w .${NC}"
+      exit 1
+    fi
+  else
+    echo "  ${SUCCESS}✓${NC} Format"
   fi
-  echo "  ${SUCCESS}✓${NC} Format"
 
   echo "  ${MUTED}2/4 Vet${NC}"
   go vet ./...
@@ -115,8 +165,53 @@ run_build() {
 }
 
 run_bench() {
-  echo "  ${ACCENT}${BOLD}⏱️  Running corpus benchmark suite${NC}"
-  bash tests/benchmark/scripts/run-corpus-benchmark.sh
+  echo "  ${ACCENT}${BOLD}🏋 Running corpus benchmark${NC}"
+  go run ./cmd/semantic-bench check "$@"
+}
+
+run_bench_full() {
+  echo "  ${ACCENT}${BOLD}🏋 Running full benchmark suite${NC}"
+  go run ./cmd/semantic-bench run -suite=all "$@"
+}
+
+run_lint_corpus() {
+  echo "  ${ACCENT}${BOLD}🔍 Linting benchmark corpus${NC}"
+  go run ./cmd/semantic-bench lint "$@"
+}
+
+run_lint_docs() {
+  echo "  ${ACCENT}${BOLD}🔍 Checking documentation links${NC}"
+  bash scripts/check-docs-links.sh
+}
+
+run_baseline() {
+  echo "  ${ACCENT}${BOLD}📏 Creating quality baseline${NC}"
+  go run ./cmd/semantic-bench baseline create "$@"
+}
+
+run_baseline_check() {
+  echo "  ${ACCENT}${BOLD}📏 Checking against baseline${NC}"
+  go run ./cmd/semantic-bench check "$@"
+}
+
+run_baseline_update() {
+  echo "  ${ACCENT}${BOLD}📏 Updating baseline${NC}"
+  go run ./cmd/semantic-bench baseline update --accept "$@"
+}
+
+run_calibrate() {
+  echo "  ${ACCENT}${BOLD}🎯 Calibrating thresholds${NC}"
+  go run ./cmd/semantic-bench calibrate -verbose "$@"
+}
+
+run_runtime() {
+  echo "  ${ACCENT}${BOLD}⏱️ Checking runtime baseline${NC}"
+  go run ./cmd/semantic-bench runtime "$@"
+}
+
+run_tune() {
+  echo "  ${ACCENT}${BOLD}🎛️ Tuning combined weights${NC}"
+  go run ./cmd/semantic-bench tune -verbose "$@"
 }
 
 run_e2e() {
@@ -129,6 +224,7 @@ run_e2e() {
 }
 
 case "${1:-help}" in
+  pr)        run_pr ;;
   doctor)    exec bash scripts/doctor.sh ;;
   test)
     case "${2:-}" in
@@ -138,12 +234,33 @@ case "${1:-help}" in
     esac
     ;;
   coverage)  run_coverage ;;
-  lint)      run_lint ;;
+  lint)
+    case "${2:-}" in
+      corpus) run_lint_corpus ;;
+      docs) run_lint_docs ;;
+      *) run_lint ;;
+    esac
+    ;;
   fmt)       run_fmt ;;
   vet)       run_vet ;;
   check)     run_check ;;
   build)     run_build ;;
-  bench|benchmark) run_bench ;;
+  bench|benchmark)
+    case "${2:-}" in
+      full) run_bench_full ;;
+      *) shift; run_bench "$@" ;;
+    esac
+    ;;
+  baseline)
+    case "${2:-}" in
+      check) shift 2; run_baseline_check "$@" ;;
+      update) shift 2; run_baseline_update "$@" ;;
+      *) shift; run_baseline "$@" ;;
+    esac
+    ;;
+  calibrate) shift; run_calibrate "$@" ;;
+  runtime)   shift; run_runtime "$@" ;;
+  tune)      shift; run_tune "$@" ;;
   e2e)       run_e2e ;;
   help|*)    show_help ;;
 esac

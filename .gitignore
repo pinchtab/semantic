@@ -1,5 +1,6 @@
 # Binary
 /semantic
+/semantic-bench
 tests/benchmark/semantic
 tests/e2e/semantic
 *.exe
@@ -22,3 +23,4 @@ cover.out
 tests/e2e/results/*.txt
 tests/benchmark/results/*.json
 tests/benchmark/results/*.md
+tests/benchmark/baselines/*.json
