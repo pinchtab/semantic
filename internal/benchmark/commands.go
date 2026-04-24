@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/pinchtab/semantic"
 )
 
 type CheckResult struct {
@@ -507,4 +509,365 @@ func PrintCatalogResult(result *CatalogResult, cfg CatalogConfig) {
 		}
 	}
 	fmt.Printf("\n")
+}
+
+// Baseline management
+
+type BaselineResult struct {
+	Action   string         `json:"action"`
+	Path     string         `json:"path"`
+	Metrics  OverallMetrics `json:"metrics"`
+	Previous *OverallMetrics `json:"previous,omitempty"`
+}
+
+func RunBaseline(cfg BaselineCmdConfig) (*BaselineResult, error) {
+	root := FindBenchmarkRoot()
+	baselinesDir := filepath.Join(root, "baselines")
+	if err := os.MkdirAll(baselinesDir, 0755); err != nil {
+		return nil, err
+	}
+
+	baselinePath := filepath.Join(baselinesDir, cfg.Name+".json")
+
+	switch cfg.Action {
+	case "create":
+		return createBaseline(root, baselinePath, cfg)
+	case "update":
+		if !cfg.Accept {
+			return nil, fmt.Errorf("use --accept to confirm baseline update")
+		}
+		return updateBaseline(root, baselinePath, cfg)
+	default:
+		return nil, fmt.Errorf("unknown baseline action: %s (use 'create' or 'update')", cfg.Action)
+	}
+}
+
+func createBaseline(root, baselinePath string, cfg BaselineCmdConfig) (*BaselineResult, error) {
+	ds, err := LoadDataset(root)
+	if err != nil {
+		return nil, fmt.Errorf("load dataset: %w", err)
+	}
+
+	runCfg := RunConfig{
+		Suite:           "corpus",
+		Strategy:        "combined",
+		Threshold:       0.01,
+		TopK:            5,
+		LexicalWeight:   0.6,
+		EmbeddingWeight: 0.4,
+		Mode:            "library",
+	}
+
+	report, err := RunCorpusBenchmark(ds, runCfg)
+	if err != nil {
+		return nil, fmt.Errorf("run benchmark: %w", err)
+	}
+
+	data, err := json.MarshalIndent(report, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	if err := os.WriteFile(baselinePath, data, 0644); err != nil {
+		return nil, err
+	}
+
+	return &BaselineResult{
+		Action:  "create",
+		Path:    baselinePath,
+		Metrics: report.Metrics.Overall,
+	}, nil
+}
+
+func updateBaseline(root, baselinePath string, cfg BaselineCmdConfig) (*BaselineResult, error) {
+	var previous *OverallMetrics
+	if data, err := os.ReadFile(baselinePath); err == nil {
+		var old Report
+		if json.Unmarshal(data, &old) == nil {
+			previous = &old.Metrics.Overall
+		}
+		backupPath := strings.TrimSuffix(baselinePath, ".json") + "_" + time.Now().Format("20060102_150405") + ".backup.json"
+		os.WriteFile(backupPath, data, 0644)
+	}
+
+	result, err := createBaseline(root, baselinePath, cfg)
+	if err != nil {
+		return nil, err
+	}
+	result.Action = "update"
+	result.Previous = previous
+	return result, nil
+}
+
+func PrintBaselineResult(result *BaselineResult, cfg BaselineCmdConfig) {
+	fmt.Printf("\n  Baseline %sd: %s\n\n", result.Action, result.Path)
+	fmt.Printf("  MRR:    %.4f\n", result.Metrics.MRR)
+	fmt.Printf("  P@1:    %.4f\n", result.Metrics.PAt1)
+	fmt.Printf("  Hit@3:  %.4f\n", result.Metrics.HitAt3)
+
+	if result.Previous != nil {
+		fmt.Printf("\n  Previous:\n")
+		fmt.Printf("    MRR:    %.4f\n", result.Previous.MRR)
+		fmt.Printf("    P@1:    %.4f\n", result.Previous.PAt1)
+		fmt.Printf("    Hit@3:  %.4f\n", result.Previous.HitAt3)
+	}
+	fmt.Println()
+}
+
+// Threshold calibration
+
+type CalibrateResult struct {
+	ByThreshold     map[string]ThresholdMetrics `json:"by_threshold"`
+	Recommendations CalibrateRecommendations    `json:"recommendations"`
+	TotalCases      int                         `json:"total_cases"`
+}
+
+type ThresholdMetrics struct {
+	TP        int     `json:"tp"`
+	FP        int     `json:"fp"`
+	FN        int     `json:"fn"`
+	TN        int     `json:"tn"`
+	Recall    float64 `json:"recall"`
+	Precision float64 `json:"precision"`
+	FPR       float64 `json:"false_positive_rate"`
+	F1        float64 `json:"f1"`
+}
+
+type CalibrateRecommendations struct {
+	DefaultThreshold  float64 `json:"default_threshold"`
+	RecoveryThreshold float64 `json:"recovery_threshold"`
+	BestF1            float64 `json:"best_f1"`
+}
+
+func RunCalibrate(cfg CalibrateConfig) (*CalibrateResult, error) {
+	root := FindBenchmarkRoot()
+	ds, err := LoadDataset(root)
+	if err != nil {
+		return nil, fmt.Errorf("load dataset: %w", err)
+	}
+
+	result := &CalibrateResult{
+		ByThreshold: make(map[string]ThresholdMetrics),
+	}
+
+	type testCase struct {
+		query         Query
+		corpus        *Corpus
+	}
+
+	var cases []testCase
+	for i := range ds.Corpora {
+		corpus := &ds.Corpora[i]
+		if cfg.Corpus != "" && corpus.ID != cfg.Corpus {
+			continue
+		}
+		for _, q := range corpus.Queries {
+			cases = append(cases, testCase{query: q, corpus: corpus})
+		}
+	}
+	result.TotalCases = len(cases)
+
+	if cfg.Verbose {
+		fmt.Printf("Testing %d thresholds against %d cases...\n\n", len(cfg.Thresholds), len(cases))
+	}
+
+	runCfg := RunConfig{
+		Strategy:        "combined",
+		TopK:            5,
+		LexicalWeight:   0.6,
+		EmbeddingWeight: 0.4,
+	}
+	matcher := createMatcher(runCfg)
+
+	var bestF1, bestF1Threshold float64
+	var bestRecallThreshold float64
+	var bestRecallWithPrecision float64
+
+	for _, threshold := range cfg.Thresholds {
+		tp, fp, fn, tn := 0, 0, 0, 0
+
+		for _, tc := range cases {
+			findResult, _ := matcher.Find(nil, tc.query.QueryText, tc.corpus.Snapshot, semantic.FindOptions{
+				Threshold: threshold,
+				TopK:      5,
+			})
+
+			hasMatch := len(findResult.Matches) > 0
+			topRef := ""
+			if hasMatch {
+				topRef = findResult.Matches[0].Ref
+			}
+
+			if tc.query.ExpectNoMatch {
+				if hasMatch {
+					fp++
+				} else {
+					tn++
+				}
+			} else if len(tc.query.RelevantRefs) > 0 {
+				if !hasMatch {
+					fn++
+				} else if contains(tc.query.RelevantRefs, topRef) {
+					tp++
+				} else {
+					fp++
+				}
+			}
+		}
+
+		totalPos := tp + fn
+		totalNeg := tn + fp
+
+		var recall, precision, fpr, f1 float64
+		if totalPos > 0 {
+			recall = float64(tp) / float64(totalPos)
+		}
+		if tp+fp > 0 {
+			precision = float64(tp) / float64(tp+fp)
+		}
+		if totalNeg > 0 {
+			fpr = float64(fp) / float64(totalNeg)
+		}
+		if precision+recall > 0 {
+			f1 = 2 * precision * recall / (precision + recall)
+		}
+
+		key := fmt.Sprintf("%.2f", threshold)
+		result.ByThreshold[key] = ThresholdMetrics{
+			TP: tp, FP: fp, FN: fn, TN: tn,
+			Recall: recall, Precision: precision, FPR: fpr, F1: f1,
+		}
+
+		if f1 > bestF1 {
+			bestF1 = f1
+			bestF1Threshold = threshold
+		}
+		if recall >= 0.85 && precision > bestRecallWithPrecision {
+			bestRecallWithPrecision = precision
+			bestRecallThreshold = threshold
+		}
+
+		if cfg.Verbose {
+			fmt.Printf("  threshold=%.2f | TP=%3d FP=%3d FN=%3d TN=%3d | recall=%.3f precision=%.3f F1=%.3f\n",
+				threshold, tp, fp, fn, tn, recall, precision, f1)
+		}
+	}
+
+	if bestRecallThreshold == 0 && len(cfg.Thresholds) > 0 {
+		bestRecallThreshold = cfg.Thresholds[0]
+	}
+
+	result.Recommendations = CalibrateRecommendations{
+		DefaultThreshold:  bestF1Threshold,
+		RecoveryThreshold: bestRecallThreshold,
+		BestF1:            bestF1,
+	}
+
+	return result, nil
+}
+
+func contains(refs []string, ref string) bool {
+	for _, r := range refs {
+		if r == ref {
+			return true
+		}
+	}
+	return false
+}
+
+func PrintCalibrateResult(result *CalibrateResult, cfg CalibrateConfig) {
+	fmt.Printf("\n  Tested %d cases across %d thresholds\n\n", result.TotalCases, len(result.ByThreshold))
+
+	fmt.Printf("  Recommendations:\n")
+	fmt.Printf("    Default (best F1):   %.2f (F1=%.3f)\n", result.Recommendations.DefaultThreshold, result.Recommendations.BestF1)
+	fmt.Printf("    Recovery (recall):   %.2f\n", result.Recommendations.RecoveryThreshold)
+	fmt.Println()
+}
+
+// Weight tuning
+
+type TuneResult struct {
+	Results []TuneRun `json:"results"`
+	Best    *TuneRun  `json:"best"`
+}
+
+type TuneRun struct {
+	LexicalWeight   float64 `json:"lexical_weight"`
+	EmbeddingWeight float64 `json:"embedding_weight"`
+	MRR             float64 `json:"mrr"`
+	PAt1            float64 `json:"p_at_1"`
+	HitAt3          float64 `json:"hit_at_3"`
+}
+
+func RunTune(cfg TuneConfig) (*TuneResult, error) {
+	root := FindBenchmarkRoot()
+	ds, err := LoadDataset(root)
+	if err != nil {
+		return nil, fmt.Errorf("load dataset: %w", err)
+	}
+
+	result := &TuneResult{}
+
+	if cfg.Verbose {
+		fmt.Printf("  %-10s %-10s %-8s %-8s %-8s\n", "lexical", "embedding", "MRR", "P@1", "Hit@3")
+	}
+
+	for w := 0.0; w <= 1.0001; w += cfg.Step {
+		lexW := w
+		embW := 1.0 - w
+
+		runCfg := RunConfig{
+			Suite:           "corpus",
+			Strategy:        "combined",
+			Threshold:       0.01,
+			TopK:            5,
+			LexicalWeight:   lexW,
+			EmbeddingWeight: embW,
+			Mode:            "library",
+		}
+
+		if cfg.Corpus != "" {
+			runCfg.Corpus = cfg.Corpus
+		}
+
+		report, err := RunCorpusBenchmark(ds, runCfg)
+		if err != nil {
+			return nil, fmt.Errorf("run at lexical=%.2f: %w", lexW, err)
+		}
+
+		run := TuneRun{
+			LexicalWeight:   lexW,
+			EmbeddingWeight: embW,
+			MRR:             report.Metrics.Overall.MRR,
+			PAt1:            report.Metrics.Overall.PAt1,
+			HitAt3:          report.Metrics.Overall.HitAt3,
+		}
+		result.Results = append(result.Results, run)
+
+		if result.Best == nil || run.PAt1 > result.Best.PAt1 ||
+			(run.PAt1 == result.Best.PAt1 && run.MRR > result.Best.MRR) {
+			best := run
+			result.Best = &best
+		}
+
+		if cfg.Verbose {
+			fmt.Printf("  %-10.2f %-10.2f %-8.4f %-8.4f %-8.4f\n",
+				lexW, embW, run.MRR, run.PAt1, run.HitAt3)
+		}
+	}
+
+	return result, nil
+}
+
+func PrintTuneResult(result *TuneResult, cfg TuneConfig) {
+	fmt.Printf("\n  Tested %d weight combinations\n\n", len(result.Results))
+
+	if result.Best != nil {
+		fmt.Printf("  Best weights:\n")
+		fmt.Printf("    Lexical:   %.2f\n", result.Best.LexicalWeight)
+		fmt.Printf("    Embedding: %.2f\n", result.Best.EmbeddingWeight)
+		fmt.Printf("    MRR:       %.4f\n", result.Best.MRR)
+		fmt.Printf("    P@1:       %.4f\n", result.Best.PAt1)
+		fmt.Printf("    Hit@3:     %.4f\n", result.Best.HitAt3)
+	}
+	fmt.Println()
 }

@@ -177,22 +177,22 @@ run_lint_docs() {
 
 run_baseline() {
   echo "  ${ACCENT}${BOLD}📏 Creating quality baseline${NC}"
-  bash tests/benchmark/scripts/create-baseline.sh "$@"
+  go run ./cmd/semantic-bench baseline create "$@"
 }
 
 run_baseline_check() {
   echo "  ${ACCENT}${BOLD}📏 Checking against baseline${NC}"
-  bash tests/benchmark/scripts/check-baseline.sh "$@"
+  go run ./cmd/semantic-bench check "$@"
 }
 
 run_baseline_update() {
   echo "  ${ACCENT}${BOLD}📏 Updating baseline${NC}"
-  bash tests/benchmark/scripts/update-baseline.sh --accept "$@"
+  go run ./cmd/semantic-bench baseline update --accept "$@"
 }
 
 run_calibrate() {
   echo "  ${ACCENT}${BOLD}🎯 Calibrating thresholds${NC}"
-  bash tests/benchmark/scripts/calibrate-thresholds.sh "$@"
+  go run ./cmd/semantic-bench calibrate -verbose "$@"
 }
 
 run_runtime() {
@@ -202,7 +202,7 @@ run_runtime() {
 
 run_tune() {
   echo "  ${ACCENT}${BOLD}🎛️ Tuning combined weights${NC}"
-  bash tests/benchmark/scripts/tune-weights.sh "$@"
+  go run ./cmd/semantic-bench tune -verbose "$@"
 }
 
 run_e2e() {

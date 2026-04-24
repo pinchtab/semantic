@@ -13,11 +13,14 @@ Usage:
   semantic-bench <command> [flags]
 
 Commands:
-  check     Run benchmark and compare against baseline (default)
-  run       Run benchmark suites
-  compare   Compare two reports
-  lint      Validate dataset
-  catalog   Print dataset inventory
+  check       Run benchmark and compare against baseline (default)
+  run         Run benchmark suites
+  compare     Compare two reports
+  lint        Validate dataset
+  catalog     Print dataset inventory
+  baseline    Manage quality baselines (create, update)
+  calibrate   Find optimal thresholds via precision/recall analysis
+  tune        Grid-search lexical/embedding weights
 
 Flags:
   -h, --help    Show help
@@ -45,6 +48,12 @@ func main() {
 		runLint(args)
 	case "catalog":
 		runCatalog(args)
+	case "baseline":
+		runBaseline(args)
+	case "calibrate":
+		runCalibrate(args)
+	case "tune":
+		runTune(args)
 	case "-h", "--help", "help":
 		fmt.Print(usage)
 	default:
@@ -110,4 +119,34 @@ func runCatalog(args []string) {
 		os.Exit(2)
 	}
 	benchmark.PrintCatalogResult(result, cfg)
+}
+
+func runBaseline(args []string) {
+	cfg := benchmark.ParseBaselineFlags(args)
+	result, err := benchmark.RunBaseline(cfg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(2)
+	}
+	benchmark.PrintBaselineResult(result, cfg)
+}
+
+func runCalibrate(args []string) {
+	cfg := benchmark.ParseCalibrateFlags(args)
+	result, err := benchmark.RunCalibrate(cfg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(2)
+	}
+	benchmark.PrintCalibrateResult(result, cfg)
+}
+
+func runTune(args []string) {
+	cfg := benchmark.ParseTuneFlags(args)
+	result, err := benchmark.RunTune(cfg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(2)
+	}
+	benchmark.PrintTuneResult(result, cfg)
 }
