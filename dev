@@ -19,6 +19,7 @@ commands=(
   "coverage:📊:Run tests with coverage report"
   "lint:🔍:Run golangci-lint"
   "lint corpus:🔍:Lint benchmark corpus"
+  "lint docs:🔍:Check documentation links"
   "fmt:✨:Format code"
   "vet:🔬:Run go vet"
   "check:✅:Run all checks (fmt + vet + lint + test)"
@@ -32,6 +33,7 @@ commands=(
   "runtime:⏱️:Check runtime baseline"
   "tune:🎛️:Tune combined weights"
   "e2e:🐳:Run E2E tests (Docker)"
+  "loop:🔄:Benchmark loop (bench → compare → report)"
 )
 
 show_help() {
@@ -155,17 +157,22 @@ run_build() {
 
 run_bench() {
   echo "  ${ACCENT}${BOLD}🏋 Running corpus benchmark${NC}"
-  bash tests/benchmark/scripts/run-corpus-benchmark.sh "$@"
+  go run ./cmd/semantic-bench check "$@"
 }
 
 run_bench_full() {
   echo "  ${ACCENT}${BOLD}🏋 Running full benchmark suite${NC}"
-  bash tests/benchmark/scripts/run-full-benchmark.sh
+  go run ./cmd/semantic-bench run -suite=all "$@"
 }
 
 run_lint_corpus() {
   echo "  ${ACCENT}${BOLD}🔍 Linting benchmark corpus${NC}"
-  bash tests/benchmark/scripts/lint-corpus.sh
+  go run ./cmd/semantic-bench lint "$@"
+}
+
+run_lint_docs() {
+  echo "  ${ACCENT}${BOLD}🔍 Checking documentation links${NC}"
+  bash scripts/check-docs-links.sh
 }
 
 run_baseline() {
@@ -207,6 +214,11 @@ run_e2e() {
   bash scripts/e2e.sh
 }
 
+run_loop() {
+  echo "  ${ACCENT}${BOLD}🔄 Benchmark Loop${NC}"
+  go run ./cmd/semantic-bench check -verbose "$@"
+}
+
 case "${1:-help}" in
   pr)        run_pr ;;
   doctor)    exec bash scripts/doctor.sh ;;
@@ -221,6 +233,7 @@ case "${1:-help}" in
   lint)
     case "${2:-}" in
       corpus) run_lint_corpus ;;
+      docs) run_lint_docs ;;
       *) run_lint ;;
     esac
     ;;
@@ -245,5 +258,6 @@ case "${1:-help}" in
   runtime)   shift; run_runtime "$@" ;;
   tune)      shift; run_tune "$@" ;;
   e2e)       run_e2e ;;
+  loop)      run_loop ;;
   help|*)    show_help ;;
 esac
