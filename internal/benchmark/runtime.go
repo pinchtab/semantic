@@ -37,24 +37,12 @@ func RunRuntime(cfg RuntimeConfig) (*RuntimeResult, error) {
 	root := FindBenchmarkRoot()
 
 	// Load config for thresholds
-	benchCfg, _ := LoadConfig(root)
-	var thresholds BaselineRuntime
-	if benchCfg != nil {
-		thresholds = benchCfg.RuntimeThresholds()
-	} else {
-		thresholds = BaselineRuntime{
-			MaxNsOpRegressionRatio:  1.25,
-			MaxAllocRegressionRatio: 1.25,
-		}
+	benchCfg, err := LoadConfig(root)
+	if err != nil {
+		return nil, fmt.Errorf("load config: %w", err)
 	}
-
-	// Determine baseline path from config
-	var baselinePath string
-	if benchCfg != nil {
-		baselinePath = filepath.Join(benchCfg.BaselinesDir(root), "runtime.json")
-	} else {
-		baselinePath = filepath.Join(root, "baselines", "runtime.json")
-	}
+	thresholds := benchCfg.RuntimeThresholds()
+	baselinePath := filepath.Join(benchCfg.BaselinesDir(root), "runtime.json")
 
 	benchmarks, err := runGoBenchmarks()
 	if err != nil {

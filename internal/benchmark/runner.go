@@ -161,8 +161,10 @@ func RunCorpusBenchmark(ds *Dataset, cfg RunConfig) (*Report, error) {
 	return report, nil
 }
 
-// selectQuickSubset returns a deterministic subset of queries for quick mode.
-// It selects at most 3 queries per corpus, preferring a mix of difficulties.
+// selectQuickSubset returns a deterministic subset for smoke testing.
+// Selects up to 3 queries per corpus by difficulty. This is NOT representative
+// of full corpus coverage—edge-case tags may be missed. Use for fast iteration,
+// not for final regression checks.
 func selectQuickSubset(queries []Query) []Query {
 	if len(queries) <= 3 {
 		return queries
