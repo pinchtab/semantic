@@ -62,14 +62,25 @@ func PrintCatalogResult(result *CatalogResult, cfg CatalogConfig) {
 	switch cfg.By {
 	case "difficulty":
 		fmt.Printf("\n  By Difficulty:\n")
-		for d, n := range result.ByDifficulty {
-			fmt.Printf("    %-10s %4d\n", d, n)
+		diffs := sortedKeys(result.ByDifficulty)
+		for _, d := range diffs {
+			fmt.Printf("    %-10s %4d\n", d, result.ByDifficulty[d])
 		}
 	case "tag":
 		fmt.Printf("\n  By Tag:\n")
-		for t, n := range result.ByTag {
-			fmt.Printf("    %-20s %4d\n", t, n)
+		tags := sortedKeys(result.ByTag)
+		for _, t := range tags {
+			fmt.Printf("    %-20s %4d\n", t, result.ByTag[t])
 		}
 	}
 	fmt.Printf("\n")
+}
+
+func sortedKeys(m map[string]int) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }

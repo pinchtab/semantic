@@ -35,7 +35,26 @@ type runtimeBaseline struct {
 
 func RunRuntime(cfg RuntimeConfig) (*RuntimeResult, error) {
 	root := FindBenchmarkRoot()
-	baselinePath := filepath.Join(root, "baselines", "runtime.json")
+
+	// Load config for thresholds
+	benchCfg, _ := LoadConfig(root)
+	var thresholds BaselineRuntime
+	if benchCfg != nil {
+		thresholds = benchCfg.RuntimeThresholds()
+	} else {
+		thresholds = BaselineRuntime{
+			MaxNsOpRegressionRatio:  1.25,
+			MaxAllocRegressionRatio: 1.25,
+		}
+	}
+
+	// Determine baseline path from config
+	var baselinePath string
+	if benchCfg != nil {
+		baselinePath = filepath.Join(benchCfg.BaselinesDir(root), "runtime.json")
+	} else {
+		baselinePath = filepath.Join(root, "baselines", "runtime.json")
+	}
 
 	benchmarks, err := runGoBenchmarks()
 	if err != nil {
@@ -66,18 +85,29 @@ func RunRuntime(cfg RuntimeConfig) (*RuntimeResult, error) {
 		baselineMap[b.Name] = b
 	}
 
-	maxRatio := 1.25
+	// Warning threshold is halfway between 1.0 and max ratio
+	warnRatio := 1.0 + ((thresholds.MaxNsOpRegressionRatio - 1.0) / 2.0)
+
 	for i, b := range result.Benchmarks {
 		if base, ok := baselineMap[b.Name]; ok {
-			ratio := b.NsOp / base.NsOp
+			nsRatio := b.NsOp / base.NsOp
 			result.Benchmarks[i].BaselineNs = base.NsOp
-			result.Benchmarks[i].Ratio = ratio
+			result.Benchmarks[i].Ratio = nsRatio
+
+			// Check allocation regression if baseline has allocation data
+			var allocRatio float64
+			if base.AllocsOp > 0 && b.AllocsOp > 0 {
+				allocRatio = float64(b.AllocsOp) / float64(base.AllocsOp)
+			}
 
 			switch {
-			case ratio > maxRatio:
+			case nsRatio > thresholds.MaxNsOpRegressionRatio:
 				result.Benchmarks[i].Status = "regression"
 				result.Regressions++
-			case ratio > 1.1:
+			case allocRatio > thresholds.MaxAllocRegressionRatio:
+				result.Benchmarks[i].Status = "regression"
+				result.Regressions++
+			case nsRatio > warnRatio:
 				result.Benchmarks[i].Status = "warning"
 			default:
 				result.Benchmarks[i].Status = "ok"

@@ -3,6 +3,7 @@ package benchmark
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 )
 
 func RunCompare(cfg CompareConfig) (*CompareResult, error) {
@@ -70,9 +71,19 @@ func PrintCompareResult(result *CompareResult, cfg CompareConfig) {
 
 	if len(result.Regressions) > 0 {
 		fmt.Printf("\n  Regressions:\n")
+		sortRegressions(result.Regressions)
 		for _, r := range result.Regressions {
 			fmt.Printf("    %s: %s (%s)\n", r.ID, r.Reason, r.Query)
 		}
 	}
 	fmt.Printf("\n")
+}
+
+func sortRegressions(regs []Regression) {
+	sort.Slice(regs, func(i, j int) bool {
+		if regs[i].Corpus != regs[j].Corpus {
+			return regs[i].Corpus < regs[j].Corpus
+		}
+		return regs[i].ID < regs[j].ID
+	})
 }

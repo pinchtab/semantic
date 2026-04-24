@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
@@ -40,6 +41,7 @@ func RunCheck(cfg CheckConfig) (*CheckResult, error) {
 		Verbose:         cfg.Verbose,
 		Explain:         cfg.Explain,
 		OutputDir:       cfg.OutputDir,
+		Quick:           cfg.Quick,
 	}
 
 	report, err := RunCorpusBenchmark(ds, runCfg)
@@ -71,10 +73,28 @@ func RunCheck(cfg CheckConfig) (*CheckResult, error) {
 	}
 	result.Summary.Regressions = len(result.TopRegs)
 
+	// Determine baseline path from config
 	baselinePath := cfg.BaselinePath
 	if baselinePath == "" {
-		baselinePath = filepath.Join(root, "baselines", "combined.json")
+		if benchCfg != nil {
+			baselinePath = filepath.Join(benchCfg.BaselinesDir(root), "combined.json")
+		} else {
+			baselinePath = filepath.Join(root, "baselines", "combined.json")
+		}
 	}
+
+	// Get quality thresholds from config
+	var thresholds BaselineQuality
+	if benchCfg != nil {
+		thresholds = benchCfg.QualityThresholds()
+	} else {
+		thresholds = BaselineQuality{
+			MaxOverallPAt1Drop:   0.02,
+			MaxOverallMRRDrop:    0.02,
+			MaxOverallHitAt3Drop: 0.02,
+		}
+	}
+
 	if _, err := os.Stat(baselinePath); err == nil {
 		baseline, err := loadReport(baselinePath)
 		if err == nil {
@@ -83,11 +103,23 @@ func RunCheck(cfg CheckConfig) (*CheckResult, error) {
 				MRR:    report.Metrics.Overall.MRR - baseline.Metrics.Overall.MRR,
 				HitAt3: report.Metrics.Overall.HitAt3 - baseline.Metrics.Overall.HitAt3,
 			}
-			if cfg.FailOnReg && (result.Delta.PAt1 < -0.02 || result.Delta.MRR < -0.02) {
-				result.Status = "fail"
+			if cfg.FailOnReg {
+				if result.Delta.PAt1 < -thresholds.MaxOverallPAt1Drop ||
+					result.Delta.MRR < -thresholds.MaxOverallMRRDrop ||
+					result.Delta.HitAt3 < -thresholds.MaxOverallHitAt3Drop {
+					result.Status = "fail"
+				}
 			}
 		}
 	}
+
+	// Sort regressions for deterministic output
+	sort.Slice(result.TopRegs, func(i, j int) bool {
+		if result.TopRegs[i].Corpus != result.TopRegs[j].Corpus {
+			return result.TopRegs[i].Corpus < result.TopRegs[j].Corpus
+		}
+		return result.TopRegs[i].ID < result.TopRegs[j].ID
+	})
 
 	_ = os.MkdirAll(cfg.OutputDir, 0755)
 	ts := time.Now().Format("20060102_150405")
@@ -155,12 +187,15 @@ func generateSummaryMD(report *Report, result *CheckResult) string {
 		sb.WriteString("\n## Misses\n\n")
 		sb.WriteString("| ID | Corpus | Query | Got | Expected |\n")
 		sb.WriteString("|----|--------|-------|-----|----------|\n")
-		for _, r := range result.TopRegs {
-			if len(result.TopRegs) > 10 {
+		for i, r := range result.TopRegs {
+			if i >= 10 {
 				break
 			}
 			fmt.Fprintf(&sb, "| %s | %s | %s | %s | %s |\n",
 				r.ID, r.Corpus, r.Query, r.CurrentRef, strings.Join(r.Expected, ","))
+		}
+		if len(result.TopRegs) > 10 {
+			fmt.Fprintf(&sb, "\n*Showing 10 of %d misses.*\n", len(result.TopRegs))
 		}
 	}
 

@@ -2,20 +2,35 @@ package benchmark
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 )
 
 type Config struct {
-	Version  string             `json:"version"`
-	Defaults DefaultsConfig     `json:"defaults"`
-	Profiles map[string]Profile `json:"profiles"`
-	Baseline BaselineConfig     `json:"baseline"`
+	Version      string             `json:"version"`
+	Defaults     DefaultsConfig     `json:"defaults"`
+	Profiles     map[string]Profile `json:"profiles"`
+	Baseline     BaselineConfig     `json:"baseline"`
+	Results      ResultsConfig      `json:"results"`
+	Strategies   []string           `json:"strategies"`
+	SnapshotsDir string             `json:"snapshots_dir"`
 }
 
 type DefaultsConfig struct {
-	Profile string `json:"profile"`
+	Profile   string  `json:"profile"`
+	Strategy  string  `json:"strategy"`
+	Threshold float64 `json:"threshold"`
+	TopK      int     `json:"top_k"`
+	Weights   Weights `json:"weights"`
+}
+
+type ResultsConfig struct {
+	Dir                  string `json:"dir"`
+	BaselinesDir         string `json:"baselines_dir"`
+	GeneratedFilesPolicy string `json:"generated_files_policy"`
 }
 
 type Profile struct {
@@ -42,16 +57,20 @@ type BaselineConfig struct {
 }
 
 type BaselineQuality struct {
-	MaxOverallPAt1Drop   float64 `json:"max_overall_p_at_1_drop"`
-	MaxOverallMRRDrop    float64 `json:"max_overall_mrr_drop"`
-	MaxOverallHitAt3Drop float64 `json:"max_overall_hit_at_3_drop"`
-	MaxCorpusPAt1Drop    float64 `json:"max_corpus_p_at_1_drop"`
-	MaxTagPAt1Drop       float64 `json:"max_tag_p_at_1_drop"`
+	MaxOverallPAt1Drop    float64 `json:"max_overall_p_at_1_drop"`
+	MaxOverallMRRDrop     float64 `json:"max_overall_mrr_drop"`
+	MaxOverallHitAt3Drop  float64 `json:"max_overall_hit_at_3_drop"`
+	MaxCorpusPAt1Drop     float64 `json:"max_corpus_p_at_1_drop"`
+	MaxDifficultyPAt1Drop float64 `json:"max_difficulty_p_at_1_drop"`
+	MaxTagPAt1Drop        float64 `json:"max_tag_p_at_1_drop"`
+	MaxMarginDropReport   float64 `json:"max_margin_drop_report"`
 }
 
 type BaselineRuntime struct {
 	MaxNsOpRegressionRatio  float64 `json:"max_ns_op_regression_ratio"`
 	MaxAllocRegressionRatio float64 `json:"max_alloc_regression_ratio"`
+	MaxCorpusLatencyP50MS   int     `json:"max_corpus_latency_p50_ms"`
+	MaxCorpusLatencyP95MS   int     `json:"max_corpus_latency_p95_ms"`
 }
 
 type CheckConfig struct {
@@ -80,6 +99,7 @@ type RunConfig struct {
 	Explain         bool
 	OutputDir       string
 	ReportName      string
+	Quick           bool
 }
 
 type CompareConfig struct {
@@ -152,11 +172,28 @@ func LoadConfig(benchmarkRoot string) (*Config, error) {
 func ResolveProfile(cfg *Config, name string) Profile {
 	p, ok := cfg.Profiles[name]
 	if !ok {
+		// Use defaults from config, falling back to hardcoded values
+		strategy := cfg.Defaults.Strategy
+		if strategy == "" {
+			strategy = "combined"
+		}
+		threshold := cfg.Defaults.Threshold
+		if threshold == 0 {
+			threshold = 0.01
+		}
+		topK := cfg.Defaults.TopK
+		if topK == 0 {
+			topK = 5
+		}
+		weights := cfg.Defaults.Weights
+		if weights.Lexical == 0 && weights.Embedding == 0 {
+			weights = Weights{Lexical: 0.6, Embedding: 0.4}
+		}
 		return Profile{
-			Strategy:  "combined",
-			Threshold: 0.01,
-			TopK:      5,
-			Weights:   Weights{Lexical: 0.6, Embedding: 0.4},
+			Strategy:  strategy,
+			Threshold: threshold,
+			TopK:      topK,
+			Weights:   weights,
 			Suites:    []string{"corpus"},
 			Mode:      "library",
 		}
@@ -183,6 +220,180 @@ func ResolveProfile(cfg *Config, name string) Profile {
 		}
 	}
 	return p
+}
+
+// projectRoot returns the project root (parent of tests/benchmark).
+func projectRoot(benchmarkRoot string) string {
+	return filepath.Dir(filepath.Dir(benchmarkRoot))
+}
+
+// ResultsDir returns the configured results directory.
+func (c *Config) ResultsDir(benchmarkRoot string) string {
+	if c.Results.Dir != "" {
+		if filepath.IsAbs(c.Results.Dir) {
+			return c.Results.Dir
+		}
+		return filepath.Join(projectRoot(benchmarkRoot), c.Results.Dir)
+	}
+	return filepath.Join(benchmarkRoot, "results")
+}
+
+// BaselinesDir returns the configured baselines directory.
+func (c *Config) BaselinesDir(benchmarkRoot string) string {
+	if c.Results.BaselinesDir != "" {
+		if filepath.IsAbs(c.Results.BaselinesDir) {
+			return c.Results.BaselinesDir
+		}
+		return filepath.Join(projectRoot(benchmarkRoot), c.Results.BaselinesDir)
+	}
+	return filepath.Join(benchmarkRoot, "baselines")
+}
+
+// QualityThresholds returns quality thresholds with fallback defaults.
+func (c *Config) QualityThresholds() BaselineQuality {
+	q := c.Baseline.Quality
+	if q.MaxOverallPAt1Drop == 0 {
+		q.MaxOverallPAt1Drop = 0.02
+	}
+	if q.MaxOverallMRRDrop == 0 {
+		q.MaxOverallMRRDrop = 0.02
+	}
+	if q.MaxOverallHitAt3Drop == 0 {
+		q.MaxOverallHitAt3Drop = 0.02
+	}
+	if q.MaxCorpusPAt1Drop == 0 {
+		q.MaxCorpusPAt1Drop = 0.08
+	}
+	if q.MaxDifficultyPAt1Drop == 0 {
+		q.MaxDifficultyPAt1Drop = 0.08
+	}
+	if q.MaxTagPAt1Drop == 0 {
+		q.MaxTagPAt1Drop = 0.08
+	}
+	if q.MaxMarginDropReport == 0 {
+		q.MaxMarginDropReport = 0.15
+	}
+	return q
+}
+
+// RuntimeThresholds returns runtime thresholds with fallback defaults.
+func (c *Config) RuntimeThresholds() BaselineRuntime {
+	r := c.Baseline.Runtime
+	if r.MaxNsOpRegressionRatio == 0 {
+		r.MaxNsOpRegressionRatio = 1.25
+	}
+	if r.MaxAllocRegressionRatio == 0 {
+		r.MaxAllocRegressionRatio = 1.25
+	}
+	return r
+}
+
+// ValidateConfig checks the config for errors and returns a descriptive error if invalid.
+func ValidateConfig(cfg *Config) error {
+	var errs []error
+
+	// Validate strategies
+	if len(cfg.Strategies) == 0 {
+		errs = append(errs, errors.New("strategies list is empty"))
+	} else {
+		validStrategies := make(map[string]bool)
+		for _, s := range cfg.Strategies {
+			validStrategies[s] = true
+		}
+		// Check default strategy is in list
+		if cfg.Defaults.Strategy != "" && !validStrategies[cfg.Defaults.Strategy] {
+			errs = append(errs, fmt.Errorf("default strategy %q not in strategies list", cfg.Defaults.Strategy))
+		}
+		// Check profile strategies
+		for name, p := range cfg.Profiles {
+			if p.Strategy != "" && !validStrategies[p.Strategy] {
+				errs = append(errs, fmt.Errorf("profile %q uses strategy %q not in strategies list", name, p.Strategy))
+			}
+		}
+	}
+
+	// Validate weights
+	if cfg.Defaults.Weights.Lexical < 0 {
+		errs = append(errs, errors.New("defaults.weights.lexical must be non-negative"))
+	}
+	if cfg.Defaults.Weights.Embedding < 0 {
+		errs = append(errs, errors.New("defaults.weights.embedding must be non-negative"))
+	}
+	if cfg.Defaults.Weights.Lexical == 0 && cfg.Defaults.Weights.Embedding == 0 {
+		errs = append(errs, errors.New("defaults.weights: lexical and embedding cannot both be zero"))
+	}
+
+	// Validate profile weights
+	for name, p := range cfg.Profiles {
+		if p.Weights.Lexical < 0 {
+			errs = append(errs, fmt.Errorf("profile %q: weights.lexical must be non-negative", name))
+		}
+		if p.Weights.Embedding < 0 {
+			errs = append(errs, fmt.Errorf("profile %q: weights.embedding must be non-negative", name))
+		}
+	}
+
+	// Validate quality thresholds (should be positive when set)
+	q := cfg.Baseline.Quality
+	if q.MaxOverallPAt1Drop < 0 {
+		errs = append(errs, errors.New("baseline.quality.max_overall_p_at_1_drop must be non-negative"))
+	}
+	if q.MaxOverallMRRDrop < 0 {
+		errs = append(errs, errors.New("baseline.quality.max_overall_mrr_drop must be non-negative"))
+	}
+	if q.MaxOverallHitAt3Drop < 0 {
+		errs = append(errs, errors.New("baseline.quality.max_overall_hit_at_3_drop must be non-negative"))
+	}
+
+	// Validate runtime thresholds (must be >= 1)
+	r := cfg.Baseline.Runtime
+	if r.MaxNsOpRegressionRatio != 0 && r.MaxNsOpRegressionRatio < 1 {
+		errs = append(errs, errors.New("baseline.runtime.max_ns_op_regression_ratio must be >= 1"))
+	}
+	if r.MaxAllocRegressionRatio != 0 && r.MaxAllocRegressionRatio < 1 {
+		errs = append(errs, errors.New("baseline.runtime.max_alloc_regression_ratio must be >= 1"))
+	}
+
+	// Validate profile inheritance
+	if err := validateProfileInheritance(cfg); err != nil {
+		errs = append(errs, err)
+	}
+
+	if len(errs) == 0 {
+		return nil
+	}
+	if len(errs) == 1 {
+		return errs[0]
+	}
+	return fmt.Errorf("config has %d errors: %v", len(errs), errs)
+}
+
+// validateProfileInheritance checks for missing references and cycles.
+func validateProfileInheritance(cfg *Config) error {
+	for name, p := range cfg.Profiles {
+		if p.Inherits == "" {
+			continue
+		}
+		// Check reference exists
+		if _, ok := cfg.Profiles[p.Inherits]; !ok {
+			return fmt.Errorf("profile %q inherits from non-existent profile %q", name, p.Inherits)
+		}
+		// Check for cycles
+		visited := map[string]bool{name: true}
+		current := p.Inherits
+		for current != "" {
+			if visited[current] {
+				return fmt.Errorf("profile inheritance cycle detected: %q -> %q", name, current)
+			}
+			visited[current] = true
+			if parent, ok := cfg.Profiles[current]; ok {
+				current = parent.Inherits
+			} else {
+				break
+			}
+		}
+	}
+	return nil
 }
 
 func ParseCheckFlags(args []string) CheckConfig {
