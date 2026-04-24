@@ -10,6 +10,16 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BENCHMARK_DIR="${SCRIPT_DIR}/.."
 RESULTS_DIR="${BENCHMARK_DIR}/results"
+CONFIG_FILE="${BENCHMARK_DIR}/config/benchmark.json"
+
+# Read defaults from config (used for threshold/top_k in grid runs)
+if [[ -f "$CONFIG_FILE" ]]; then
+    THRESHOLD=$(jq -r '.defaults.threshold // 0.01' "$CONFIG_FILE")
+    TOP_K=$(jq -r '.defaults.top_k // 5' "$CONFIG_FILE")
+else
+    THRESHOLD=0.01
+    TOP_K=5
+fi
 
 SPECIFIC_CORPUS=""
 STEP="0.1"

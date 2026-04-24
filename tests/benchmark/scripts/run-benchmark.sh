@@ -19,9 +19,18 @@ CONFIG_FILE="${BENCHMARK_DIR}/config/benchmark.json"
 SNAPSHOTS_DIR="${BENCHMARK_DIR}/../e2e/assets/snapshots"
 RESULTS_DIR="${BENCHMARK_DIR}/results"
 
-# Parse args
-STRATEGY="combined"
+# Read defaults from config
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "ERROR: Config file not found: $CONFIG_FILE" >&2
+    exit 1
+fi
+
+STRATEGY=$(jq -r '.defaults.strategy // "combined"' "$CONFIG_FILE")
+THRESHOLD=$(jq -r '.defaults.threshold // 0.01' "$CONFIG_FILE")
+TOP_K=$(jq -r '.defaults.top_k // 5' "$CONFIG_FILE")
 CASE_FILE=""
+
+# Parse args (override config)
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --strategy) STRATEGY="$2"; shift 2 ;;

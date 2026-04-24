@@ -17,17 +17,27 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BENCHMARK_DIR="${SCRIPT_DIR}/.."
 CORPUS_DIR="${BENCHMARK_DIR}/corpus"
 RESULTS_DIR="${BENCHMARK_DIR}/results"
+CONFIG_FILE="${BENCHMARK_DIR}/config/benchmark.json"
 
-# Parse args
-STRATEGY="combined"
+# Read defaults from config
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "ERROR: Config file not found: $CONFIG_FILE" >&2
+    exit 1
+fi
+
+STRATEGY=$(jq -r '.defaults.strategy // "combined"' "$CONFIG_FILE")
+THRESHOLD=$(jq -r '.defaults.threshold // 0.01' "$CONFIG_FILE")
+TOP_K=$(jq -r '.defaults.top_k // 5' "$CONFIG_FILE")
+LEXICAL_WEIGHT=$(jq -r '.defaults.weights.lexical // 0.6' "$CONFIG_FILE")
+EMBEDDING_WEIGHT=$(jq -r '.defaults.weights.embedding // 0.4' "$CONFIG_FILE")
 SPECIFIC_CORPUS=""
-TOP_K=5
-LEXICAL_WEIGHT=0.6
-EMBEDDING_WEIGHT=0.4
+
+# Parse args (override config)
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --strategy) STRATEGY="$2"; shift 2 ;;
         --corpus) SPECIFIC_CORPUS="$2"; shift 2 ;;
+        --threshold) THRESHOLD="$2"; shift 2 ;;
         --top-k) TOP_K="$2"; shift 2 ;;
         --lexical-weight) LEXICAL_WEIGHT="$2"; shift 2 ;;
         --embedding-weight) EMBEDDING_WEIGHT="$2"; shift 2 ;;
@@ -54,15 +64,19 @@ REPORT_FILE="${RESULTS_DIR}/corpus_${STRATEGY}_${TIMESTAMP}.json"
 jq -n \
     --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     --arg strategy "${STRATEGY}" \
+    --argjson threshold "${THRESHOLD}" \
     --argjson top_k "${TOP_K}" \
     --argjson lexical_weight "${LEXICAL_WEIGHT}" \
     --argjson embedding_weight "${EMBEDDING_WEIGHT}" \
+    --arg config_file "${CONFIG_FILE}" \
     '{
         benchmark: {
             timestamp: $ts,
             strategy: $strategy,
+            threshold: $threshold,
             top_k: $top_k,
             type: "corpus",
+            config_source: $config_file,
             weights: {
                 lexical: $lexical_weight,
                 embedding: $embedding_weight
@@ -128,7 +142,7 @@ run_corpus() {
         if ! result=$("${SEMANTIC}" find "${query}" \
             --snapshot "${snapshot}" \
             --strategy "${STRATEGY}" \
-            --threshold 0.01 \
+            --threshold "${THRESHOLD}" \
             --top-k "${TOP_K}" \
             --lexical-weight "${LEXICAL_WEIGHT}" \
             --embedding-weight "${EMBEDDING_WEIGHT}" \
