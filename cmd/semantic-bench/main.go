@@ -21,6 +21,7 @@ Commands:
   baseline    Manage quality baselines (create, update)
   calibrate   Find optimal thresholds via precision/recall analysis
   tune        Grid-search lexical/embedding weights
+  runtime     Check Go benchmark performance against baseline
 
 Flags:
   -h, --help    Show help
@@ -54,6 +55,8 @@ func main() {
 		runCalibrate(args)
 	case "tune":
 		runTune(args)
+	case "runtime":
+		runRuntime(args)
 	case "-h", "--help", "help":
 		fmt.Print(usage)
 	default:
@@ -149,4 +152,17 @@ func runTune(args []string) {
 		os.Exit(2)
 	}
 	benchmark.PrintTuneResult(result, cfg)
+}
+
+func runRuntime(args []string) {
+	cfg := benchmark.ParseRuntimeFlags(args)
+	result, err := benchmark.RunRuntime(cfg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(2)
+	}
+	benchmark.PrintRuntimeResult(result, cfg)
+	if result.Status == "fail" && cfg.FailOnRegression {
+		os.Exit(1)
+	}
 }
