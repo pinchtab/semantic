@@ -118,6 +118,11 @@ type TuneConfig struct {
 	Verbose bool
 }
 
+type RuntimeConfig struct {
+	FailOnRegression bool
+	Verbose          bool
+}
+
 func FindBenchmarkRoot() string {
 	cwd, _ := os.Getwd()
 	for d := cwd; d != "/"; d = filepath.Dir(d) {
@@ -300,6 +305,15 @@ func ParseTuneFlags(args []string) TuneConfig {
 	}
 	fs.StringVar(&cfg.Corpus, "corpus", "", "specific corpus to tune against")
 	fs.Float64Var(&cfg.Step, "step", cfg.Step, "weight step size (0.05, 0.1, 0.2)")
+	fs.BoolVar(&cfg.Verbose, "verbose", false, "verbose output")
+	fs.Parse(args)
+	return cfg
+}
+
+func ParseRuntimeFlags(args []string) RuntimeConfig {
+	fs := flag.NewFlagSet("runtime", flag.ExitOnError)
+	cfg := RuntimeConfig{}
+	fs.BoolVar(&cfg.FailOnRegression, "fail-on-regression", false, "exit 1 on regression")
 	fs.BoolVar(&cfg.Verbose, "verbose", false, "verbose output")
 	fs.Parse(args)
 	return cfg

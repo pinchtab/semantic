@@ -197,7 +197,7 @@ run_calibrate() {
 
 run_runtime() {
   echo "  ${ACCENT}${BOLD}⏱️ Checking runtime baseline${NC}"
-  bash tests/benchmark/scripts/check-runtime-baseline.sh "$@"
+  go run ./cmd/semantic-bench runtime "$@"
 }
 
 run_tune() {
