@@ -1,5 +1,6 @@
 # Binary
 /semantic
+/semantic-bench
 tests/benchmark/semantic
 tests/e2e/semantic
 *.exe
