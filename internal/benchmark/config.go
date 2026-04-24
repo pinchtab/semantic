@@ -99,6 +99,25 @@ type CatalogConfig struct {
 	By     string
 }
 
+type BaselineCmdConfig struct {
+	Action  string // "create" or "update"
+	Name    string
+	Accept  bool
+	Verbose bool
+}
+
+type CalibrateConfig struct {
+	Corpus     string
+	Thresholds []float64
+	Verbose    bool
+}
+
+type TuneConfig struct {
+	Corpus  string
+	Step    float64
+	Verbose bool
+}
+
 func FindBenchmarkRoot() string {
 	cwd, _ := os.Getwd()
 	for d := cwd; d != "/"; d = filepath.Dir(d) {
@@ -242,6 +261,46 @@ func ParseCatalogFlags(args []string) CatalogConfig {
 	}
 	fs.StringVar(&cfg.Format, "format", cfg.Format, "output format (table|json)")
 	fs.StringVar(&cfg.By, "by", "", "group by (tag|difficulty|intent)")
+	fs.Parse(args)
+	return cfg
+}
+
+func ParseBaselineFlags(args []string) BaselineCmdConfig {
+	fs := flag.NewFlagSet("baseline", flag.ExitOnError)
+	cfg := BaselineCmdConfig{
+		Action: "create",
+		Name:   "combined",
+	}
+	fs.StringVar(&cfg.Name, "name", cfg.Name, "baseline name")
+	fs.BoolVar(&cfg.Accept, "accept", false, "accept changes (for update)")
+	fs.BoolVar(&cfg.Verbose, "verbose", false, "verbose output")
+	fs.Parse(args)
+
+	if len(fs.Args()) > 0 {
+		cfg.Action = fs.Args()[0]
+	}
+	return cfg
+}
+
+func ParseCalibrateFlags(args []string) CalibrateConfig {
+	fs := flag.NewFlagSet("calibrate", flag.ExitOnError)
+	cfg := CalibrateConfig{
+		Thresholds: []float64{0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60},
+	}
+	fs.StringVar(&cfg.Corpus, "corpus", "", "specific corpus to test")
+	fs.BoolVar(&cfg.Verbose, "verbose", false, "verbose output")
+	fs.Parse(args)
+	return cfg
+}
+
+func ParseTuneFlags(args []string) TuneConfig {
+	fs := flag.NewFlagSet("tune", flag.ExitOnError)
+	cfg := TuneConfig{
+		Step: 0.1,
+	}
+	fs.StringVar(&cfg.Corpus, "corpus", "", "specific corpus to tune against")
+	fs.Float64Var(&cfg.Step, "step", cfg.Step, "weight step size (0.05, 0.1, 0.2)")
+	fs.BoolVar(&cfg.Verbose, "verbose", false, "verbose output")
 	fs.Parse(args)
 	return cfg
 }
