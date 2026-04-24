@@ -2,9 +2,10 @@ package engine
 
 import (
 	"context"
-	"github.com/pinchtab/semantic/internal/types"
 	"strconv"
 	"testing"
+
+	"github.com/pinchtab/semantic/internal/types"
 )
 
 // benchElements returns a realistic set of elements for benchmarking.
@@ -240,6 +241,122 @@ func BenchmarkCombinedFind_Issue24_100Elements(b *testing.B) {
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				_, _ = m.Find(ctx, q, elements, opts)
+			}
+		})
+	}
+}
+
+// Focused microbenchmarks for individual components
+
+func BenchmarkParseQueryContext(b *testing.B) {
+	queries := []string{
+		"sign in button",
+		"the first email textbox in the login form",
+		"button not submit near the checkout section",
+		"second item in the dropdown menu",
+	}
+	b.ReportAllocs()
+
+	for b.Loop() {
+		for _, q := range queries {
+			ParseQueryContext(q)
+		}
+	}
+}
+
+func BenchmarkParseQueryContext_Complex(b *testing.B) {
+	q := "the third blue submit button in the checkout form not disabled"
+	b.ReportAllocs()
+
+	for b.Loop() {
+		ParseQueryContext(q)
+	}
+}
+
+func BenchmarkRemoveStopwords(b *testing.B) {
+	tokenSets := [][]string{
+		{"click", "the", "sign", "in", "button"},
+		{"find", "the", "email", "address", "textbox"},
+		{"the", "first", "item", "in", "a", "dropdown", "menu"},
+	}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, tokens := range tokenSets {
+			removeStopwords(tokens)
+		}
+	}
+}
+
+func BenchmarkScoreFusion(b *testing.B) {
+	// Test the score fusion calculation
+	lexScores := make([]float64, 100)
+	embScores := make([]float64, 100)
+	for i := range lexScores {
+		lexScores[i] = float64(i) / 100.0
+		embScores[i] = float64(100-i) / 100.0
+	}
+	lexWeight, embWeight := 0.6, 0.4
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for j := range lexScores {
+			_ = lexWeight*lexScores[j] + embWeight*embScores[j]
+		}
+	}
+}
+
+func BenchmarkLexicalScore_Variants(b *testing.B) {
+	cases := []struct {
+		name  string
+		query string
+		desc  string
+	}{
+		{"exact", "Sign In", "button: Sign In"},
+		{"partial", "sign", "button: Sign In"},
+		{"synonym", "login", "button: Sign In"},
+		{"mismatch", "checkout", "button: Sign In"},
+		{"long_query", "click the sign in button on the login page", "button: Sign In"},
+	}
+	for _, tc := range cases {
+		b.Run(tc.name, func(b *testing.B) {
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				LexicalScore(tc.query, tc.desc)
+			}
+		})
+	}
+}
+
+func BenchmarkCombinedFind_WeightVariants(b *testing.B) {
+	elements := benchElements()
+	ctx := context.Background()
+
+	weights := []struct {
+		name string
+		lex  float64
+		emb  float64
+	}{
+		{"lex_only", 1.0, 0.0},
+		{"emb_only", 0.0, 1.0},
+		{"balanced", 0.5, 0.5},
+		{"lex_heavy", 0.8, 0.2},
+		{"emb_heavy", 0.2, 0.8},
+	}
+
+	for _, w := range weights {
+		b.Run(w.name, func(b *testing.B) {
+			m := NewCombinedMatcher(NewHashingEmbedder(128))
+			opts := types.FindOptions{
+				Threshold:       0.3,
+				TopK:            3,
+				LexicalWeight:   w.lex,
+				EmbeddingWeight: w.emb,
+			}
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				_, _ = m.Find(ctx, "sign in button", elements, opts)
 			}
 		})
 	}

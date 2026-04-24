@@ -2,6 +2,8 @@ package benchmark
 
 import (
 	"context"
+	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/pinchtab/semantic"
@@ -118,6 +120,7 @@ func RunCorpusBenchmark(ds *Dataset, cfg RunConfig) (*Report, error) {
 	report.Run.ID = time.Now().Format("20060102-150405") + "-" + cfg.Profile
 	report.Run.Timestamp = time.Now().UTC().Format(time.RFC3339)
 	report.Run.Tool = "semantic-bench"
+	report.Run.GitSHA, report.Run.GitDirty = getGitInfo()
 	report.Dataset.Name = "semantic-ui-matching-corpus"
 	report.Dataset.QueryCount = ds.QueryCount()
 	report.Dataset.CorpusCount = ds.CorpusCount()
@@ -138,7 +141,12 @@ func RunCorpusBenchmark(ds *Dataset, cfg RunConfig) (*Report, error) {
 			continue
 		}
 
-		for _, query := range corpus.Queries {
+		queries := corpus.Queries
+		if cfg.Quick {
+			queries = selectQuickSubset(corpus.Queries)
+		}
+
+		for _, query := range queries {
 			if cfg.QueryID != "" && query.ID != cfg.QueryID {
 				continue
 			}
@@ -151,6 +159,56 @@ func RunCorpusBenchmark(ds *Dataset, cfg RunConfig) (*Report, error) {
 
 	aggregateMetrics(report, allLatencies)
 	return report, nil
+}
+
+// selectQuickSubset returns a deterministic subset of queries for quick mode.
+// It selects at most 3 queries per corpus, preferring a mix of difficulties.
+func selectQuickSubset(queries []Query) []Query {
+	if len(queries) <= 3 {
+		return queries
+	}
+
+	// Group by difficulty
+	byDiff := make(map[string][]Query)
+	for _, q := range queries {
+		diff := q.Difficulty
+		if diff == "" {
+			diff = "medium"
+		}
+		byDiff[diff] = append(byDiff[diff], q)
+	}
+
+	// Select one from each difficulty level, up to 3 total
+	var selected []Query
+	for _, diff := range []string{"easy", "medium", "hard"} {
+		if qs, ok := byDiff[diff]; ok && len(qs) > 0 {
+			selected = append(selected, qs[0])
+			if len(selected) >= 3 {
+				break
+			}
+		}
+	}
+
+	// If we don't have 3 yet, fill from remaining
+	if len(selected) < 3 {
+		for _, q := range queries {
+			found := false
+			for _, s := range selected {
+				if s.ID == q.ID {
+					found = true
+					break
+				}
+			}
+			if !found {
+				selected = append(selected, q)
+				if len(selected) >= 3 {
+					break
+				}
+			}
+		}
+	}
+
+	return selected
 }
 
 func createMatcher(cfg RunConfig) semantic.ElementMatcher {
@@ -189,8 +247,11 @@ func runQuery(matcher semantic.ElementMatcher, corpus Corpus, query Query, cfg R
 
 	start := time.Now()
 	findResult, _ := matcher.Find(context.Background(), query.QueryText, corpus.Snapshot, semantic.FindOptions{
-		Threshold: threshold,
-		TopK:      topK,
+		Threshold:       threshold,
+		TopK:            topK,
+		LexicalWeight:   cfg.LexicalWeight,
+		EmbeddingWeight: cfg.EmbeddingWeight,
+		Explain:         cfg.Explain,
 	})
 	result.Latency.LibraryMs = time.Since(start).Milliseconds()
 
@@ -383,4 +444,21 @@ func sortInt64(s []int64) {
 			}
 		}
 	}
+}
+
+func getGitInfo() (sha string, dirty bool) {
+	cmd := exec.Command("git", "rev-parse", "HEAD")
+	out, err := cmd.Output()
+	if err != nil {
+		return "", false
+	}
+	sha = strings.TrimSpace(string(out))
+
+	cmd = exec.Command("git", "status", "--porcelain")
+	out, err = cmd.Output()
+	if err != nil {
+		return sha, false
+	}
+	dirty = len(strings.TrimSpace(string(out))) > 0
+	return sha, dirty
 }
