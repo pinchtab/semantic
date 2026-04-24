@@ -22,3 +22,4 @@ cover.out
 tests/e2e/results/*.txt
 tests/benchmark/results/*.json
 tests/benchmark/results/*.md
+tests/benchmark/baselines/*.backup.json

@@ -1,13 +1,35 @@
 {
-  "version": "1.0.0",
-  "strategies": ["lexical", "embedding", "combined"],
-  "default_strategy": "combined",
-  "default_threshold": 0.3,
-  "default_top_k": 3,
-  "metrics": {
-    "min_accuracy": 0.85,
-    "min_avg_score": 0.5,
-    "max_latency_ms": 100
+  "version": "1.1.0",
+  "defaults": {
+    "strategy": "combined",
+    "threshold": 0.01,
+    "top_k": 5,
+    "weights": {
+      "lexical": 0.6,
+      "embedding": 0.4
+    }
   },
+  "baseline": {
+    "quality": {
+      "max_overall_p_at_1_drop": 0.02,
+      "max_overall_mrr_drop": 0.02,
+      "max_overall_hit_at_3_drop": 0.02,
+      "max_corpus_p_at_1_drop": 0.08,
+      "max_difficulty_p_at_1_drop": 0.08,
+      "max_margin_drop_report": 0.15
+    },
+    "runtime": {
+      "max_ns_op_regression_ratio": 1.25,
+      "max_alloc_regression_ratio": 1.25,
+      "max_corpus_latency_p50_ms": 75,
+      "max_corpus_latency_p95_ms": 200
+    }
+  },
+  "results": {
+    "dir": "tests/benchmark/results",
+    "baselines_dir": "tests/benchmark/baselines",
+    "generated_files_policy": "warn"
+  },
+  "strategies": ["lexical", "embedding", "combined"],
   "snapshots_dir": "../e2e/assets/snapshots"
 }

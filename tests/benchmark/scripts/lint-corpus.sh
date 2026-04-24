@@ -17,12 +17,12 @@ WARNINGS=0
 
 error() {
     echo -e "${RED}ERROR:${NC} $1"
-    ((ERRORS++))
+    ERRORS=$((ERRORS + 1))
 }
 
 warn() {
     echo -e "${YELLOW}WARN:${NC} $1"
-    ((WARNINGS++))
+    WARNINGS=$((WARNINGS + 1))
 }
 
 ok() {

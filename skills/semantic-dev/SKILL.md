@@ -15,22 +15,26 @@ cd ~/dev/semantic
 
 ## Dev Commands
 
-All development commands run via `./dev`:
+```bash
+# Before opening a PR (runs all checks + e2e + benchmark)
+./dev pr
 
-| Command | Description |
-|---------|-------------|
-| `./dev doctor` | Setup dev environment |
-| `./dev test` | Run unit tests |
-| `./dev test verbose` | Run unit tests (verbose) |
-| `./dev test race` | Run unit tests with race detector |
-| `./dev coverage` | Run tests with coverage report |
-| `./dev lint` | Run golangci-lint |
-| `./dev fmt` | Format code |
-| `./dev vet` | Run go vet |
-| `./dev check` | All checks (fmt + vet + lint + test) |
-| `./dev build` | Build CLI binary |
-| `./dev bench` | Run corpus benchmark suite |
-| `./dev e2e` | Run E2E tests (Docker) |
+# Quick iteration
+./dev test              # unit tests
+./dev check             # fmt + vet + lint + test race
+
+# Benchmarking
+./dev bench             # corpus benchmark
+./dev baseline          # create baseline (first time)
+./dev baseline check    # check for regressions
+
+# Other
+./dev build             # build ./semantic binary
+./dev e2e               # e2e tests (Docker)
+./dev lint corpus       # validate benchmark data
+./dev calibrate         # find optimal thresholds
+./dev tune              # grid-search weights
+```
 
 ## Architecture
 

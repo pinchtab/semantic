@@ -10,6 +10,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BENCHMARK_DIR="${SCRIPT_DIR}/.."
 CORPUS_DIR="${BENCHMARK_DIR}/corpus"
 RESULTS_DIR="${BENCHMARK_DIR}/results"
+CONFIG_FILE="${BENCHMARK_DIR}/config/benchmark.json"
+
+# Read defaults from config
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "ERROR: Config file not found: $CONFIG_FILE" >&2
+    exit 1
+fi
+
+STRATEGY=$(jq -r '.defaults.strategy // "combined"' "$CONFIG_FILE")
+THRESHOLD=$(jq -r '.defaults.threshold // 0.01' "$CONFIG_FILE")
+TOP_K=$(jq -r '.defaults.top_k // 5' "$CONFIG_FILE")
+LEXICAL_WEIGHT=$(jq -r '.defaults.weights.lexical // 0.6' "$CONFIG_FILE")
+EMBEDDING_WEIGHT=$(jq -r '.defaults.weights.embedding // 0.4' "$CONFIG_FILE")
 
 mkdir -p "${RESULTS_DIR}"
 
