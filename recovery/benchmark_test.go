@@ -237,7 +237,7 @@ func runBenchmarkScenarioB(b *testing.B, matcher semantic.ElementMatcher, sc Ben
 
 	err := fmt.Errorf("could not find node with id %s", sc.OriginalRef)
 
-	re.AttemptWithClassification(
+	_, _, _ = re.AttemptWithClassification(
 		context.Background(),
 		"test-tab",
 		sc.OriginalRef,

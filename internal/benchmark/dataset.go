@@ -25,10 +25,10 @@ type Query struct {
 }
 
 type Corpus struct {
-	ID        string
-	Path      string
-	Snapshot  []semantic.ElementDescriptor
-	Queries   []Query
+	ID       string
+	Path     string
+	Snapshot []semantic.ElementDescriptor
+	Queries  []Query
 }
 
 type Dataset struct {
