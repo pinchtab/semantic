@@ -18,16 +18,11 @@ func RunCheck(cfg CheckConfig) (*CheckResult, error) {
 		return nil, fmt.Errorf("load dataset: %w", err)
 	}
 
-	benchCfg, _ := LoadConfig(root)
-	profile := Profile{
-		Strategy:  "combined",
-		Threshold: 0.01,
-		TopK:      5,
-		Weights:   Weights{Lexical: 0.6, Embedding: 0.4},
+	benchCfg, err := LoadConfig(root)
+	if err != nil {
+		return nil, fmt.Errorf("load config: %w", err)
 	}
-	if benchCfg != nil {
-		profile = ResolveProfile(benchCfg, cfg.Profile)
-	}
+	profile := ResolveProfile(benchCfg, cfg.Profile)
 
 	runCfg := RunConfig{
 		Suite:           "corpus",
@@ -76,24 +71,11 @@ func RunCheck(cfg CheckConfig) (*CheckResult, error) {
 	// Determine baseline path from config
 	baselinePath := cfg.BaselinePath
 	if baselinePath == "" {
-		if benchCfg != nil {
-			baselinePath = filepath.Join(benchCfg.BaselinesDir(root), "combined.json")
-		} else {
-			baselinePath = filepath.Join(root, "baselines", "combined.json")
-		}
+		baselinePath = filepath.Join(benchCfg.BaselinesDir(root), "combined.json")
 	}
 
 	// Get quality thresholds from config
-	var thresholds BaselineQuality
-	if benchCfg != nil {
-		thresholds = benchCfg.QualityThresholds()
-	} else {
-		thresholds = BaselineQuality{
-			MaxOverallPAt1Drop:   0.02,
-			MaxOverallMRRDrop:    0.02,
-			MaxOverallHitAt3Drop: 0.02,
-		}
-	}
+	thresholds := benchCfg.QualityThresholds()
 
 	if _, err := os.Stat(baselinePath); err == nil {
 		baseline, err := loadReport(baselinePath)
@@ -104,10 +86,35 @@ func RunCheck(cfg CheckConfig) (*CheckResult, error) {
 				HitAt3: report.Metrics.Overall.HitAt3 - baseline.Metrics.Overall.HitAt3,
 			}
 			if cfg.FailOnReg {
+				// Check overall thresholds
 				if result.Delta.PAt1 < -thresholds.MaxOverallPAt1Drop ||
 					result.Delta.MRR < -thresholds.MaxOverallMRRDrop ||
 					result.Delta.HitAt3 < -thresholds.MaxOverallHitAt3Drop {
 					result.Status = "fail"
+				}
+				// Check corpus-level thresholds
+				for corpus, current := range report.Metrics.ByCorpus {
+					if base, ok := baseline.Metrics.ByCorpus[corpus]; ok {
+						if current.PAt1-base.PAt1 < -thresholds.MaxCorpusPAt1Drop {
+							result.Status = "fail"
+						}
+					}
+				}
+				// Check difficulty-level thresholds
+				for diff, current := range report.Metrics.ByDifficulty {
+					if base, ok := baseline.Metrics.ByDifficulty[diff]; ok {
+						if current.PAt1-base.PAt1 < -thresholds.MaxDifficultyPAt1Drop {
+							result.Status = "fail"
+						}
+					}
+				}
+				// Check tag-level thresholds
+				for tag, current := range report.Metrics.ByTag {
+					if base, ok := baseline.Metrics.ByTag[tag]; ok {
+						if current.PAt1-base.PAt1 < -thresholds.MaxTagPAt1Drop {
+							result.Status = "fail"
+						}
+					}
 				}
 			}
 		}

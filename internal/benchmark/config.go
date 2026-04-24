@@ -166,6 +166,9 @@ func LoadConfig(benchmarkRoot string) (*Config, error) {
 	if err := json.Unmarshal(data, &cfg); err != nil {
 		return nil, err
 	}
+	if err := ValidateConfig(&cfg); err != nil {
+		return nil, fmt.Errorf("invalid config: %w", err)
+	}
 	return &cfg, nil
 }
 
@@ -408,7 +411,7 @@ func ParseCheckFlags(args []string) CheckConfig {
 	fs.StringVar(&cfg.OutputDir, "out", cfg.OutputDir, "output directory")
 	fs.StringVar(&cfg.Format, "format", cfg.Format, "output format (text|json|github)")
 	fs.BoolVar(&cfg.FailOnReg, "fail-on-regression", false, "exit 1 on regression")
-	fs.BoolVar(&cfg.Quick, "quick", false, "run subset for fast checks")
+	fs.BoolVar(&cfg.Quick, "quick", false, "smoke mode: 3 queries per corpus (not representative)")
 	fs.BoolVar(&cfg.Verbose, "verbose", false, "print per-corpus details")
 	fs.BoolVar(&cfg.Explain, "explain", false, "include matcher explanations")
 	_ = fs.Parse(args)
