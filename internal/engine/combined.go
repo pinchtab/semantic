@@ -46,6 +46,13 @@ func (c *CombinedMatcher) Find(ctx context.Context, query string, elements []typ
 		ctx = context.Background()
 	}
 
+	query, forceNatural := normalizeSemanticQuery(query)
+	if !forceNatural {
+		if result, ok := findStructuredLocator(query, elements, opts, c.Strategy()); ok {
+			return result, nil
+		}
+	}
+
 	opts = sanitizeFindOptions(opts, len(elements), 3)
 
 	parsed := ParseQueryContext(query)

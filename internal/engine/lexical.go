@@ -55,6 +55,13 @@ func (m *LexicalMatcher) Find(ctx context.Context, query string, elements []type
 		return types.FindResult{}, err
 	}
 
+	query, forceNatural := normalizeSemanticQuery(query)
+	if !forceNatural {
+		if result, ok := findStructuredLocator(query, elements, opts, m.Strategy()); ok {
+			return result, nil
+		}
+	}
+
 	queryCtx := ParseQueryContext(query)
 	return m.findWithParsedContext(ctx, queryCtx, elements, opts), nil
 }

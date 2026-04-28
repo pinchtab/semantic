@@ -90,6 +90,12 @@ func matchesExcludedContext(el types.ElementDescriptor, excludeTokens []string) 
 		el.Role,
 		el.Name,
 		el.Value,
+		el.Label,
+		el.Placeholder,
+		el.Alt,
+		el.Title,
+		el.Text,
+		el.Tag,
 	}, " "))
 	if len(ctxTokens) == 0 {
 		return false

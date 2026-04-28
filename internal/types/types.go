@@ -85,36 +85,45 @@ type MatchExplain struct {
 
 // PositionalHints captures optional AX-tree relationship and position metadata.
 type PositionalHints struct {
-	Depth        int
-	SiblingIndex int
-	SiblingCount int
-	LabelledBy   string
-	X            float64
-	Y            float64
-	Width        float64
-	Height       float64
+	Depth        int     `json:"depth,omitempty"`
+	SiblingIndex int     `json:"sibling_index,omitempty"`
+	SiblingCount int     `json:"sibling_count,omitempty"`
+	LabelledBy   string  `json:"labelled_by,omitempty"`
+	X            float64 `json:"x,omitempty"`
+	Y            float64 `json:"y,omitempty"`
+	Width        float64 `json:"width,omitempty"`
+	Height       float64 `json:"height,omitempty"`
 }
 
 // ElementDescriptor describes a single accessibility tree node.
 type ElementDescriptor struct {
-	Ref         string
-	Role        string
-	Name        string
-	Value       string
-	Interactive bool
-	Parent      string
-	Section     string
-	DocumentIdx int
-	Positional  PositionalHints
+	Ref         string          `json:"ref,omitempty"`
+	Role        string          `json:"role,omitempty"`
+	Name        string          `json:"name,omitempty"`
+	Value       string          `json:"value,omitempty"`
+	Label       string          `json:"label,omitempty"`
+	Placeholder string          `json:"placeholder,omitempty"`
+	Alt         string          `json:"alt,omitempty"`
+	Title       string          `json:"title,omitempty"`
+	TestID      string          `json:"testid,omitempty"`
+	Text        string          `json:"text,omitempty"`
+	Tag         string          `json:"tag,omitempty"`
+	Interactive bool            `json:"interactive,omitempty"`
+	Parent      string          `json:"parent,omitempty"`
+	Section     string          `json:"section,omitempty"`
+	DocumentIdx int             `json:"document_idx,omitempty"`
+	Positional  PositionalHints `json:"positional,omitempty"`
 }
 
-// Composite returns a single string combining role, name, and value
+// Composite returns a single string combining public element identity fields
 // for matching purposes: "role: name [value]".
 func (ed *ElementDescriptor) Composite() string {
 	var parts []string
 
 	if ed.Role != "" {
 		parts = append(parts, ed.Role+":")
+	} else if ed.Tag != "" {
+		parts = append(parts, ed.Tag+":")
 	}
 	if ed.Name != "" {
 		parts = append(parts, ed.Name)
@@ -122,11 +131,44 @@ func (ed *ElementDescriptor) Composite() string {
 	if ed.Value != "" && ed.Value != ed.Name {
 		parts = append(parts, "["+ed.Value+"]")
 	}
+	if shouldAddCompositeField(ed.Text, ed.Name, ed.Value) {
+		parts = append(parts, ed.Text)
+	}
+	if shouldAddCompositeField(ed.Label, ed.Name, ed.Text) {
+		parts = append(parts, "label:"+ed.Label)
+	}
+	if shouldAddCompositeField(ed.Placeholder, ed.Name, ed.Text) {
+		parts = append(parts, "placeholder:"+ed.Placeholder)
+	}
+	if shouldAddCompositeField(ed.Alt, ed.Name, ed.Text) {
+		parts = append(parts, "alt:"+ed.Alt)
+	}
+	if shouldAddCompositeField(ed.Title, ed.Name, ed.Text) {
+		parts = append(parts, "title:"+ed.Title)
+	}
 	if ed.Section != "" {
 		parts = append(parts, "{"+ed.Section+"}")
 	}
 
 	return strings.Join(parts, " ")
+}
+
+func shouldAddCompositeField(value string, existing ...string) bool {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return false
+	}
+	normValue := normalizeCompositeValue(value)
+	for _, candidate := range existing {
+		if normValue == normalizeCompositeValue(candidate) {
+			return false
+		}
+	}
+	return true
+}
+
+func normalizeCompositeValue(value string) string {
+	return strings.ToLower(strings.Join(strings.Fields(strings.TrimSpace(value)), " "))
 }
 
 // CalibrateConfidence maps a score to a human-readable confidence level.

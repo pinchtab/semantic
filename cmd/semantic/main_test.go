@@ -12,8 +12,8 @@ func TestLoadSnapshot_PropagatesInteractiveFlag(t *testing.T) {
 	}
 
 	json := `[
-		{"ref":"e1","role":"button","name":"Submit","interactive":true,"parent":"Login form","section":"Authentication","depth":3,"sibling_index":1,"sibling_count":2,"labelled_by":"Primary Action","x":20,"y":40,"width":120,"height":30},
-		{"ref":"e2","role":"text","name":"Submit","interactive":false,"parent":"Payment form","section":"Checkout","positional":{"depth":2,"sibling_index":0,"sibling_count":1,"labelled_by":"Secondary Action","left":300,"top":640,"width":200,"height":44}}
+		{"ref":"e1","role":"button","name":"Submit","label":"Primary Action","placeholder":"Search","alt":"Submit icon","title":"Submit form","testid":"submit-button","text":"Submit","tag":"button","document_idx":7,"interactive":true,"parent":"Login form","section":"Authentication","depth":3,"sibling_index":1,"sibling_count":2,"labelled_by":"Primary Action","x":20,"y":40,"width":120,"height":30},
+		{"ref":"e2","role":"text","name":"Submit","test_id":"legacy-submit","interactive":false,"parent":"Payment form","section":"Checkout","positional":{"depth":2,"sibling_index":0,"sibling_count":1,"labelled_by":"Secondary Action","left":300,"top":640,"width":200,"height":44}}
 	]`
 	if _, err := f.WriteString(json); err != nil {
 		t.Fatalf("WriteString failed: %v", err)
@@ -37,6 +37,30 @@ func TestLoadSnapshot_PropagatesInteractiveFlag(t *testing.T) {
 	}
 	if descs[0].Section != "Authentication" {
 		t.Fatalf("expected first descriptor section=Authentication, got %q", descs[0].Section)
+	}
+	if descs[0].Label != "Primary Action" {
+		t.Fatalf("expected first descriptor label=Primary Action, got %q", descs[0].Label)
+	}
+	if descs[0].Placeholder != "Search" {
+		t.Fatalf("expected first descriptor placeholder=Search, got %q", descs[0].Placeholder)
+	}
+	if descs[0].Alt != "Submit icon" {
+		t.Fatalf("expected first descriptor alt=Submit icon, got %q", descs[0].Alt)
+	}
+	if descs[0].Title != "Submit form" {
+		t.Fatalf("expected first descriptor title=Submit form, got %q", descs[0].Title)
+	}
+	if descs[0].TestID != "submit-button" {
+		t.Fatalf("expected first descriptor testid=submit-button, got %q", descs[0].TestID)
+	}
+	if descs[0].Text != "Submit" {
+		t.Fatalf("expected first descriptor text=Submit, got %q", descs[0].Text)
+	}
+	if descs[0].Tag != "button" {
+		t.Fatalf("expected first descriptor tag=button, got %q", descs[0].Tag)
+	}
+	if descs[0].DocumentIdx != 7 {
+		t.Fatalf("expected first descriptor document_idx=7, got %d", descs[0].DocumentIdx)
 	}
 	if descs[0].Positional.Depth != 3 {
 		t.Fatalf("expected first descriptor depth=3, got %d", descs[0].Positional.Depth)
@@ -64,6 +88,9 @@ func TestLoadSnapshot_PropagatesInteractiveFlag(t *testing.T) {
 	}
 	if descs[1].Section != "Checkout" {
 		t.Fatalf("expected second descriptor section=Checkout, got %q", descs[1].Section)
+	}
+	if descs[1].TestID != "legacy-submit" {
+		t.Fatalf("expected second descriptor test_id fallback=legacy-submit, got %q", descs[1].TestID)
 	}
 	if descs[1].Positional.Depth != 2 {
 		t.Fatalf("expected second descriptor depth=2, got %d", descs[1].Positional.Depth)

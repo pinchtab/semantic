@@ -361,3 +361,56 @@ func BenchmarkCombinedFind_WeightVariants(b *testing.B) {
 		})
 	}
 }
+
+func BenchmarkStructuredLocatorFind(b *testing.B) {
+	m := NewCombinedMatcher(NewHashingEmbedder(128))
+	elements := []types.ElementDescriptor{
+		{Ref: "e0", Role: "heading", Name: "Welcome Back", Text: "Welcome Back", DocumentIdx: 0},
+		{Ref: "e1", Role: "textbox", Name: "Email address", Label: "Email address", Placeholder: "name@example.com", Tag: "input", Interactive: true, DocumentIdx: 1},
+		{Ref: "e2", Role: "textbox", Name: "Password", Label: "Password", Placeholder: "Password", Tag: "input", Interactive: true, DocumentIdx: 2},
+		{Ref: "e3", Role: "checkbox", Name: "Remember me", Label: "Remember me", Tag: "input", Interactive: true, DocumentIdx: 3},
+		{Ref: "e4", Role: "button", Name: "Sign In", Text: "Sign In", TestID: "submit-login", Tag: "button", Interactive: true, DocumentIdx: 4},
+		{Ref: "e5", Role: "link", Name: "Forgot password?", Text: "Forgot password?", Tag: "a", Interactive: true, DocumentIdx: 5},
+		{Ref: "e6", Role: "img", Name: "Company Logo", Alt: "Company Logo", Tag: "img", DocumentIdx: 6},
+	}
+	ctx := context.Background()
+	opts := types.FindOptions{Threshold: 0, TopK: 3}
+	queries := []string{
+		"role:button Sign In",
+		"text:Forgot password?",
+		"label:Email address",
+		"placeholder:Password",
+		"alt:Company Logo",
+		"testid:submit-login",
+		"nth:0:role:textbox",
+	}
+
+	for _, query := range queries {
+		b.Run(query, func(b *testing.B) {
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				_, _ = m.Find(ctx, query, elements, opts)
+			}
+		})
+	}
+}
+
+func BenchmarkParseStructuredLocator(b *testing.B) {
+	queries := []string{
+		"role:button Sign In",
+		"text:Forgot password?",
+		"label:Email address",
+		"placeholder:Password",
+		"alt:Company Logo",
+		"testid:submit-login",
+		"nth:2:role:button Save",
+	}
+	b.ReportAllocs()
+
+	for b.Loop() {
+		for _, query := range queries {
+			parseStructuredLocator(query)
+		}
+	}
+}
