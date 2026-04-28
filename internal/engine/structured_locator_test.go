@@ -63,6 +63,12 @@ func TestParseStructuredLocator_TableDriven(t *testing.T) {
 			wantOK: true,
 		},
 		{
+			name:   "nth zero parses as structured locator",
+			raw:    "nth:0:role:button",
+			want:   structuredLocator{kind: locatorRole, role: "button", wrapper: locatorNth, nth: 0},
+			wantOK: true,
+		},
+		{
 			name:   "invalid wrapper base",
 			raw:    "first:button",
 			wantOK: false,
@@ -192,7 +198,7 @@ func TestStructuredLocator_WrappersSelectFromOrderedCandidates(t *testing.T) {
 	}{
 		{"first:role:button Save", "first"},
 		{"last:role:button Save", "third"},
-		{"nth:1:role:button Save", "second"},
+		{"nth:2:role:button Save", "second"},
 	}
 
 	for _, tt := range tests {
@@ -224,8 +230,8 @@ func TestStructuredLocator_WrappersUseDocumentOrderNotScoreRank(t *testing.T) {
 	}{
 		{"first:text:Submit", "first-partial"},
 		{"last:text:Submit", "second-exact"},
-		{"nth:0:text:Submit", "first-partial"},
-		{"nth:1:text:Submit", "second-exact"},
+		{"nth:1:text:Submit", "first-partial"},
+		{"nth:2:text:Submit", "second-exact"},
 	}
 
 	for _, tt := range tests {
@@ -238,6 +244,24 @@ func TestStructuredLocator_WrappersUseDocumentOrderNotScoreRank(t *testing.T) {
 				t.Fatalf("BestRef=%q, want %q; matches=%v", res.BestRef, tt.want, res.Matches)
 			}
 		})
+	}
+}
+
+func TestStructuredLocator_NthZeroReturnsNoMatch(t *testing.T) {
+	m := NewLexicalMatcher()
+	elements := []types.ElementDescriptor{
+		{Ref: "submit", Role: "button", Text: "Submit"},
+	}
+
+	res, err := m.Find(context.Background(), "nth:0:text:Submit", elements, types.FindOptions{Threshold: 0, TopK: 1})
+	if err != nil {
+		t.Fatalf("Find returned error: %v", err)
+	}
+	if len(res.Matches) != 0 {
+		t.Fatalf("expected nth:0 to return no structured matches, got %v", res.Matches)
+	}
+	if res.BestRef != "" {
+		t.Fatalf("expected empty BestRef, got %q", res.BestRef)
 	}
 }
 

@@ -35,6 +35,8 @@ Structured locator queries are parsed before generic semantic matching:
 - `testid:<id>`
 - `first:<selector>`, `last:<selector>`, `nth:<n>:<selector>`
 
+`nth:<n>` is 1-based: `nth:1` selects the first ordered candidate, `nth:2` selects the second, and `nth:0` is not the first match.
+
 Exact normalized field matches outrank substring matches. Role locators prefer `Role` and fall back to the implicit role inferred from `Tag` when the explicit role is empty or generic. `find:<query>` and `semantic:<query>` force natural-language matching.
 
 ## Lexical Matcher

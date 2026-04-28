@@ -382,7 +382,7 @@ func BenchmarkStructuredLocatorFind(b *testing.B) {
 		"placeholder:Password",
 		"alt:Company Logo",
 		"testid:submit-login",
-		"nth:0:role:textbox",
+		"nth:1:role:textbox",
 	}
 
 	for _, query := range queries {

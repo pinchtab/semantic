@@ -33,9 +33,9 @@ Structured locators are parsed before natural-language matching:
 | `alt:Logo` | Image alt text |
 | `title:Help` | Title text |
 | `testid:submit` | Test id |
-| `first:role:button`, `last:role:button`, `nth:1:role:button` | Ordered candidate selection |
+| `first:role:button`, `last:role:button`, `nth:1:role:button` | Ordered candidate selection; `nth` is 1-based |
 
-Use `find:<query>` or `semantic:<query>` to force natural-language matching when a query starts with a locator-like prefix.
+`nth:<n>` is 1-based: `nth:1` selects the first ordered candidate, `nth:2` selects the second, and `nth:0` is not the first match. Use `find:<query>` or `semantic:<query>` to force natural-language matching when a query starts with a locator-like prefix.
 
 ## Matchers
 

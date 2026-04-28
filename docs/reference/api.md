@@ -73,7 +73,7 @@ func CosineSimilarity(a, b []float32) float64
 
 ### Structured Locator Queries
 
-`Find` parses these locator forms before natural-language scoring: `role:<role> [name]`, `text:<text>`, `label:<label>`, `placeholder:<text>`, `alt:<text>`, `title:<text>`, `testid:<id>`, `first:<selector>`, `last:<selector>`, and `nth:<n>:<selector>`. `find:<query>` and `semantic:<query>` force natural-language matching.
+`Find` parses these locator forms before natural-language scoring: `role:<role> [name]`, `text:<text>`, `label:<label>`, `placeholder:<text>`, `alt:<text>`, `title:<text>`, `testid:<id>`, `first:<selector>`, `last:<selector>`, and `nth:<n>:<selector>`. `nth:<n>` is 1-based: `nth:1` selects the first ordered candidate, `nth:2` selects the second, and `nth:0` is not the first match. `find:<query>` and `semantic:<query>` force natural-language matching.
 
 ---
 

@@ -289,7 +289,7 @@ func selectStructuredLocatorWrapper(candidates []structuredLocatorCandidate, loc
 	case locatorLast:
 		idx = len(candidates) - 1
 	case locatorNth:
-		idx = locator.nth
+		idx = locator.nth - 1
 	default:
 		return candidates
 	}
