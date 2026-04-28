@@ -309,6 +309,21 @@ func TestElementDescriptor_Composite_IncludesSection(t *testing.T) {
 	}
 }
 
+func TestElementDescriptor_Composite_IncludesLocatorFields(t *testing.T) {
+	d := semantic.ElementDescriptor{
+		Role:        "textbox",
+		Name:        "Email",
+		Label:       "Work Email",
+		Placeholder: "name@example.com",
+		Title:       "Primary email address",
+		TestID:      "email-input",
+	}
+	want := "textbox: Email label:Work Email placeholder:name@example.com title:Primary email address"
+	if d.Composite() != want {
+		t.Errorf("unexpected composite with locator fields: %q", d.Composite())
+	}
+}
+
 func TestElementDescriptor_PositionalHints(t *testing.T) {
 	d := semantic.ElementDescriptor{
 		Role: "textbox",

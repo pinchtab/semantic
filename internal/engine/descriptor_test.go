@@ -24,6 +24,25 @@ func TestComposite(t *testing.T) {
 			want: "textbox: Email [user@pinchtab.com]",
 		},
 		{
+			name: "locator identity fields",
+			desc: types.ElementDescriptor{
+				Ref:         "e4",
+				Role:        "textbox",
+				Name:        "Email",
+				Label:       "Work Email",
+				Placeholder: "name@example.com",
+				Title:       "Primary email address",
+				Text:        "Email",
+				TestID:      "email-input",
+			},
+			want: "textbox: Email label:Work Email placeholder:name@example.com title:Primary email address",
+		},
+		{
+			name: "tag when role missing",
+			desc: types.ElementDescriptor{Ref: "e5", Tag: "button", Text: "Save"},
+			want: "button: Save",
+		},
+		{
 			name: "name only",
 			desc: types.ElementDescriptor{Ref: "e2", Name: "Heading"},
 			want: "Heading",

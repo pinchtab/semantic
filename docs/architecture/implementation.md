@@ -8,14 +8,36 @@ The input unit. Each element from the accessibility tree becomes a descriptor:
 
 ```go
 type ElementDescriptor struct {
-    Ref   string  // "e4" — the element reference
-    Role  string  // "button" — ARIA role
-    Name  string  // "Sign In" — accessible name
-    Value string  // "" — current value (for inputs)
+    Ref         string
+    Role        string
+    Name        string
+    Value       string
+    Label       string
+    Placeholder string
+    Alt         string
+    Title       string
+    TestID      string
+    Text        string
+    Tag         string
 }
 ```
 
-The `Composite()` method produces a single searchable string: `"button: Sign In"`. This is what matchers score against.
+The `Composite()` method produces a single searchable string such as `"button: Sign In"`. Natural-language matchers score against this composite; structured locators score explicit fields directly.
+
+Structured locator queries are parsed before generic semantic matching:
+
+- `role:<role> [name]`
+- `text:<text>`
+- `label:<label>`
+- `placeholder:<text>`
+- `alt:<text>`
+- `title:<text>`
+- `testid:<id>`
+- `first:<selector>`, `last:<selector>`, `nth:<n>:<selector>`
+
+`nth:<n>` is 1-based: `nth:1` selects the first ordered candidate, `nth:2` selects the second, and `nth:0` is not the first match.
+
+Exact normalized field matches outrank substring matches. Role locators prefer `Role` and fall back to the implicit role inferred from `Tag` when the explicit role is empty or generic. `find:<query>` and `semantic:<query>` force natural-language matching.
 
 ## Lexical Matcher
 

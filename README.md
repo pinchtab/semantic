@@ -53,6 +53,18 @@ result, err := matcher.Find(ctx, "log in button", elements, semantic.FindOptions
 // result.BestScore = 0.82
 ```
 
+Structured locators are also supported when descriptors include the corresponding fields:
+
+```go
+result, err := matcher.Find(ctx, "role:button Sign In", elements, semantic.FindOptions{})
+result, err = matcher.Find(ctx, "placeholder:Search", elements, semantic.FindOptions{})
+result, err = matcher.Find(ctx, "nth:1:role:button", elements, semantic.FindOptions{})
+```
+
+`nth:<n>` is 1-based: `nth:1` selects the first ordered candidate, `nth:2` selects the second, and `nth:0` is not the first match.
+
+Use `find:<query>` or `semantic:<query>` to force natural-language matching for locator-like text.
+
 ## Package Layout
 
 ```

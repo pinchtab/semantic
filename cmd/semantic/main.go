@@ -81,9 +81,18 @@ type snapshotElement struct {
 	Role        string              `json:"role"`
 	Name        string              `json:"name"`
 	Value       string              `json:"value"`
+	Label       string              `json:"label"`
+	Placeholder string              `json:"placeholder"`
+	Alt         string              `json:"alt"`
+	Title       string              `json:"title"`
+	TestID      string              `json:"testid"`
+	TestIDAlt   string              `json:"test_id"`
+	Text        string              `json:"text"`
+	Tag         string              `json:"tag"`
 	Interactive bool                `json:"interactive"`
 	Parent      string              `json:"parent"`
 	Section     string              `json:"section"`
+	DocumentIdx int                 `json:"document_idx"`
 	Depth       int                 `json:"depth"`
 	SiblingIdx  int                 `json:"sibling_index"`
 	SiblingCnt  int                 `json:"sibling_count"`
@@ -122,6 +131,11 @@ func loadSnapshot(path string) ([]semantic.ElementDescriptor, error) {
 
 	descs := make([]semantic.ElementDescriptor, len(elements))
 	for i, e := range elements {
+		testID := e.TestID
+		if testID == "" {
+			testID = e.TestIDAlt
+		}
+
 		labelledBy := e.LabelledBy
 		depth := e.Depth
 		siblingIdx := e.SiblingIdx
@@ -173,9 +187,17 @@ func loadSnapshot(path string) ([]semantic.ElementDescriptor, error) {
 			Role:        e.Role,
 			Name:        e.Name,
 			Value:       e.Value,
+			Label:       e.Label,
+			Placeholder: e.Placeholder,
+			Alt:         e.Alt,
+			Title:       e.Title,
+			TestID:      testID,
+			Text:        e.Text,
+			Tag:         e.Tag,
 			Interactive: e.Interactive,
 			Parent:      e.Parent,
 			Section:     e.Section,
+			DocumentIdx: e.DocumentIdx,
 			Positional: semantic.PositionalHints{
 				Depth:        depth,
 				SiblingIndex: siblingIdx,

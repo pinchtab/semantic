@@ -50,6 +50,31 @@ func CosineSimilarity(a, b []float32) float64
 | `EmbeddingWeight` | `float64` | 0 | Per-request weight override |
 | `Explain` | `bool` | false | Include per-strategy breakdown |
 
+### ElementDescriptor Fields
+
+| Field | Description |
+|-------|-------------|
+| `Ref` | Snapshot element reference |
+| `Role` | Explicit/accessibility role |
+| `Name` | Accessible name |
+| `Value` | Current value |
+| `Label` | Associated label text |
+| `Placeholder` | Placeholder text |
+| `Alt` | Image alt text |
+| `Title` | Title text |
+| `TestID` | Test id attribute |
+| `Text` | Visible text |
+| `Tag` | HTML tag used for implicit role fallback |
+| `Interactive` | Whether the element is interactive |
+| `Parent` | Parent context |
+| `Section` | Section context |
+| `DocumentIdx` | Document order hint |
+| `Positional` | AX-tree and visual position hints |
+
+### Structured Locator Queries
+
+`Find` parses these locator forms before natural-language scoring: `role:<role> [name]`, `text:<text>`, `label:<label>`, `placeholder:<text>`, `alt:<text>`, `title:<text>`, `testid:<id>`, `first:<selector>`, `last:<selector>`, and `nth:<n>:<selector>`. `nth:<n>` is 1-based: `nth:1` selects the first ordered candidate, `nth:2` selects the second, and `nth:0` is not the first match. `find:<query>` and `semantic:<query>` force natural-language matching.
+
 ---
 
 ## Recovery Package (`github.com/pinchtab/semantic/recovery`)

@@ -6,14 +6,36 @@ The input unit. Each element from the accessibility tree becomes a descriptor:
 
 ```go
 semantic.ElementDescriptor{
-    Ref:   "e4",      // element reference
-    Role:  "button",  // ARIA role
-    Name:  "Sign In", // accessible name
-    Value: "",        // current value (for inputs)
+    Ref:         "e4",      // element reference
+    Role:        "button",  // explicit/accessibility role
+    Name:        "Sign In", // accessible name
+    Value:       "",        // current value (for inputs)
+    Label:       "Email",   // associated label text
+    Placeholder: "Search",  // placeholder text
+    Alt:         "Logo",    // image alt text
+    Title:       "Help",    // title attribute text
+    TestID:      "submit",  // test id attribute
+    Text:        "Sign In", // visible text
+    Tag:         "button",  // HTML tag for implicit role fallback
 }
 ```
 
 `Composite()` produces a single searchable string: `"button: Sign In"`.
+
+Structured locators are parsed before natural-language matching:
+
+| Query | Meaning |
+|-------|---------|
+| `role:button Sign In` | Role plus optional accessible name |
+| `text:Sign In` | Visible text |
+| `label:Email` | Associated label text |
+| `placeholder:Search` | Placeholder text |
+| `alt:Logo` | Image alt text |
+| `title:Help` | Title text |
+| `testid:submit` | Test id |
+| `first:role:button`, `last:role:button`, `nth:1:role:button` | Ordered candidate selection; `nth` is 1-based |
+
+`nth:<n>` is 1-based: `nth:1` selects the first ordered candidate, `nth:2` selects the second, and `nth:0` is not the first match. Use `find:<query>` or `semantic:<query>` to force natural-language matching when a query starts with a locator-like prefix.
 
 ## Matchers
 
